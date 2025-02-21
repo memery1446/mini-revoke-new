@@ -9,7 +9,7 @@ require("@nomicfoundation/hardhat-chai-matchers");
 const INFURA_URL = process.env.INFURA_URL || "https://mainnet.infura.io/v3/873f1dfbc0294062843aadbe3d6afc9e";
 
 module.exports = {
-  solidity: "0.8.18",
+  solidity: "0.8.20",
   networks: {
     hardhat: {
       chainId: 1337,

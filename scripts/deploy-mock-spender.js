@@ -1,49 +1,45 @@
-// Import dependencies
-const { ethers } = require("hardhat");
+const { ethers, run } = require("hardhat");
+const fs = require("fs");
 
 async function main() {
-    // Get the first signer (default deployer's account)
     const [deployer] = await ethers.getSigners();
 
     console.log("🚀 Deploying MockSpender contract...");
     console.log("📜 Deployer Address:", deployer.address);
 
-    // Deploy the MockSpender contract
     const MockSpender = await ethers.getContractFactory("MockSpender");
     const mockSpender = await MockSpender.deploy();
 
-    await mockSpender.deployed();
+    console.log("⏳ Waiting for deployment to complete...");
+    await mockSpender.waitForDeployment(); // ✅ Ethers v6 equivalent of `.deployed()`
 
-    console.log("✅ MockSpender deployed to:", mockSpender.address);
+    const contractAddress = await mockSpender.getAddress(); // ✅ Ethers v6 way to get contract address
 
-    // Save contract address for future references
-    console.log(`📍 Saving MockSpender address...`);
-    const fs = require("fs");
+    console.log("✅ MockSpender deployed to:", contractAddress);
+
+    // Save contract address to a JSON file
     fs.writeFileSync(
         "./deployed-mock-spender.json",
-        JSON.stringify({ address: mockSpender.address }, null, 2)
+        JSON.stringify({ address: contractAddress }, null, 2)
     );
 
     console.log("📂 Address saved in deployed-mock-spender.json");
 
-    // Optional: Verification step (for Etherscan if deployed on testnets/mainnet)
+    // Optional: Verify contract on Etherscan (if ETHERSCAN_API_KEY exists)
     if (process.env.ETHERSCAN_API_KEY) {
         console.log("🔍 Verifying contract on Etherscan...");
-        await mockSpender.deployTransaction.wait(6); // Wait for confirmations
         await run("verify:verify", {
-            address: mockSpender.address,
+            address: contractAddress,
             constructorArguments: [],
         });
         console.log("✅ Verified on Etherscan");
     }
 }
 
-// Execute the deployment script
+// Run deployment
 main()
     .then(() => process.exit(0))
     .catch((error) => {
         console.error("❌ Deployment failed:", error);
         process.exit(1);
     });
-
-
