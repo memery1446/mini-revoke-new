@@ -45,6 +45,8 @@ module.exports = {
   gasReporter: {
     enabled: true,
     currency: "USD",
+  },
+  paths: {
+    artifacts: "./src/artifacts", // Point Hardhat to the correct artifacts directory
   }
 };
-

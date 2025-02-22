@@ -10,13 +10,33 @@ async function main() {
     const { abi: testNFTABI } = require('../src/artifacts/contracts/TestNFT.sol/TestNFT.json');
     const { abi: testERC1155ABI } = require('../src/artifacts/contracts/TestERC1155.sol/TestERC1155.json');
 
+    console.log("ABIs Loaded Successfully");
+
     // Get contract instances
-    const tk1 = await ethers.getContractAt(testTokenABI, "0xae246e208ea35b3f23de72b697d47044fc594d5f");
-    const tk2 = await ethers.getContractAt(testTokenABI, "0x82bbaa3b0982d88741b275ae1752db85cafe3c65");
-    const nft = await ethers.getContractAt(testNFTABI, "0x084815d1330ecc3ef94193a19ec222c0c73dff2d"); // Update this address
-    const erc1155 = await ethers.getContractAt(testERC1155ABI, "0x76a999d5f7efde0a300e710e6f52fb0a4b61ad58");
+    const tk1 = await ethers.getContractAt(testTokenABI, "0xef66010868ff77119171628b7efa0f6179779375");
+    const tk2 = await ethers.getContractAt(testTokenABI, "0xd544d7a5ef50c510f3e90863828eaba7e392907a");
+    const nft = await ethers.getContractAt(testNFTABI, "0x103416cfcd0d0a32b904ab4fb69df6e5b5aadf2b"); // Update this address
+    const erc1155 = await ethers.getContractAt(testERC1155ABI, "0x1f585372f116e1055af2bed81a808ddf9638dccd");
 
     console.log("Contract Instances Created");
+
+    // Debugging: Log the contract instance and its properties
+    console.log("NFT Contract Instance:", nft);
+    console.log("NFT Contract Interface:", nft.interface);
+
+    // Debugging: Check if the ABI is correctly applied
+    if (nft.interface && nft.interface.fragments) {
+        console.log("ABI Fragments:", nft.interface.fragments);
+    } else {
+        console.error("ABI Fragments are missing or invalid.");
+    }
+
+    // Debugging: Check if safeMint exists
+    if (nft.interface && nft.interface.getFunction("safeMint")) {
+        console.log("safeMint function exists in the ABI.");
+    } else {
+        console.error("safeMint function is missing in the ABI.");
+    }
 
     // Mint more ERC-20 tokens
     await tk1.mint(owner.address, ethers.parseUnits("1000", 18));
@@ -26,8 +46,13 @@ async function main() {
     // Mint an NFT
     console.log("Minting NFT to owner...");
     try {
-        await nft.safeMint(owner.address);
-        console.log("Minted 1 NFT to owner");
+        if (nft.interface && nft.interface.getFunction("safeMint")) {
+            const tx = await nft.safeMint(owner.address);
+            await tx.wait(); // Wait for the transaction to be mined
+            console.log("Minted 1 NFT to owner");
+        } else {
+            console.error("safeMint is not a function on the NFT contract instance.");
+        }
     } catch (error) {
         console.error("Error minting NFT:", error);
     }
