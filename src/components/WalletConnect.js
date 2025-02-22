@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { setAccount, setNetwork, resetWeb3 } from "../store/web3Slice";
-import { ethers } from "ethers";
+import { ethers, BrowserProvider } from "ethers";
 
 const WalletConnect = () => {
   const dispatch = useDispatch();
@@ -11,7 +10,6 @@ const WalletConnect = () => {
   const [loading, setLoading] = useState(false);
   const [networkError, setNetworkError] = useState(false);
 
-  // Hardhat network parameters
   const HARDHAT_CHAIN_ID = "0x539"; // 1337 in hex
   const HARDHAT_NETWORK = {
     chainId: HARDHAT_CHAIN_ID,
@@ -20,15 +18,14 @@ const WalletConnect = () => {
     nativeCurrency: {
       name: "Ethereum",
       symbol: "ETH",
-      decimals: 18
-    }
+      decimals: 18,
+    },
   };
 
   useEffect(() => {
     console.log("🔄 Redux Account:", account);
     console.log("🔄 Redux Network:", network);
-    
-    // Check if connected but on wrong network
+
     if (account && network !== 1337) {
       setNetworkError(true);
     } else {
@@ -38,54 +35,32 @@ const WalletConnect = () => {
 
   const connectWallet = async () => {
     if (!window.ethereum) {
-      alert("❌ MetaMask is required.");
+      alert("❌ MetaMask is required. Please install it.");
       return;
     }
 
     try {
       setLoading(true);
-      
-      // First try to switch to Hardhat network
-      try {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: HARDHAT_CHAIN_ID }],
-        });
-      } catch (switchError) {
-        // Network doesn't exist, add it
-        if (switchError.code === 4902) {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [HARDHAT_NETWORK],
-            });
-          } catch (addError) {
-            console.error("Failed to add Hardhat network", addError);
-          }
-        }
-      }
-      
-      // Now request accounts
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+      const provider = new BrowserProvider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
 
-      const signer = provider.getSigner();
+      const signer = await provider.getSigner();
       const address = await signer.getAddress();
-      
-      // Check if we're actually on Hardhat
       const network = await provider.getNetwork();
-      console.log("Connected to network:", network);
-      
-      if (network.chainId !== 1337) {
-        console.warn("⚠️ Not connected to Hardhat (1337)! Instead on:", network.chainId);
-        setNetworkError(true);
-      }
+
+      console.log("🌐 Connected to network:", network);
 
       dispatch(setAccount(address));
       dispatch(setNetwork(network.chainId));
 
       console.log("✅ Redux Updated -> Account:", address);
       console.log("✅ Redux Updated -> Network:", network.chainId);
+
+      if (network.chainId !== 1337) {
+        console.warn("⚠️ Not connected to Hardhat (1337)! Instead on:", network.chainId);
+        setNetworkError(true);
+      }
     } catch (error) {
       console.error("❌ Connection error:", error);
     } finally {
@@ -94,19 +69,26 @@ const WalletConnect = () => {
   };
 
   const switchToHardhat = async () => {
+    if (!window.ethereum) {
+      alert("❌ MetaMask is required to switch networks.");
+      return;
+    }
+
     try {
       setLoading(true);
       await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
+        method: "wallet_switchEthereumChain",
         params: [{ chainId: HARDHAT_CHAIN_ID }],
       });
-      
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+      const provider = new BrowserProvider(window.ethereum);
       const network = await provider.getNetwork();
-      dispatch(setNetwork(network.chainId));
+      dispatch(setNetwork(Number(network.chainId))); // ✅ Convert BigInt to Number
+
       setNetworkError(false);
+      console.log("✅ Successfully switched to Hardhat network.");
     } catch (error) {
-      console.error("Failed to switch network", error);
+      console.error("❌ Failed to switch network:", error);
     } finally {
       setLoading(false);
     }
@@ -126,32 +108,27 @@ const WalletConnect = () => {
           <p className={network === 1337 ? "text-info" : "text-danger"}>
             🌐 Network: {network} {network !== 1337 && "⚠️"}
           </p>
-          
+
           {networkError && (
             <div className="alert alert-danger">
               <p>Your wallet is connected to the wrong network (should be Hardhat 1337)</p>
-              <Button 
-                colorScheme="blue" 
-                onClick={switchToHardhat} 
-                isLoading={loading}
-              >
-                Switch to Hardhat
-              </Button>
+              <button className="btn btn-primary" onClick={switchToHardhat} disabled={loading}>
+                {loading ? "Switching..." : "Switch to Hardhat"}
+              </button>
             </div>
           )}
-          
-          <Button colorScheme="red" onClick={disconnectWallet}>
+
+          <button className="btn btn-danger" onClick={disconnectWallet}>
             Disconnect
-          </Button>
+          </button>
         </>
       ) : (
-        <Button colorScheme="teal" onClick={connectWallet} isLoading={loading}>
-          Connect Wallet
-        </Button>
+        <button className="btn btn-success" onClick={connectWallet} disabled={loading}>
+          {loading ? "Connecting..." : "Connect Wallet"}
+        </button>
       )}
     </div>
   );
 };
 
 export default WalletConnect;
-

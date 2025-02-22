@@ -1,65 +1,66 @@
-import { ethers } from "ethers";
+import { Contract, JsonRpcProvider, getAddress } from "ethers";
 import { CONTRACT_ADDRESSES, TOKEN_ABI } from "../../src/constants/abis"; // ✅ Ensuring proper import
 
-const provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545");
+const provider = new JsonRpcProvider("http://127.0.0.1:8545");
 
-/** Function to get ERC-20 Approvals */
+/**
+ * Fetch ERC-20 approvals for given token contracts and an owner address.
+ * @param {Array<string>} tokenContracts - List of ERC-20 contract addresses.
+ * @param {string} ownerAddress - Address of the token owner.
+ * @returns {Promise<Array>} - Resolves to an array of approval objects.
+ */
 export async function getERC20Approvals(tokenContracts, ownerAddress) {
     let approvals = [];
 
-    // ✅ Ensure the ownerAddress is defined and valid
-    if (!ownerAddress || !ethers.utils.isAddress(ownerAddress)) {
+    try {
+        // ✅ Validate owner address
+        ownerAddress = getAddress(ownerAddress); 
+    } catch {
         console.error(`❌ Invalid owner address: ${ownerAddress}`);
         return [];
     }
 
     const spenderAddresses = [
         CONTRACT_ADDRESSES.TK1, // ✅ Token contract itself
-        "0x43c5df0c482c88cef8005389f64c362ee720a5bc" // ✅ Test wallet
+        "0x9DBb24B10502aD166c198Dbeb5AB54d2d13AfcFd" // ✅ Test wallet
     ];
 
-    try {
-        console.log("🔍 Debug: Token Contracts Input:", tokenContracts);
+    console.log("🔍 Fetching ERC-20 approvals for owner:", ownerAddress);
 
-        for (let tokenAddress of tokenContracts) {
-            if (!ethers.utils.isAddress(tokenAddress)) {
-                console.error(`❌ Invalid token address: ${tokenAddress}`);
-                continue;
-            }
+    for (let tokenAddress of tokenContracts) {
+        try {
+            tokenAddress = getAddress(tokenAddress);
+        } catch {
+            console.error(`❌ Invalid token address: ${tokenAddress}`);
+            continue;
+        }
 
-            console.log("🔍 Fetching ABI Methods...");
-            const contract = new ethers.Contract(tokenAddress, TOKEN_ABI, provider);
-            console.log("✅ Contract ABI Methods:", contract.interface.fragments.map(f => f.name));
+        try {
+            const contract = new Contract(tokenAddress, TOKEN_ABI, provider);
 
             for (let spender of spenderAddresses) {
-                console.log("🔍 Checking ERC-20 Allowance...");
-                console.log("📌 Token Address:", tokenAddress);
-                console.log("📌 Spender Address:", spender);
-                console.log("📌 Owner Address:", ownerAddress);
-
                 try {
-                    const network = await provider.getNetwork();
-                    console.log("✅ Connected to Network ID:", network.chainId);
-
+                    spender = getAddress(spender); // ✅ Validate spender address
                     const allowance = await contract.allowance(ownerAddress, spender);
-                    if (allowance.gt(0)) {
+
+                    if (allowance > 0n) { // ✅ BigInt handling
                         approvals.push({
                             contract: tokenAddress,
                             type: "ERC-20",
                             spender: spender,
                             amount: allowance.toString(),
                         });
+
+                        console.log(`✅ Approved: ${spender} can spend ${allowance} tokens from ${tokenAddress}`);
                     }
                 } catch (error) {
-                    console.error(`❌ Error fetching allowance for spender: ${spender} on token: ${tokenAddress}`, error);
+                    console.error(`❌ Error fetching allowance for ${spender} on ${tokenAddress}:`, error);
                 }
             }
+        } catch (error) {
+            console.error(`❌ Error interacting with contract at ${tokenAddress}:`, error);
         }
-    } catch (error) {
-        console.error("❌ Error in getERC20Approvals function:", error);
     }
 
     return approvals;
 }
-
-

@@ -1,20 +1,17 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
+import ReactDOM from "react-dom/client";  // ✅ Correct import for React 18
+import { BootstrapWrapper } from "./utils/provider";  // ✅ Ensure Chakra is removed
 import { Provider } from "react-redux";
-import { ChakraProvider } from "@chakra-ui/react";
-import App from "./App";  // ✅ Ensure App is correctly imported
 import store from "./store";
-import "bootstrap/dist/css/bootstrap.min.css";
+import App from "./App";
+import "bootstrap/dist/css/bootstrap.min.css";  // ✅ Ensure Bootstrap styles are applied
 
-console.log("✅ React is running");
+const root = ReactDOM.createRoot(document.getElementById("root"));  // ✅ Use React 18 API
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <ChakraProvider>
-        <App />
-      </ChakraProvider>
-    </Provider>
-  </React.StrictMode>
+  <Provider store={store}>
+    <BootstrapWrapper>
+      <App />
+    </BootstrapWrapper>
+  </Provider>
 );

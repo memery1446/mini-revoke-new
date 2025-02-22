@@ -1,4 +1,5 @@
-import { ethers } from "ethers"
+// import { ethers } from "ethers"
+import { JsonRpcProvider } from "ethers";
 import getProvider from "../utils/provider"
 import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis"
 

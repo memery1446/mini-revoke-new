@@ -8,11 +8,11 @@ const web3Slice = createSlice({
     approvals: [],
   },
   reducers: {
-    setAccount: (state, action) => {
-      state.account = action.payload;
-    },
+setAccount: (state, action) => {
+  state.account = action.payload; // ✅ Keep wallet as a string
+},
     setNetwork: (state, action) => {
-      state.network = action.payload;
+      state.network = Number(action.payload);
     },
     resetWeb3: (state) => {
       state.account = null;

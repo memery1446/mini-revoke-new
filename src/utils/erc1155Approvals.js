@@ -1,13 +1,6 @@
-import { ethers } from "ethers"; // Import ethers library
-import getProvider from "../utils/provider"; // Importing the default export
+import { isAddress, Contract } from "ethers"; // ✅ Updated import
+import { getProvider } from "../utils/provider";
 import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis"; // Importing ABIs and addresses
-
-const provider = getProvider(); // Get the provider
-const erc1155Contract = new ethers.Contract(
-    CONTRACT_ADDRESSES.ERC1155, // Ensure this points to the ERC1155 contract address
-    ERC1155_ABI, // Ensure this is the correct ABI for the ERC1155 contract
-    provider
-);
 
 /**
  * Fetch ERC-1155 approvals for a given owner address.
@@ -19,15 +12,16 @@ const getERC1155Approvals = async (ownerAddress) => {
         console.log("🔍 Fetching ERC-1155 approvals for owner:", ownerAddress);
         console.log("ERC1155 Contract Address:", CONTRACT_ADDRESSES.ERC1155);
 
-        const spenderAddresses = [
-            CONTRACT_ADDRESSES.MockSpender
-        ];
+        const provider = await getProvider(); // ✅ Fix: Ensure async provider fetching
+        const erc1155Contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, provider);
+
+        const spenderAddresses = [CONTRACT_ADDRESSES.MockSpender];
 
         let approvals = [];
         for (let spender of spenderAddresses) {
             console.log("Checking approval for spender:", spender);
 
-            if (!ethers.utils.isAddress(ownerAddress) || !ethers.utils.isAddress(spender)) {
+            if (!isAddress(ownerAddress) || !isAddress(spender)) { // ✅ Fix `isAddress`
                 console.error("❌ Invalid address provided:", { ownerAddress, spender });
                 continue;
             }
@@ -57,10 +51,12 @@ const getERC1155Approvals = async (ownerAddress) => {
 async function revokeERC1155Approval(spenderAddress) {
     try {
         console.log("🚨 Revoking approval for ERC-1155 spender:", spenderAddress);
-        const signer = provider.getSigner();
-        const contractWithSigner = erc1155Contract.connect(signer);
 
-        const tx = await contractWithSigner.setApprovalForAll(spenderAddress, false);
+        const provider = await getProvider(); // ✅ Fix: Ensure async provider fetching
+        const signer = await provider.getSigner();
+        const erc1155Contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, signer); // ✅ Fix: Move inside function
+
+        const tx = await erc1155Contract.setApprovalForAll(spenderAddress, false);
         await tx.wait(); // Wait for transaction confirmation
 
         console.log("✅ Approval revoked successfully.");
@@ -79,15 +75,18 @@ async function revokeERC1155Approval(spenderAddress) {
 async function batchRevokeERC1155Approvals(spenderAddresses) {
     try {
         console.log("🚨 Revoking approvals for multiple ERC-1155 spenders:", spenderAddresses);
-        const signer = provider.getSigner();
-        const contractWithSigner = erc1155Contract.connect(signer);
+
+        const provider = await getProvider(); // ✅ Fix: Ensure async provider fetching
+        const signer = await provider.getSigner();
+        const erc1155Contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, signer);
 
         for (let spender of spenderAddresses) {
-            if (!ethers.utils.isAddress(spender)) {
+            if (!isAddress(spender)) {  // ✅ Fix `isAddress`
                 console.error(`❌ Invalid spender address: ${spender}`);
                 continue; // Skip if invalid
             }
-            const tx = await contractWithSigner.setApprovalForAll(spender, false);
+
+            const tx = await erc1155Contract.setApprovalForAll(spender, false);
             await tx.wait(); // Wait for transaction confirmation
         }
 

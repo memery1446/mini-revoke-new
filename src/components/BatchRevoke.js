@@ -1,24 +1,44 @@
 import { ethers } from "ethers";
 
-/** Function to batch revoke ERC-20 approvals */
+/** 
+ * Function to batch revoke ERC-20 approvals.
+ * @param {Array<string>} tokenContracts - List of token contract addresses.
+ * @param {ethers.Signer} signer - The wallet signer executing the transactions.
+ */
 export async function batchRevokeERC20Approvals(tokenContracts, signer) {
-    const abi = ["function approve(address spender, uint256 amount)"];
+    const abi = [
+        "function approve(address spender, uint256 amount)",
+        "function allowance(address owner, address spender) view returns (uint256)"
+    ];
+    const spender = "0x9DBb24B10502aD166c198Dbeb5AB54d2d13AfcFd";
 
-    console.log("⏳ Revoking multiple ERC-20 approvals...");
-
+    console.log("⏳ Starting batch revocation for ERC-20 approvals...");
+    
     for (let tokenAddress of tokenContracts) {
-        if (!ethers.utils.isAddress(tokenAddress)) {
-            console.error(`❌ Invalid token address for revoking: ${tokenAddress}`);
-            continue;
-        }
-
         try {
+            if (!ethers.isAddress(tokenAddress)) {
+                console.error(`❌ Invalid token address: ${tokenAddress}`);
+                continue;
+            }
+
+            console.log(`🔍 Checking allowance for ${tokenAddress}...`);
             const contract = new ethers.Contract(tokenAddress, abi, signer);
-            const tx = await contract.approve("0x43c5df0c482c88cef8005389f64c362ee720a5bc", 0);
+            const owner = await signer.getAddress();
+            const currentAllowance = await contract.allowance(owner, spender);
+
+            if (currentAllowance === 0n) { // ✅ Ethers v6 requires BigInt for comparisons
+                console.log(`🔹 Skipping ${tokenAddress}, already revoked.`);
+                continue;
+            }
+
+            console.log(`🚀 Revoking approval for ${tokenAddress}...`);
+            const tx = await contract.approve(spender, 0);
             await tx.wait();
-            console.log(`✅ Revoked approval for ${tokenAddress}`);
+
+            console.log(`✅ Successfully revoked approval for ${tokenAddress}`);
         } catch (error) {
             console.error(`❌ Error revoking approval for ${tokenAddress}:`, error);
         }
     }
+    console.log("🎉 Batch revocation process complete!");
 }

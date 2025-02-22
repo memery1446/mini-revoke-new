@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setNetwork } from "../store/web3Slice";
-import { ethers } from "ethers";
+import { BrowserProvider } from "ethers";  // ✅ Fixed Ethers v6 import
 
+// 🔗 Define supported networks
 const supportedNetworks = {
   1: { 
     chainId: "0x1", 
@@ -42,35 +43,37 @@ const NetworkSelector = () => {
   const currentNetwork = useSelector((state) => state.web3.network);
   const [isChanging, setIsChanging] = useState(false);
   const [error, setError] = useState(null);
-  
+
   useEffect(() => {
     const checkNetwork = async () => {
       if (window.ethereum) {
         try {
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const provider = new BrowserProvider(window.ethereum);
           const network = await provider.getNetwork();
           if (network.chainId !== currentNetwork) {
-            dispatch(setNetwork(network.chainId));
+            dispatch(setNetwork(Number(network.chainId))); // ✅ Convert BigInt to Number
+
           }
         } catch (err) {
           console.error("Failed to check network:", err);
         }
       }
     };
-    
+
     checkNetwork();
-    
-    // Listen for network changes
+
+    // ✅ Listen for network changes
+    const handleChainChange = (chainId) => {
+      dispatch(setNetwork(parseInt(chainId, 16)));
+    };
+
     if (window.ethereum) {
-      window.ethereum.on('chainChanged', (chainId) => {
-        dispatch(setNetwork(parseInt(chainId, 16)));
-        window.location.reload();
-      });
+      window.ethereum.on("chainChanged", handleChainChange);
     }
-    
+
     return () => {
-      if (window.ethereum && window.ethereum.removeListener) {
-        window.ethereum.removeListener('chainChanged', () => {});
+      if (window.ethereum) {
+        window.ethereum.removeListener("chainChanged", handleChainChange);
       }
     };
   }, [dispatch, currentNetwork]);
@@ -95,7 +98,6 @@ const NetworkSelector = () => {
 
       console.log(`✅ Successfully switched to network ${hexChainId}`);
       return;
-
     } catch (error) {
       console.error("❌ Error switching network:", error);
 
@@ -116,7 +118,6 @@ const NetworkSelector = () => {
           console.log(`✅ Network ${networkDetails.name} added successfully!`);
           await new Promise((resolve) => setTimeout(resolve, 1500));
           await switchNetwork(hexChainId);
-
         } catch (addError) {
           setError("Failed to add the network. Please try manually in MetaMask.");
           console.error("❌ Failed to add network:", addError);
@@ -200,17 +201,9 @@ const NetworkSelector = () => {
             </div>
           </div>
         </div>
-        
-        {currentNetwork === 1337 && (
-          <div className="alert alert-success mt-3" role="alert">
-            <i className="bi bi-info-circle me-2"></i>
-            Connected to Hardhat local network. Your contracts are ready to interact with.
-          </div>
-        )}
       </div>
     </div>
   );
 };
 
 export default NetworkSelector;
-

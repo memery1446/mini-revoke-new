@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
+import { ethers, BrowserProvider } from "ethers";
 
 const NFTApprovals = ({ contractAddress, spender }) => {
   const [approvals, setApprovals] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (contractAddress && spender && window.ethereum) {
@@ -12,30 +14,43 @@ const NFTApprovals = ({ contractAddress, spender }) => {
 
   const fetchApprovals = async () => {
     try {
+      setLoading(true);
+      setError(null);
       console.log("🔍 Fetching NFT approvals for contract:", contractAddress);
-      
-      if (!contractAddress) throw new Error("❌ Contract address is missing!");
-      if (!spender) throw new Error("❌ Spender address is missing!");
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
+      if (!contractAddress || !ethers.isAddress(contractAddress)) {
+        throw new Error("❌ Invalid or missing contract address.");
+      }
+      if (!spender || !ethers.isAddress(spender)) {
+        throw new Error("❌ Invalid or missing spender address.");
+      }
+      if (!window.ethereum) {
+        throw new Error("❌ MetaMask is not installed.");
+      }
+
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
       const owner = await signer.getAddress(); // Get the owner's address
 
-      console.log("Checking isApprovedForAll for:", owner, spender);
+      console.log("📌 Checking isApprovedForAll for:", owner, spender);
 
       const abi = [
         "function isApprovedForAll(address owner, address operator) view returns (bool)",
-        "function getApproved(uint256 tokenId) view returns (address)",
+        "function getApproved(uint256 tokenId) view returns (address)"
       ];
+      
       const contract = new ethers.Contract(contractAddress, abi, signer);
 
       const isApprovedForAll = await contract.isApprovedForAll(owner, spender);
 
-      console.log("✅ NFT Approvals:", isApprovedForAll);
+      console.log("✅ NFT Approval Status:", isApprovedForAll);
       setApprovals(isApprovedForAll);
     } catch (error) {
       console.error("❌ Error fetching approvals:", error);
+      setError(error.message);
       setApprovals(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,12 +60,16 @@ const NFTApprovals = ({ contractAddress, spender }) => {
         <h3 className="mb-0">NFT Approvals</h3>
       </div>
       <div className="card-body">
-        {approvals === null ? (
+        {loading ? (
           <div className="text-center">
             <div className="spinner-border text-primary" role="status">
               <span className="visually-hidden">Loading...</span>
             </div>
-            <p className="mt-2">Fetching...</p>
+            <p className="mt-2">Fetching approvals...</p>
+          </div>
+        ) : error ? (
+          <div className="alert alert-danger">
+            <strong>⚠️ Error:</strong> {error}
           </div>
         ) : (
           <div className="d-flex align-items-center">
@@ -73,4 +92,3 @@ const NFTApprovals = ({ contractAddress, spender }) => {
 };
 
 export default NFTApprovals;
-
