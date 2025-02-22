@@ -8,10 +8,9 @@ import ApprovalDashboard from "./components/ApprovalDashboard.js";
 import NetworkSelector from "./components/NetworkSelector.js";
 import ExistingApprovals from "./components/ExistingApprovals.js";
 import { CONTRACT_ADDRESSES } from "./constants/abis";
-import { getProvider } from "./utils/provider"; // ✅ Correcting provider import
+import { getProvider } from "./utils/provider";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { BootstrapWrapper } from "./utils/provider";  // ✅ Use Bootstrap, not Chakra
-
+import { BootstrapWrapper } from "./utils/provider";
 
 const App = () => {
     const wallet = useSelector((state) => state.web3.account);
@@ -41,8 +40,6 @@ const App = () => {
         }
     };
 
-    const isHardhatNetwork = network === 1337;
-
     return (
         <BootstrapWrapper>
             <div className="container my-5">
@@ -60,14 +57,6 @@ const App = () => {
                             <NetworkSelector />
                         </div>
                     </div>
-
-                    {wallet && !isHardhatNetwork && (
-                        <div className="alert alert-warning">
-                            <strong>⚠️ Warning:</strong> You're connected to network ID {network}, but this app 
-                            is designed to work with Hardhat local network (ID: 1337).
-                            Please switch networks for full functionality.
-                        </div>
-                    )}
                 </header>
 
                 {!wallet ? (
@@ -151,19 +140,25 @@ const App = () => {
                         <div className="col-lg-4">
                             <div className="card mb-4 shadow-sm">
                                 <div className="card-header bg-light">
-                                    <h4 className="card-title mb-0">Network Status</h4>
+                                    <h4 className="card-title mb-0">Connection Status</h4>
                                 </div>
                                 <div className="card-body">
                                     <div className="mb-3">
                                         <span className="fw-bold d-block mb-1">Wallet:</span>
-<code>{wallet && typeof wallet === "string" ? `${wallet.substring(0, 8)}...${wallet.substring(wallet.length - 6)}` : "Not Connected"}</code>
+                                        <code>{wallet ? `${wallet.substring(0, 8)}...${wallet.substring(wallet.length - 6)}` : "Not Connected"}</code>
                                     </div>
-                                    <div className="mb-3">
-                                        <span className="fw-bold d-block mb-1">Network:</span>
-                                        <span className={`badge ${isHardhatNetwork ? 'bg-success' : 'bg-warning'}`}>
-                                            {isHardhatNetwork ? 'Hardhat (1337)' : `Network ID: ${network}`}
-                                        </span>
-                                    </div>
+                                    {network && (
+                                        <div className="mb-3">
+                                            <span className="fw-bold d-block mb-1">Network:</span>
+                                            <span className="badge bg-primary">
+                                                {network === 1 ? "Ethereum Fork" : 
+                                                 network === 56 ? "BSC Fork" :
+                                                 network === 137 ? "Polygon Fork" :
+                                                 network === 97 ? "BSC Testnet Fork" :
+                                                 "Hardhat Local"}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -179,3 +174,4 @@ const App = () => {
 };
 
 export default App;
+
