@@ -1,4 +1,190 @@
 .exit
+console.log("Final ERC1155 Approved:", finalErc1155Approved);
+const finalErc1155Approved = await erc1155.isApprovedForAll(owner.address, MOCK_SPENDER);
+console.log("Final NFT Approved:", finalNftApproved);
+const finalNftApproved = await nft.isApprovedForAll(owner.address, MOCK_SPENDER);
+console.log("Final TK2 Allowance:", finalTk2Allowance);
+console.log("Final TK1 Allowance:", finalTk1Allowance);
+const finalTk2Allowance = await tk2.allowance(owner.address, MOCK_SPENDER);
+const finalTk1Allowance = await tk1.allowance(owner.address, MOCK_SPENDER);
+console.log("\nFinal Verification:");
+await txERC1155.wait();
+const txERC1155 = await erc1155.setApprovalForAll(MOCK_SPENDER, false);
+console.log("\nRevoking ERC1155 approval...");
+await txNFT.wait();
+const txNFT = await nft.setApprovalForAll(MOCK_SPENDER, false);
+console.log("\nRevoking NFT approval...");
+}
+    console.log(`Revoked ERC20 approval for ${tokenAddress}`);
+    await tx.wait();
+    const tx = await contract.approve(MOCK_SPENDER, 0);
+    const contract = new ethers.Contract(tokenAddress, testTokenABI, owner);
+for (let tokenAddress of tokenAddresses) {
+];
+    await tk2.getAddress()
+    await tk1.getAddress(),
+const tokenAddresses = [
+console.log("\nBatch revoking ERC20 tokens...");
+console.log("ERC1155 Approved:", erc1155Approved);
+const erc1155Approved = await erc1155.isApprovedForAll(owner.address, MOCK_SPENDER);
+console.log("NFT Approved:", nftApproved);
+const nftApproved = await nft.isApprovedForAll(owner.address, MOCK_SPENDER);
+console.log("TK2 Allowance:", tk2Allowance);
+console.log("TK1 Allowance:", tk1Allowance);
+const tk2Allowance = await tk2.allowance(owner.address, MOCK_SPENDER);
+const tk1Allowance = await tk1.allowance(owner.address, MOCK_SPENDER);
+console.log("\nVerifying Approvals:");
+await erc1155.setApprovalForAll(MOCK_SPENDER, true);
+console.log("\nSetting ERC1155 Approval...");
+await nft.setApprovalForAll(MOCK_SPENDER, true);
+console.log("\nSetting NFT Approval...");
+await tk2.approve(MOCK_SPENDER, amount);
+await tk1.approve(MOCK_SPENDER, amount);
+console.log("\nSetting ERC20 Approvals...");
+const amount = ethers.parseUnits("100", 18);
+console.log("Mock Spender:", MOCK_SPENDER);
+console.log("Owner:", owner.address);
+console.log("ERC1155:", await erc1155.getAddress());
+console.log("NFT:", await nft.getAddress());
+console.log("TK2:", await tk2.getAddress());
+console.log("TK1:", await tk1.getAddress());
+console.log("\nContract Addresses:");
+const MOCK_SPENDER = "0x9DBb24B10502aD166c198Dbeb5AB54d2d13AfcFd";
+const [owner] = await ethers.getSigners();
+const erc1155 = await ethers.getContractAt(testERC1155ABI, "0x76a999d5f7efde0a300e710e6f52fb0a4b61ad58");
+const nft = await ethers.getContractAt(testNFTABI, "0x084815d1330ecc3ef94193a19ec222c0c73dff2d");
+const tk2 = await ethers.getContractAt(testTokenABI, "0x82bbaa3b0982d88741b275ae1752db85cafe3c65");
+const tk1 = await ethers.getContractAt(testTokenABI, "0xae246e208ea35b3f23de72b697d47044fc594d5f");
+const { abi: testERC1155ABI } = require('./artifacts/contracts/TestERC1155.sol/TestERC1155.json');
+const { abi: testNFTABI } = require('./artifacts/contracts/TestNFT.sol/TestNFT.json');
+const { abi: testTokenABI } = require('./artifacts/contracts/TestToken.sol/TestToken.json');
+.exit
+console.log("TK2 final allowance:", finalTk2Allowance);
+console.log("TK1 final allowance:", finalTk1Allowance);
+console.log("\nFinal Verification:");
+const finalTk2Allowance = await tk2.allowance(owner.address, MOCK_SPENDER);
+const finalTk1Allowance = await tk1.allowance(owner.address, MOCK_SPENDER);
+}
+    console.log(`Revoked approval for ${tokenAddress}`);
+    await tx.wait();
+    const tx = await contract.approve(MOCK_SPENDER, 0);
+    const contract = new ethers.Contract(tokenAddress, testTokenABI, owner);
+for (let tokenAddress of tokenAddresses) {
+console.log("\nStarting batch revocation...");
+];
+    await tk2.getAddress()
+    await tk1.getAddress(),
+const tokenAddresses = [
+}
+    await tk2.approve(MOCK_SPENDER, amount);
+    console.log("Setting TK2 allowance...");
+if (tk2Allowance === 0n) {
+}
+    await tk1.approve(MOCK_SPENDER, amount);
+    console.log("Setting TK1 allowance...");
+if (tk1Allowance === 0n) {
+console.log("TK2:", tk2Allowance);
+console.log("TK1:", tk1Allowance);
+console.log("Current Allowances:");
+const tk2Allowance = await tk2.allowance(owner.address, MOCK_SPENDER);
+const tk1Allowance = await tk1.allowance(owner.address, MOCK_SPENDER);
+const [owner] = await ethers.getSigners();
+const amount = ethers.parseUnits("100", 18);
+const MOCK_SPENDER = "0x9DBb24B10502aD166c198Dbeb5AB54d2d13AfcFd";
+console.log("TK2 address:", await tk2.getAddress());
+console.log("TK1 address:", await tk1.getAddress());
+);
+  "0x82bbaa3b0982d88741b275ae1752db85cafe3c65"
+  testTokenABI,
+const tk2 = await ethers.getContractAt(
+);
+  "0xae246e208ea35b3f23de72b697d47044fc594d5f"
+  testTokenABI,
+const tk1 = await ethers.getContractAt(
+const { abi: testTokenABI } = require('./artifacts/contracts/TestToken.sol/TestToken.json');
+.exit
+await tk2.approve(MOCK_SPENDER, amount);
+await tk1.approve(MOCK_SPENDER, amount);
+const amount = ethers.parseUnits("100", 18);
+const MOCK_SPENDER = "0x9DBb24B10502aD166c198Dbeb5AB54d2d13AfcFd";
+.exit
+console.log("TK2 final allowance:", finalTk2);
+console.log("TK1 final allowance:", finalTk1);
+console.log("\nFinal Verification:");
+const finalTk2 = await tk2.allowance(owner.address, spenderAddress);
+const finalTk1 = await tk1.allowance(owner.address, spenderAddress);
+console.log("TK2 Allowance after revoke:", afterRevokeTk2);
+const afterRevokeTk2 = await tk2.allowance(owner.address, spenderAddress);
+await tk2.approve(spenderAddress, 0);
+console.log("\nRevoking TK2 approval...");
+console.log("TK1 Allowance after revoke:", afterRevokeTk1);
+const afterRevokeTk1 = await tk1.allowance(owner.address, spenderAddress);
+await tk1.approve(spenderAddress, 0);
+console.log("\nRevoking TK1 approval...");
+console.log("Current TK2 Allowance:", currentTk2Allowance);
+console.log("Current TK1 Allowance:", currentTk1Allowance);
+const currentTk2Allowance = await tk2.allowance(owner.address, spenderAddress);
+const currentTk1Allowance = await tk1.allowance(owner.address, spenderAddress);
+console.log("TK2 Allowance for MockSpender:", tk2Allowance);
+const tk2Allowance = await tk2.allowance(owner.address, spenderAddress);
+await tk2.approve(spenderAddress, amount);
+console.log("TK1 Allowance for MockSpender:", tk1Allowance);
+const tk1Allowance = await tk1.allowance(owner.address, spenderAddress);
+await tk1.approve(spenderAddress, amount);
+const amount = ethers.parseUnits("100", 18);
+const spenderAddress = "0x9DBb24B10502aD166c198Dbeb5AB54d2d13AfcFd"; // MockSpender
+console.log("Owner TK1 balance:", ownerTk1Balance);
+const ownerTk1Balance = await tk1.balanceOf(owner.address);
+console.log("Testing with owner:", await owner.getAddress());
+const [owner, addr1] = await ethers.getSigners();
+);
+  "0x82bbaa3b0982d88741b275ae1752db85cafe3c65"
+  testTokenABI,
+const tk2 = await ethers.getContractAt(
+);
+  "0xae246e208ea35b3f23de72b697d47044fc594d5f"
+  testTokenABI,
+const tk1 = await ethers.getContractAt(
+const { abi: testTokenABI } = require('./artifacts/contracts/TestToken.sol/TestToken.json');
+.exit
+console.log("TK1 Allowance after revoke:", newTk1Allowance);
+const newTk1Allowance = await tk1.allowance(owner.address, spenderAddress);
+await tk1.approve(spenderAddress, 0);
+console.log("TK2 is approved:", isApproved2);
+console.log("TK1 is approved:", isApproved1);
+const isApproved2 = (await tk2.allowance(owner.address, spenderAddress)) > 0n;
+const isApproved1 = (await tk1.allowance(owner.address, spenderAddress)) > 0n;
+console.log("TK2 Allowance:", tk2Allowance);
+const tk2Allowance = await tk2.allowance(owner.address, spenderAddress);
+await tk2.approve(spenderAddress, amount);
+console.log("TK1 Allowance:", tk1Allowance);
+const tk1Allowance = await tk1.allowance(owner.address, spenderAddress);
+await tk1.approve(spenderAddress, amount);
+const amount = 100n * (10n ** 18n);
+const spenderAddress = addr1.address;
+console.log("TK2 deployed to:", tk2Address);
+console.log("TK1 deployed to:", tk1Address);
+const tk2Address = await tk2.getAddress();
+const tk1Address = await tk1.getAddress();
+await tk2.waitForDeployment();
+await tk1.waitForDeployment();
+const tk2 = await Token.deploy("Test Token 2", "TK2", 18);
+const tk1 = await Token.deploy("Test Token 1", "TK1", 18);
+const Token = await ethers.getContractFactory("TestToken");
+.exit
+await tk2.deployed();
+await tk1.deployed();
+const tk2 = await Token.deploy("Test Token 2", "TK2");
+const tk1 = await Token.deploy("Test Token 1", "TK1");
+const Token = await ethers.getContractFactory("TestToken");
+await tk2.deployed();
+await tk1.deployed();
+const tk2 = await Token.deploy("Test Token 2", "TK2");
+const tk1 = await Token.deploy("Test Token 1", "TK1");
+const Token = await ethers.getContractFactory("TestToken");
+console.log("Owner address:", await owner.getAddress());
+const [owner, addr1, addr2] = await ethers.getSigners();
+.exit
 console.log("🔍 ERC-1155 Approval Status:", isApproved);
 const isApproved = await erc1155.isApprovedForAll(ownerAddress, spenderAddress);
 console.log("Owner Address:", ownerAddress);

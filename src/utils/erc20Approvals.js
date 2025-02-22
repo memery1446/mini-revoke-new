@@ -22,7 +22,7 @@ export async function getERC20Approvals(tokenContracts, ownerAddress) {
 
     const spenderAddresses = [
         CONTRACT_ADDRESSES.TK1, // ✅ Token contract itself
-        "0x9DBb24B10502aD166c198Dbeb5AB54d2d13AfcFd" // ✅ Test wallet
+        "0x9dbb24b10502ad166c198dbeb5ab54d2d13afcfd" // ✅ Test wallet
     ];
 
     console.log("🔍 Fetching ERC-20 approvals for owner:", ownerAddress);

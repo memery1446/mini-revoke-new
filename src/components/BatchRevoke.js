@@ -1,32 +1,30 @@
-import { ethers } from "ethers";
+import { Contract, getAddress } from "ethers";
+import { getProvider } from "../utils/provider";
+import { TOKEN_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
 
-/** 
- * Function to batch revoke ERC-20 approvals.
+/**
+ * Batch revoke ERC-20 approvals.
  * @param {Array<string>} tokenContracts - List of token contract addresses.
  * @param {ethers.Signer} signer - The wallet signer executing the transactions.
  */
 export async function batchRevokeERC20Approvals(tokenContracts, signer) {
-    const abi = [
-        "function approve(address spender, uint256 amount)",
-        "function allowance(address owner, address spender) view returns (uint256)"
-    ];
-    const spender = "0x9DBb24B10502aD166c198Dbeb5AB54d2d13AfcFd";
+    const spender = CONTRACT_ADDRESSES.MockSpender;
 
     console.log("⏳ Starting batch revocation for ERC-20 approvals...");
     
     for (let tokenAddress of tokenContracts) {
         try {
-            if (!ethers.isAddress(tokenAddress)) {
+            if (!getAddress(tokenAddress)) {
                 console.error(`❌ Invalid token address: ${tokenAddress}`);
                 continue;
             }
 
             console.log(`🔍 Checking allowance for ${tokenAddress}...`);
-            const contract = new ethers.Contract(tokenAddress, abi, signer);
+            const contract = new Contract(tokenAddress, TOKEN_ABI, signer);
             const owner = await signer.getAddress();
             const currentAllowance = await contract.allowance(owner, spender);
 
-            if (currentAllowance === 0n) { // ✅ Ethers v6 requires BigInt for comparisons
+            if (currentAllowance === 0n) {
                 console.log(`🔹 Skipping ${tokenAddress}, already revoked.`);
                 continue;
             }
@@ -42,3 +40,4 @@ export async function batchRevokeERC20Approvals(tokenContracts, signer) {
     }
     console.log("🎉 Batch revocation process complete!");
 }
+

@@ -5,6 +5,7 @@ const NFTApprovals = ({ contractAddress, spender }) => {
   const [approvals, setApprovals] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [revoking, setRevoking] = useState(false);
 
   useEffect(() => {
     if (contractAddress && spender && window.ethereum) {
@@ -30,17 +31,17 @@ const NFTApprovals = ({ contractAddress, spender }) => {
 
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const owner = await signer.getAddress(); // Get the owner's address
+      const owner = await signer.getAddress();
 
       console.log("📌 Checking isApprovedForAll for:", owner, spender);
 
       const abi = [
         "function isApprovedForAll(address owner, address operator) view returns (bool)",
+        "function setApprovalForAll(address operator, bool approved) external",
         "function getApproved(uint256 tokenId) view returns (address)"
       ];
       
       const contract = new ethers.Contract(contractAddress, abi, signer);
-
       const isApprovedForAll = await contract.isApprovedForAll(owner, spender);
 
       console.log("✅ NFT Approval Status:", isApprovedForAll);
@@ -51,6 +52,34 @@ const NFTApprovals = ({ contractAddress, spender }) => {
       setApprovals(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRevoke = async () => {
+    try {
+      setRevoking(true);
+      setError(null);
+
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      const abi = [
+        "function setApprovalForAll(address operator, bool approved) external"
+      ];
+      
+      const contract = new ethers.Contract(contractAddress, abi, signer);
+      
+      console.log("🚨 Revoking approval...");
+      const tx = await contract.setApprovalForAll(spender, false);
+      await tx.wait();
+      
+      console.log("✅ Successfully revoked approval");
+      setApprovals(false);
+    } catch (error) {
+      console.error("❌ Error revoking approval:", error);
+      setError(error.message);
+    } finally {
+      setRevoking(false);
     }
   };
 
@@ -72,11 +101,22 @@ const NFTApprovals = ({ contractAddress, spender }) => {
             <strong>⚠️ Error:</strong> {error}
           </div>
         ) : (
-          <div className="d-flex align-items-center">
-            <span className="me-3">Approval Status:</span>
-            <span className={`badge ${approvals ? 'bg-success' : 'bg-secondary'}`}>
-              {approvals ? 'Approved' : 'Not Approved'}
-            </span>
+          <div className="d-flex align-items-center justify-content-between">
+            <div>
+              <span className="me-3">Approval Status:</span>
+              <span className={`badge ${approvals ? 'bg-success' : 'bg-secondary'}`}>
+                {approvals ? 'Approved' : 'Not Approved'}
+              </span>
+            </div>
+            {approvals && (
+              <button
+                className="btn btn-danger"
+                onClick={handleRevoke}
+                disabled={revoking}
+              >
+                {revoking ? 'Revoking...' : '🚨 Revoke Approval'}
+              </button>
+            )}
           </div>
         )}
       </div>
