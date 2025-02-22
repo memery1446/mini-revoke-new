@@ -1,4 +1,59 @@
 .exit
+await checkBalances();
+}
+    }
+        console.log("No ERC1155 tokens minted yet");
+    } catch (error) {
+        console.log("ERC1155 Token #1 Balance:", erc1155Balance.toString());
+        const erc1155Balance = await erc1155.balanceOf(owner.address, 1);
+    try {
+    console.log("\nChecking ERC1155 Balances:");
+    }
+        console.log("No NFTs minted yet");
+    } catch (error) {
+        console.log("NFT Balance:", nftBalance.toString());
+        const nftBalance = await nft.balanceOf(owner.address);
+    try {
+    console.log("\nChecking NFT Ownership:");
+    console.log("TK2 Balance:", (await tk2.balanceOf(owner.address)).toString());
+    console.log("TK1 Balance:", (await tk1.balanceOf(owner.address)).toString());
+    console.log("\nChecking Token Balances:");
+async function checkBalances() {
+const [owner, addr1, addr2] = await ethers.getSigners();
+const erc1155 = await ethers.getContractAt(testERC1155ABI, "0x76a999d5f7efde0a300e710e6f52fb0a4b61ad58");
+const nft = await ethers.getContractAt(testNFTABI, "0x084815d1330ecc3ef94193a19ec222c0c73dff2d");
+const tk2 = await ethers.getContractAt(testTokenABI, "0x82bbaa3b0982d88741b275ae1752db85cafe3c65");
+const tk1 = await ethers.getContractAt(testTokenABI, "0xae246e208ea35b3f23de72b697d47044fc594d5f");
+const { abi: testERC1155ABI } = require('./artifacts/contracts/TestERC1155.sol/TestERC1155.json');
+const { abi: testNFTABI } = require('./artifacts/contracts/TestNFT.sol/TestNFT.json');
+const { abi: testTokenABI } = require('./artifacts/contracts/TestToken.sol/TestToken.json');
+.exit
+}
+    console.log("No ERC1155 tokens minted yet");
+} catch (error) {
+    console.log("ERC1155 Token #1 Balance:", erc1155Balance);
+    const erc1155Balance = await erc1155.balanceOf(owner.address, 1);
+try {
+console.log("\nChecking ERC1155 Balances:");
+}
+    console.log("No NFTs minted yet");
+} catch (error) {
+    console.log("NFT Balance:", nftBalance);
+    const nftBalance = await nft.balanceOf(owner.address);
+try {
+console.log("\nChecking NFT Ownership:");
+console.log("TK2 Balance:", await tk2.balanceOf(owner.address));
+console.log("TK1 Balance:", await tk1.balanceOf(owner.address));
+console.log("\nChecking Token Balances:");
+const [owner, addr1, addr2] = await ethers.getSigners();
+const erc1155 = await ethers.getContractAt(testERC1155ABI, "0x76a999d5f7efde0a300e710e6f52fb0a4b61ad58");
+const nft = await ethers.getContractAt(testNFTABI, "0x084815d1330ecc3ef94193a19ec222c0c73dff2d");
+const tk2 = await ethers.getContractAt(testTokenABI, "0x82bbaa3b0982d88741b275ae1752db85cafe3c65");
+const tk1 = await ethers.getContractAt(testTokenABI, "0xae246e208ea35b3f23de72b697d47044fc594d5f");
+const { abi: testERC1155ABI } = require('./artifacts/contracts/TestERC1155.sol/TestERC1155.json');
+const { abi: testNFTABI } = require('./artifacts/contracts/TestNFT.sol/TestNFT.json');
+const { abi: testTokenABI } = require('./artifacts/contracts/TestToken.sol/TestToken.json');
+.exit
 console.log("Final ERC1155 Approved:", finalErc1155Approved);
 const finalErc1155Approved = await erc1155.isApprovedForAll(owner.address, MOCK_SPENDER);
 console.log("Final NFT Approved:", finalNftApproved);

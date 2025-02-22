@@ -39,10 +39,28 @@ async function main() {
   await tk2.mint(deployer.address, hre.ethers.parseUnits("5000", 18), gasOverrides);
   console.log(`Minted 5000 TK1 and TK2 to Deployer: ${deployer.address}`);
 
+  // Mint NFTs to the deployer
+  await testNFT.safeMint(deployer.address, gasOverrides);
+  await testNFT.safeMint(deployer.address, gasOverrides);
+  await testNFT.safeMint(deployer.address, gasOverrides);
+  console.log(`Minted 3 NFTs to Deployer: ${deployer.address}`);
+
+  // Mint ERC1155 tokens to the deployer
+  await testERC1155.mint(deployer.address, 1, 100, gasOverrides);
+  console.log(`Minted 100 ERC1155 tokens (ID 1) to Deployer: ${deployer.address}`);
+
   // Now transfer tokens to other accounts
   await tk1.transfer(account1.address, hre.ethers.parseUnits("1000", 18), gasOverrides);
   await tk2.transfer(account1.address, hre.ethers.parseUnits("1000", 18), gasOverrides);
   console.log(`Sent 1000 TK1 and TK2 to ${account1.address}`);
+
+  // Transfer an NFT to account1
+  await testNFT.transferFrom(deployer.address, account1.address, 0, gasOverrides);
+  console.log(`Transferred NFT (ID 0) to ${account1.address}`);
+
+  // Transfer ERC1155 tokens to account1
+  await testERC1155.safeTransferFrom(deployer.address, account1.address, 1, 50, "0x", gasOverrides);
+  console.log(`Transferred 50 ERC1155 tokens (ID 1) to ${account1.address}`);
 
   console.log("✅ Deployment successful!");
 }
