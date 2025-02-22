@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setNetwork } from "../store/web3Slice";
-import { BrowserProvider } from "ethers";  // ✅ Fixed Ethers v6 import
+import { BrowserProvider } from "ethers";
 
-// 🔗 Define supported networks
 const supportedNetworks = {
   1: { 
     chainId: "0x1", 
@@ -12,7 +11,7 @@ const supportedNetworks = {
     currency: { name: "Ether", symbol: "ETH", decimals: 18 } 
   },
   1337: {
-    chainId: "0x539", // 1337 in hex
+    chainId: "0x539", 
     name: "Hardhat Local", 
     rpcUrl: "http://127.0.0.1:8545", 
     currency: { name: "Ether", symbol: "ETH", decimals: 18 },
@@ -41,113 +40,19 @@ const supportedNetworks = {
 const NetworkSelector = () => {
   const dispatch = useDispatch();
   const currentNetwork = useSelector((state) => state.web3.network);
-  const [isChanging, setIsChanging] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const checkNetwork = async () => {
-      if (window.ethereum) {
-        try {
-          const provider = new BrowserProvider(window.ethereum);
-          const network = await provider.getNetwork();
-          if (network.chainId !== currentNetwork) {
-            dispatch(setNetwork(Number(network.chainId))); // ✅ Convert BigInt to Number
-
-          }
-        } catch (err) {
-          console.error("Failed to check network:", err);
-        }
-      }
-    };
-
-    checkNetwork();
-
-    // ✅ Listen for network changes
-    const handleChainChange = (chainId) => {
-      dispatch(setNetwork(parseInt(chainId, 16)));
-    };
-
-    if (window.ethereum) {
-      window.ethereum.on("chainChanged", handleChainChange);
-    }
-
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener("chainChanged", handleChainChange);
-      }
-    };
-  }, [dispatch, currentNetwork]);
-
-  const switchNetwork = async (hexChainId) => {
-    const networkDetails = Object.values(supportedNetworks).find(net => net.chainId === hexChainId);
-    
-    if (!networkDetails) {
-      setError("Network not supported. Please add it manually in MetaMask.");
-      return;
-    }
-
-    try {
-      setIsChanging(true);
-      setError(null);
-      console.log(`🔄 Attempting to switch to chain: ${hexChainId}`);
-
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: hexChainId }],
-      });
-
-      console.log(`✅ Successfully switched to network ${hexChainId}`);
-      return;
-    } catch (error) {
-      console.error("❌ Error switching network:", error);
-
-      if (error.code === 4902) {
-        console.log(`➕ Adding network: ${networkDetails.name}`);
-        try {
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: networkDetails.chainId,
-              chainName: networkDetails.name,
-              rpcUrls: [networkDetails.rpcUrl],
-              nativeCurrency: networkDetails.currency,
-              blockExplorerUrls: networkDetails.explorer ? [networkDetails.explorer] : [],
-            }],
-          });
-
-          console.log(`✅ Network ${networkDetails.name} added successfully!`);
-          await new Promise((resolve) => setTimeout(resolve, 1500));
-          await switchNetwork(hexChainId);
-        } catch (addError) {
-          setError("Failed to add the network. Please try manually in MetaMask.");
-          console.error("❌ Failed to add network:", addError);
-        }
-      } else {
-        setError(`Failed to switch network: ${error.message}`);
-      }
-    } finally {
-      setIsChanging(false);
-    }
-  };
-
-  const getNetworkTag = (id) => {
-    const network = supportedNetworks[id];
-    if (!network) return null;
-    
-    if (network.isLocalNetwork) {
-      return <span className="badge bg-warning ms-2">Local</span>;
-    } else if (id === 1) {
-      return <span className="badge bg-primary ms-2">Mainnet</span>;
-    } else {
-      return <span className="badge bg-secondary ms-2">Testnet</span>;
-    }
+  const [loading, setLoading] = useState(false);
+  
+  const switchNetwork = async (chainId) => {
+    console.warn(`⚠️ Simulating network switch to ${chainId} inside Hardhat.`);
+    dispatch(setNetwork(parseInt(chainId, 10)));
+    console.log(`✅ Now using Hardhat fork as network ${chainId}.`);
   };
 
   const getCurrentNetworkName = () => {
-    return currentNetwork && supportedNetworks[currentNetwork] 
+    return currentNetwork && supportedNetworks[currentNetwork]
       ? supportedNetworks[currentNetwork].name
-      : currentNetwork 
-        ? `Unknown Network (ID: ${currentNetwork})` 
+      : currentNetwork
+        ? `Unknown Network (ID: ${currentNetwork})`
         : "Not Connected";
   };
 
@@ -161,18 +66,10 @@ const NetworkSelector = () => {
             <span className={`badge ${currentNetwork === 1337 ? 'bg-success' : 'bg-secondary'}`}>
               {getCurrentNetworkName()}
             </span>
-            {getNetworkTag(currentNetwork)}
           </div>
         </div>
       </div>
       <div className="card-body">
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            {error}
-            <button type="button" className="btn-close float-end" onClick={() => setError(null)}></button>
-          </div>
-        )}
-        
         <div className="row align-items-center">
           <div className="col-md-4">
             <label htmlFor="networkSelector" className="form-label">Switch Network:</label>
@@ -183,8 +80,7 @@ const NetworkSelector = () => {
                 id="networkSelector"
                 className="form-select"
                 onChange={(e) => switchNetwork(e.target.value)}
-                value={currentNetwork ? supportedNetworks[currentNetwork]?.chainId : ""}
-                disabled={isChanging}
+                value={currentNetwork && supportedNetworks[String(currentNetwork)] ? supportedNetworks[String(currentNetwork)].chainId : ""}
               >
                 <option value="" disabled>Select a network</option>
                 {Object.entries(supportedNetworks).map(([id, net]) => (
@@ -193,11 +89,6 @@ const NetworkSelector = () => {
                   </option>
                 ))}
               </select>
-              {isChanging && (
-                <div className="spinner-border spinner-border-sm ms-2 mt-2" role="status">
-                  <span className="visually-hidden">Switching...</span>
-                </div>
-              )}
             </div>
           </div>
         </div>

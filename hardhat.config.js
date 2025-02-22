@@ -9,31 +9,26 @@ require("@nomicfoundation/hardhat-chai-matchers");
 const INFURA_URL = process.env.INFURA_URL || "https://mainnet.infura.io/v3/873f1dfbc0294062843aadbe3d6afc9e";
 
 module.exports = {
-  solidity: "0.8.20",
   networks: {
     hardhat: {
-      chainId: 1337,
       forking: {
-        url: INFURA_URL,
-        blockNumber: process.env.FORK_BLOCK_NUMBER ? parseInt(process.env.FORK_BLOCK_NUMBER) : undefined,
+        url: "https://mainnet.infura.io/v3/873f1dfbc0294062843aadbe3d6afc9e",
+        enabled: true,
       },
+      chainId: 1337, // ✅ Keep this for consistency with MetaMask
     },
-    localhost: {
-      url: "http://127.0.0.1:8545/",
-      chainId: 1337,
+    polygon: {
+      url: "https://polygon-mainnet.infura.io/v3/873f1dfbc0294062843aadbe3d6afc9e",
+      chainId: 137,
     },
-  },
-  paths: {
-    artifacts: "./src/artifacts",
-  },
-  mocha: {
-    timeout: 200000,
-  },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || "",
-  },
-  gasReporter: {
-    enabled: process.env.GAS_REPORT === "true",
-    currency: "USD",
+    bsc: {
+      url: "https://bsc-dataseed.binance.org/",
+      chainId: 56,
+    },
+    arbitrum: {
+      url: "https://arb1.arbitrum.io/rpc",
+      chainId: 42161,
+    },
   },
 };
+

@@ -11,9 +11,9 @@ const web3Slice = createSlice({
 setAccount: (state, action) => {
   state.account = action.payload; // ✅ Keep wallet as a string
 },
-    setNetwork: (state, action) => {
-      state.network = Number(action.payload);
-    },
+setNetwork: (state, action) => {
+  state.network = parseInt(action.payload, 10);  // ✅ Ensure it's always a number
+},
     resetWeb3: (state) => {
       state.account = null;
       state.network = null;
