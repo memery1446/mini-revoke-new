@@ -43,9 +43,10 @@ const NetworkSelector = () => {
   const [loading, setLoading] = useState(false);
   
   const switchNetwork = async (chainId) => {
-    console.warn(`⚠️ Simulating network switch to ${chainId} inside Hardhat.`);
-    dispatch(setNetwork(parseInt(chainId, 10)));
-    console.log(`✅ Now using Hardhat fork as network ${chainId}.`);
+    const networkId = parseInt(chainId, 10);
+    console.warn(`⚠️ Simulating network switch to ${supportedNetworks[networkId].name}`);
+    dispatch(setNetwork(networkId));
+    console.log(`✅ Now using ${supportedNetworks[networkId].name}`);
   };
 
   const getCurrentNetworkName = () => {
@@ -80,11 +81,11 @@ const NetworkSelector = () => {
                 id="networkSelector"
                 className="form-select"
                 onChange={(e) => switchNetwork(e.target.value)}
-                value={currentNetwork && supportedNetworks[String(currentNetwork)] ? supportedNetworks[String(currentNetwork)].chainId : ""}
+                value={currentNetwork || ""}
               >
                 <option value="" disabled>Select a network</option>
                 {Object.entries(supportedNetworks).map(([id, net]) => (
-                  <option key={id} value={net.chainId}>
+                  <option key={id} value={id}>
                     {net.name} {net.isLocalNetwork ? '(Local)' : ''}
                   </option>
                 ))}
