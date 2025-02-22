@@ -54,9 +54,9 @@ async function main() {
   await tk2.transfer(account1.address, hre.ethers.parseUnits("1000", 18), gasOverrides);
   console.log(`Sent 1000 TK1 and TK2 to ${account1.address}`);
 
-  // Transfer an NFT to account1
-  await testNFT.transferFrom(deployer.address, account1.address, 0, gasOverrides);
-  console.log(`Transferred NFT (ID 0) to ${account1.address}`);
+  // Transfer an NFT to account1 (use a valid token ID, e.g., 1)
+  await testNFT.transferFrom(deployer.address, account1.address, 1, gasOverrides);
+  console.log(`Transferred NFT (ID 1) to ${account1.address}`);
 
   // Transfer ERC1155 tokens to account1
   await testERC1155.safeTransferFrom(deployer.address, account1.address, 1, 50, "0x", gasOverrides);

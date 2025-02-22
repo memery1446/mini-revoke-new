@@ -24,6 +24,7 @@ contract TestNFT is ERC721Enumerable, Ownable {
      */
     function batchRevokeApprovals(uint256[] memory tokenIds) external onlyOwner {
         for (uint256 i = 0; i < tokenIds.length; i++) {
+            require(tokenIds[i] != 0, "TestNFT: Token ID 0 is reserved and cannot be used");
             require(ownerOf(tokenIds[i]) == msg.sender, "Not owner of token");
             approve(address(0), tokenIds[i]); // ✅ Revoke approval by setting it to Zero Address
             emit ApprovalRevoked(tokenIds[i], msg.sender);
@@ -35,6 +36,7 @@ contract TestNFT is ERC721Enumerable, Ownable {
      */
     function safeMint(address to) public onlyOwner {
         uint256 tokenId = totalSupply() + 1; // Automatically assign the next token ID
+        require(tokenId != 0, "TestNFT: Token ID 0 is reserved and cannot be used");
         _safeMint(to, tokenId);
     }
 
@@ -43,3 +45,4 @@ contract TestNFT is ERC721Enumerable, Ownable {
      */
     event ApprovalRevoked(uint256 indexed tokenId, address indexed owner);
 }
+
