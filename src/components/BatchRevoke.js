@@ -41,3 +41,4 @@ export async function batchRevokeERC20Approvals(tokenContracts, signer) {
     console.log("🎉 Batch revocation process complete!");
 }
 
+export default BatchRevoke;
