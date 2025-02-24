@@ -18,13 +18,17 @@ const App = () => {
     }, [wallet, network]);
 
     // ✅ Toggle selection of approvals for batch revoke
-    const toggleApprovalSelection = (approval) => {
-        setSelectedApprovals((prev) =>
-            prev.some((a) => a.id === approval.id)
-                ? prev.filter((a) => a.id !== approval.id) // Remove if already selected
-                : [...prev, approval] // Add if not selected
-        );
-    };
+const toggleApprovalSelection = (approval) => {
+    setSelectedApprovals((prev) => {
+        const updated = prev.some((a) => a.id === approval.id)
+            ? prev.filter((a) => a.id !== approval.id) // Remove if already selected
+            : [...prev, approval]; // Add if not selected
+
+        console.log("✅ Updated Selected Approvals:", updated);
+        return updated;
+    });
+};
+
 
     return (
         <BootstrapWrapper>
