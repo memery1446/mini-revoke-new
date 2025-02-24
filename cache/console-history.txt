@@ -1,0 +1,10 @@
+.exit
+const tk1 = await hre.ethers.getContractAt("TestToken", "0xYour_TK1_Address");
+const hre = require("hardhat");
+.exit
+const tk1 = await hre.ethers.getContractAt("TestToken", "0xYour_TK1_Address");
+const hre = require("hardhat");
+console.log(await tk1.allowance(deployer.address, "0xYour_MockSpender_Address"));
+await tk1.approve("0xYour_MockSpender_Address", ethers.parseUnits("100", 18));
+const deployer = await ethers.provider.getSigner();
+const tk1 = await ethers.getContractAt("TestToken", "0xYour_TK1_Address");
