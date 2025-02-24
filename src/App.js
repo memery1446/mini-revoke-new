@@ -1,19 +1,30 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import WalletConnect from "./components/WalletConnect.js";
 import NetworkSelector from "./components/NetworkSelector.js";
 import ExistingApprovals from "./components/ExistingApprovals.js";
+import BatchRevoke from "./components/BatchRevoke.js"; // ✅ Add Batch Revoke Component
 import "bootstrap/dist/css/bootstrap.min.css";
 import { BootstrapWrapper } from "./utils/provider";
 
 const App = () => {
     const wallet = useSelector((state) => state.web3.account);
     const network = useSelector((state) => state.web3.network);
+    const [selectedApprovals, setSelectedApprovals] = useState([]); // ✅ Track selected approvals
 
     useEffect(() => {
         console.log("Wallet:", wallet);
         console.log("Network:", network);
     }, [wallet, network]);
+
+    // ✅ Toggle selection of approvals for batch revoke
+    const toggleApprovalSelection = (approval) => {
+        setSelectedApprovals((prev) =>
+            prev.some((a) => a.id === approval.id)
+                ? prev.filter((a) => a.id !== approval.id) // Remove if already selected
+                : [...prev, approval] // Add if not selected
+        );
+    };
 
     return (
         <BootstrapWrapper>
@@ -23,9 +34,7 @@ const App = () => {
                     <h1 className="text-primary fw-bold">
                         <span className="me-2">🔒</span> Mini Revoke Cash
                     </h1>
-                    <p className="text-muted">
-                        Review and revoke token approvals to protect your assets.
-                    </p>
+                    <p className="text-muted">Review and revoke token approvals to protect your assets.</p>
                 </header>
 
                 {/* 🔹 Connection Section */}
@@ -56,11 +65,18 @@ const App = () => {
                         </div>
                     </div>
                 ) : (
-                    /* 🔹 Categorized Approval List (Everything in One Place) */
+                    /* 🔹 Categorized Approval List with Batch Revoke */
                     <div className="row mt-4">
                         <div className="col-lg-12">
-                            <ExistingApprovals />
+                            <ExistingApprovals onToggleSelect={toggleApprovalSelection} />
                         </div>
+                        
+                        {/* 🔹 Batch Revoke Section (Only Visible When Selections Exist) */}
+                        {selectedApprovals.length > 0 && (
+                            <div className="col-lg-12 mt-3">
+                                <BatchRevoke selectedApprovals={selectedApprovals} setSelectedApprovals={setSelectedApprovals} />
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -74,3 +90,5 @@ const App = () => {
 };
 
 export default App;
+
+
