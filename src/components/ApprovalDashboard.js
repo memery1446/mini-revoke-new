@@ -28,48 +28,31 @@ const ApprovalDashboard = () => {
     }
   }, [wallet]);
 
-  const fetchApprovals = async () => {
+const fetchApprovals = async () => {
     setIsLoading(true);
     console.log("🔄 Fetching approvals...");
     try {
-      const provider = await getProvider();
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
+        const provider = await getProvider();
+        const signer = await provider.getSigner();
+        const userAddress = await signer.getAddress();
+        console.log("🔍 Wallet Address:", userAddress);
 
-      console.log("🔍 Wallet Address:", userAddress);
+        const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+        const erc20Approvals = (await getERC20Approvals(tokenContracts, userAddress)) || [];
 
-      const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+        console.log("✅ ERC-20 Approvals from fetchApprovals():", erc20Approvals);
 
-      console.log("📡 Fetching ERC-20 approvals...");
-      const erc20Approvals = (await getERC20Approvals(tokenContracts, userAddress)) || [];
-      console.log("✅ ERC-20 Approvals:", erc20Approvals);
+        setApprovals(erc20Approvals);
+        console.log("🟢 Approvals state after update:", approvals); // This should NOT be empty
 
-      let erc721Approvals = [];
-      try {
-        console.log("📡 Fetching ERC-721 approvals...");
-        const erc721Result = await getERC721Approvals(userAddress, contractAddresses.erc721);
-        console.log("✅ ERC-721 approval result:", erc721Result);
+    } catch (error) {
+        console.error("❌ Error fetching approvals:", error);
+        setApprovals([]);
+    } finally {
+        setIsLoading(false);
+    }
+};
 
-        if (typeof erc721Result === 'boolean') {
-          erc721Approvals = erc721Result
-            ? [{ isApproved: true, spender: CONTRACT_ADDRESSES.MockSpender }]
-            : [];
-        } else if (Array.isArray(erc721Result)) {
-          erc721Approvals = erc721Result;
-        }
-      } catch (err) {
-        console.error("❌ Error getting ERC-721 approvals:", err);
-      }
-
-      let erc1155Approvals = [];
-      try {
-        console.log("📡 Fetching ERC-1155 approvals...");
-        const result = (await getERC1155Approvals(userAddress)) || [];
-        erc1155Approvals = Array.isArray(result) ? result : [];
-        console.log("✅ ERC-1155 Approvals:", erc1155Approvals);
-      } catch (err) {
-        console.error("❌ Error getting ERC-1155 approvals:", err);
-      }
 
       const newApprovals = [
         ...erc20Approvals.map((a) => ({
@@ -149,10 +132,10 @@ const ApprovalDashboard = () => {
 
   return (
     <div className="card shadow-sm mb-4">
-      <div className="card-header bg-light">
-        <h2 className="card-title">Approval Dashboard</h2>
-        <button className="btn btn-secondary" onClick={fetchApprovals}>🔄 Refresh Approvals</button>
-      </div>
+<div className="card-header bg-light d-flex justify-content-between align-items-center">
+  <h2 className="card-title">Approval Dashboard</h2>
+  <button className="btn btn-secondary" onClick={fetchApprovals}>🔄 Refresh Approvals</button>
+</div>
       <div className="card-body">
         {isLoading ? (
           <div className="text-center py-4">
