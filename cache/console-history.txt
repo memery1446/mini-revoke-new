@@ -1,4 +1,83 @@
 .exit
+console.log(`ERC-20 Allowances After Batch Revoke: TK1 = ${allowance1After.toString()}, TK2 = ${allowance2After.toString()}`);
+const allowance2After = await token2.allowance(signer.address, spender);
+const allowance1After = await token1.allowance(signer.address, spender);
+console.log("🎉 Batch revocation complete!");
+}
+    }
+        console.log(`🔹 Skipping ${tokenAddress}, already revoked.`);
+    } else {
+        console.log(`✅ Revoked approval for ${tokenAddress}`);
+        await tx.wait();
+        const tx = await contract.approve(spender, 0);
+        console.log(`🚀 Revoking approval for ${tokenAddress}...`);
+    if (allowance > 0) {
+    const allowance = await contract.allowance(signer.address, spender);
+    const contract = await ethers.getContractAt("ERC20", tokenAddress, signer);
+for (let tokenAddress of tokenContracts) {
+console.log("⏳ Starting batch revocation...");
+const tokenContracts = ["0x483FA7f61170c19276B3DbB399e735355Ae7676a", "0xE7B9Ede68593354aff96690600D008A40519D3CF"];
+console.log(`ERC-20 Allowances Before Batch Revoke: TK1 = ${allowance1.toString()}, TK2 = ${allowance2.toString()}`);
+const allowance2 = await token2.allowance(signer.address, spender);
+const allowance1 = await token1.allowance(signer.address, spender);
+console.log("✅ Approved 1000 TK1 & 2000 TK2 for batch revoke testing.");
+await token2.approve(spender, ethers.parseUnits("2000", 18));
+await token1.approve(spender, ethers.parseUnits("1000", 18));
+console.log("✅ Tokens reloaded!");
+const token2 = await ethers.getContractAt("ERC20", "0xE7B9Ede68593354aff96690600D008A40519D3CF", signer);
+const token1 = await ethers.getContractAt("ERC20", "0x483FA7f61170c19276B3DbB399e735355Ae7676a", signer);
+console.log("✅ Spender Address:", spender);
+const spender = "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608";
+console.log("✅ Signer Address:", signer.address);
+const [signer] = await ethers.getSigners();
+npx hardhat console --network sepolia
+.exit
+console.log(`ERC-20 Allowances Before Batch Revoke: TK1 = ${allowance1.toString()}, TK2 = ${allowance2.toString()}`);
+const allowance2 = await token2.allowance(signer.address, spender);
+const allowance1 = await token1.allowance(signer.address, spender);
+console.log("✅ Approved 1000 TK1 & 2000 TK2 for batch revoke testing.");
+await token2.approve(spender, ethers.parseUnits("2000", 18));
+await token1.approve(spender, ethers.parseUnits("1000", 18));
+console.log("✅ Tokens and spender reloaded!");
+const spender = "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608";
+const token2 = await ethers.getContractAt("ERC20", "0xE7B9Ede68593354aff96690600D008A40519D3CF", signer);
+const token1 = await ethers.getContractAt("ERC20", "0x483FA7f61170c19276B3DbB399e735355Ae7676a", signer);
+console.log("✅ Signer Address:", signer.address);
+const [signer] = await ethers.getSigners();
+console.log(`ERC-20 Allowances Before Batch Revoke: TK1 = ${allowance1.toString()}, TK2 = ${allowance2.toString()}`);
+const allowance2 = await token2.allowance(signer.address, spender);
+const allowance1 = await token1.allowance(signer.address, spender);
+console.log("✅ Approved 1000 TK1 & 2000 TK2 for batch revoke testing.");
+await token2.approve(spender, ethers.parseUnits("2000", 18));
+await token1.approve(spender, ethers.parseUnits("1000", 18));
+console.log("⏳ Approving multiple tokens...");
+const spender = "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608";
+const token2 = await ethers.getContractAt("ERC20", "0xE7B9Ede68593354aff96690600D008A40519D3CF", signer);
+.exit
+console.log("Allowance After Revoke:", newAllowanceAfterRevoke.toString());
+const newAllowanceAfterRevoke = await token1.allowance(signer.address, spender);
+console.log("✅ Signer Address:", signer.address);
+const [signer] = await ethers.getSigners();
+console.log("Allowance After Revoke:", allowanceAfterRevoke.toString());
+const allowanceAfterRevoke = await token1.allowance(signer.address, spender);
+const [signer] = await ethers.getSigners(); // Re-define signer
+console.log("Allowance After Revoke:", allowanceAfterRevoke.toString());
+const allowanceAfterRevoke = await token1.allowance(signer.address, spender);
+console.log("✅ Revoked approval for MockSpender");
+await txRevoke.wait();
+ const txRevoke = await token1.approve(spender, 0);
+console.log("Allowance After Approval:", allowance.toString());
+const allowance = await token1.allowance("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c", spender);
+console.log("✅ Approved 1000 TK1 to MockSpender");
+await tx.wait();
+const tx = await token1.approve(spender, ethers.parseUnits("1000", 18));
+const spender = "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608";
+console.log("Your Balance:", balance.toString());
+const balance = await token1.balanceOf("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c");
+console.log("Total Supply:", totalSupply.toString());
+const totalSupply = await token1.totalSupply();
+const token1 = await ethers.getContractAt("ERC20", "0x483FA7f61170c19276B3DbB399e735355Ae7676a");
+.exit
 console.log(`ERC-20 Allowances After Direct Approval: TK1 = ${allowance1.toString()}, TK2 = ${allowance2.toString()}`);
 const allowance2 = await token2.allowance(signer.address, "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608");
 const allowance1 = await token1.allowance(signer.address, "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608");

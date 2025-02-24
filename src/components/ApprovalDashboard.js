@@ -4,8 +4,7 @@ import React, { useState, useEffect } from "react";
 import { batchRevokeERC20Approvals } from "../components/BatchRevoke";
 import { batchRevokeERC721Approvals } from "../utils/nftApprovals";
 import { batchRevokeERC1155Approvals } from "../utils/erc1155Approvals";
-import { ethers } from "ethers";
-import { TOKEN_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
+import { CONTRACT_ADDRESSES } from "../constants/abis";
 import { getERC20Approvals } from "../utils/erc20Approvals";
 import { getERC721Approvals } from "../utils/nftApprovals";
 import { getERC1155Approvals } from "../utils/erc1155Approvals";
@@ -35,15 +34,21 @@ const ApprovalDashboard = () => {
     try {
       const provider = await getProvider();
       const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
+
+      console.log("🔍 Wallet Address:", userAddress);
 
       const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
-      const erc20Approvals = (await getERC20Approvals(tokenContracts, wallet)) || [];
+
+      console.log("📡 Fetching ERC-20 approvals...");
+      const erc20Approvals = (await getERC20Approvals(tokenContracts, userAddress)) || [];
+      console.log("✅ ERC-20 Approvals:", erc20Approvals);
 
       let erc721Approvals = [];
       try {
-const signerAddress = await signer.getAddress();
-const erc721Result = await getERC721Approvals(signerAddress, contractAddresses.erc721);
-        console.log("ERC-721 approval result:", erc721Result);
+        console.log("📡 Fetching ERC-721 approvals...");
+        const erc721Result = await getERC721Approvals(userAddress, contractAddresses.erc721);
+        console.log("✅ ERC-721 approval result:", erc721Result);
 
         if (typeof erc721Result === 'boolean') {
           erc721Approvals = erc721Result
@@ -53,18 +58,20 @@ const erc721Result = await getERC721Approvals(signerAddress, contractAddresses.e
           erc721Approvals = erc721Result;
         }
       } catch (err) {
-        console.error("Error getting ERC-721 approvals:", err);
+        console.error("❌ Error getting ERC-721 approvals:", err);
       }
 
       let erc1155Approvals = [];
       try {
-        const result = (await getERC1155Approvals(wallet)) || [];
+        console.log("📡 Fetching ERC-1155 approvals...");
+        const result = (await getERC1155Approvals(userAddress)) || [];
         erc1155Approvals = Array.isArray(result) ? result : [];
+        console.log("✅ ERC-1155 Approvals:", erc1155Approvals);
       } catch (err) {
-        console.error("Error getting ERC-1155 approvals:", err);
+        console.error("❌ Error getting ERC-1155 approvals:", err);
       }
 
-      setApprovals([
+      const newApprovals = [
         ...erc20Approvals.map((a) => ({
           ...a,
           type: "ERC-20",
@@ -80,7 +87,11 @@ const erc721Result = await getERC721Approvals(signerAddress, contractAddresses.e
           type: "ERC-1155",
           id: `erc1155-${a.spender || "unknown"}`
         })),
-      ]);
+      ];
+
+      console.log("🟢 Updated Approvals:", newApprovals);
+      setApprovals(newApprovals);
+
     } catch (error) {
       console.error("❌ Error fetching approvals:", error);
       setApprovals([]);
@@ -140,6 +151,7 @@ const erc721Result = await getERC721Approvals(signerAddress, contractAddresses.e
     <div className="card shadow-sm mb-4">
       <div className="card-header bg-light">
         <h2 className="card-title">Approval Dashboard</h2>
+        <button className="btn btn-secondary" onClick={fetchApprovals}>🔄 Refresh Approvals</button>
       </div>
       <div className="card-body">
         {isLoading ? (
@@ -167,15 +179,11 @@ const erc721Result = await getERC721Approvals(signerAddress, contractAddresses.e
                     approvals.map((approval, index) => (
                       <tr key={index}>
                         <td>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              checked={selectedApprovals.some((a) => a.id === approval.id)}
-                              onChange={() => handleSelectApproval(approval)}
-                              id={`approval-${index}`}
-                            />
-                          </div>
+                          <input
+                            type="checkbox"
+                            checked={selectedApprovals.some((a) => a.id === approval.id)}
+                            onChange={() => handleSelectApproval(approval)}
+                          />
                         </td>
                         <td>{approval.contract}</td>
                         <td>{approval.type}</td>
@@ -184,21 +192,11 @@ const erc721Result = await getERC721Approvals(signerAddress, contractAddresses.e
                       </tr>
                     ))
                   ) : (
-                    <tr>
-                      <td colSpan="5" className="text-center py-4">No approvals found.</td>
-                    </tr>
+                    <tr><td colSpan="5" className="text-center py-4">No approvals found.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
-
-            {selectedApprovals.length > 0 && (
-              <div className="d-flex justify-content-end mt-3">
-                <button className="btn btn-warning" onClick={handleBatchRevoke} disabled={isLoading}>
-                  🚨 Revoke Selected Approvals ({selectedApprovals.length})
-                </button>
-              </div>
-            )}
           </>
         )}
       </div>
@@ -207,3 +205,4 @@ const erc721Result = await getERC721Approvals(signerAddress, contractAddresses.e
 };
 
 export default ApprovalDashboard;
+
