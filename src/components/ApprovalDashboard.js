@@ -31,6 +31,7 @@ const ApprovalDashboard = () => {
 const fetchApprovals = async () => {
     setIsLoading(true);
     console.log("🔄 Fetching approvals...");
+
     try {
         const provider = await getProvider();
         const signer = await provider.getSigner();
@@ -38,12 +39,19 @@ const fetchApprovals = async () => {
         console.log("🔍 Wallet Address:", userAddress);
 
         const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
-        const erc20Approvals = (await getERC20Approvals(tokenContracts, userAddress)) || [];
 
-        console.log("✅ ERC-20 Approvals from fetchApprovals():", erc20Approvals);
+        console.log("📡 Fetching ERC-20 approvals...");
+        const erc20Approvals = (await getERC20Approvals(tokenContracts, userAddress)) || [];
+        console.log("✅ ERC-20 Approvals Fetched (Before State Update):", erc20Approvals);
 
         setApprovals(erc20Approvals);
         console.log("🟢 Approvals state after update:", approvals); // This should NOT be empty
+
+        // Force UI re-render
+        setTimeout(() => {
+            console.log("🔄 Refreshing UI...");
+            window.location.reload();
+        }, 2000);
 
     } catch (error) {
         console.error("❌ Error fetching approvals:", error);
@@ -52,6 +60,7 @@ const fetchApprovals = async () => {
         setIsLoading(false);
     }
 };
+
 
 
       const newApprovals = [

@@ -65,11 +65,16 @@ const ExistingApprovals = ({ onToggleSelect }) => {
                 console.log("ℹ️ No approvals found.");
             }
 
+            // ✅ Ensure state updates BEFORE Redux dispatch
+            console.log("🟢 Approvals before updating state:", fetchedApprovals);
+            setFetchedApprovals(allApprovals);
+            console.log("🔄 Approvals after updating state:", allApprovals);
+
+            // ✅ Dispatch approvals to Redux AFTER updating state
             allApprovals.forEach((approval) => {
                 dispatch(addApprovalAction(approval));
             });
 
-            setFetchedApprovals(allApprovals);
         } catch (err) {
             console.error("❌ Error fetching approvals:", err);
             setError(err.message);
@@ -116,8 +121,9 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 
     return (
         <div className="card shadow-sm mb-4">
-            <div className="card-header bg-light">
+            <div className="card-header bg-light d-flex justify-content-between align-items-center">
                 <h3 className="mb-0">Existing Approvals</h3>
+                <button className="btn btn-secondary" onClick={fetchApprovals}>🔄 Refresh Approvals</button>
             </div>
 
             <div className="card-body">
@@ -157,16 +163,8 @@ const ExistingApprovals = ({ onToggleSelect }) => {
                                                 onChange={() => onToggleSelect(approval)}
                                             />
                                         </td>
-                                        <td>
-                                            <span className="d-inline-block text-truncate" style={{ maxWidth: "150px" }}>
-                                                {approval.contract}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className="d-inline-block text-truncate" style={{ maxWidth: "150px" }}>
-                                                {approval.spender}
-                                            </span>
-                                        </td>
+                                        <td>{approval.contract}</td>
+                                        <td>{approval.spender}</td>
                                         <td>{approval.amount}</td>
                                         <td>
                                             <button 
@@ -185,15 +183,13 @@ const ExistingApprovals = ({ onToggleSelect }) => {
             </div>
 
             <div className="card-footer bg-light">
-                <small className="text-muted">
-                    <button 
-                        className="btn btn-outline-secondary"
-                        onClick={fetchApprovals}
-                        disabled={loading}
-                    >
-                        🔄 Refresh
-                    </button>
-                </small>
+                <button 
+                    className="btn btn-outline-secondary"
+                    onClick={fetchApprovals}
+                    disabled={loading}
+                >
+                    🔄 Refresh
+                </button>
             </div>
         </div>
     );
