@@ -1,10 +1,7 @@
 import { JsonRpcProvider, BrowserProvider } from "ethers";
-import dotenv from "dotenv";
 
-dotenv.config(); // Load .env variables
-
-const HARDHAT_URL = "http://127.0.0.1:8545";
-const SEPOLIA_RPC_URL = process.env.ALCHEMY_SEPOLIA_URL; // Read from .env
+// ❌ REMOVE dotenv.config(); from frontend React apps
+const SEPOLIA_RPC_URL = process.env.REACT_APP_ALCHEMY_SEPOLIA_URL; // Use Vercel environment variable
 
 async function getProvider() {
     try {
@@ -14,17 +11,16 @@ async function getProvider() {
             const network = await provider.getNetwork();
             console.log(`✅ Connected to Chain ID: ${network.chainId}`);
 
-            // 🔥 Only allow Sepolia or Hardhat
-            if (![1337, 11155111].includes(network.chainId)) {
-                console.warn("⚠️ WARNING: Connect wallet to Hardhat (1337) or Sepolia (11155111).");
+            // 🔥 Only allow Sepolia
+            if (network.chainId !== 11155111) {
+                console.warn("⚠️ WARNING: Connect wallet to Sepolia (11155111).");
             }
             return provider;
         }
 
-        // ✅ Auto-switch to Alchemy for Sepolia
-        console.log("📡 Using RPC:", process.env.NODE_ENV === "production" ? "Alchemy (Sepolia)" : "Hardhat");
-
-        return new JsonRpcProvider(process.env.NODE_ENV === "production" ? SEPOLIA_RPC_URL : HARDHAT_URL);
+        // ✅ Always use Alchemy for Sepolia
+        console.log("📡 Using Sepolia RPC:", SEPOLIA_RPC_URL);
+        return new JsonRpcProvider(SEPOLIA_RPC_URL);
     } catch (error) {
         console.error("❌ Provider error:", error);
         return null;
@@ -32,3 +28,5 @@ async function getProvider() {
 }
 
 export { getProvider };
+
+
