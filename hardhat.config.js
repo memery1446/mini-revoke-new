@@ -3,6 +3,8 @@ require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("dotenv").config();
 require("@nomicfoundation/hardhat-chai-matchers");
+require("@nomicfoundation/hardhat-verify");
+
 
 const INFURA_API_KEY = process.env.INFURA_API_KEY || "";
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || "";

@@ -7,11 +7,11 @@ module.exports = {
     NFT_ABI: testNFTABI,
     ERC1155_ABI: testERC1155ABI, // Ensure this is exported
     CONTRACT_ADDRESSES: {
-        TK1: "0xd0385a738f2d9cbdd8ce54d712d5ed236f5d546e",  // Updates
-        TK2: "0x1b2a313a51a1ac877c2aa95f73850329c8dcbfc4",  // Updates
-        TestNFT: "0x103416cfcd0d0a32b904ab4fb69df6e5b5aadf2b",  // Updates
-        ERC1155: "0x6e4f6340e92139f58cf99e32fdfe33b1ca022e92",  // Ensure this is the correct contract address
-        MockSpender: "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5"
+        TK1: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",  // Updates
+        TK2: "0xE7B9Ede68593354aff96690600D008A40519D3CF",  // Updates
+        TestNFT: "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354",  // Updates
+        ERC1155: "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A",  // Ensure this is the correct contract address
+        MockSpender: "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608"
     },
 
     NETWORK_CONFIG: {
@@ -19,11 +19,11 @@ module.exports = {
             name: "Hardhat Local Fork",
             rpcUrl: "http://127.0.0.1:8545",
             contracts: {
-                tokenManager: "0xd0385a738f2d9cbdd8ce54d712d5ed236f5d546e",  // ✅ TK1
-                secondToken: "0x1b2a313a51a1ac877c2aa95f73850329c8dcbfc4",  // ✅ TK2
-                erc721: "0x103416cfcd0d0a32b904ab4fb69df6e5b5aadf2b",  // ✅ Updated NFT
-                erc1155: "0x6e4f6340e92139f58cf99e32fdfe33b1ca022e92",   // ✅ Updated ERC1155
-                MockSpender: "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5"
+                tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",  // ✅ TK1
+                secondToken: "0xE7B9Ede68593354aff96690600D008A40519D3CF",  // ✅ TK2
+                erc721: "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354",  // ✅ Updated NFT
+                erc1155: "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A",   // ✅ Updated ERC1155
+                MockSpender: "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608"
             }
         },
         1: {

@@ -10,7 +10,7 @@ async function testNFTs() {
     const { abi: testNFTABI } = require('../src/artifacts/contracts/TestNFT.sol/TestNFT.json');
 
     // The deployed NFT contract address
-    const testNFTAddress = "0x103416cfcd0d0a32b904ab4fb69df6e5b5aadf2b"; // Replace as necessary
+    const testNFTAddress = "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354"; // Replace as necessary
     const nft = await ethers.getContractAt(testNFTABI, testNFTAddress);
 
     console.log("Contract Instances Created");
