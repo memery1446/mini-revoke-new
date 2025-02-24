@@ -1,44 +1,40 @@
-import { Contract, getAddress } from "ethers";
+import React from "react";
+import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils"; // ✅ Import the function
 import { getProvider } from "../utils/provider";
-import { TOKEN_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
+import { Contract } from "ethers";
 
-/**
- * Batch revoke ERC-20 approvals.
- * @param {Array<string>} tokenContracts - List of token contract addresses.
- * @param {ethers.Signer} signer - The wallet signer executing the transactions.
- */
-export async function batchRevokeERC20Approvals(tokenContracts, signer) {
-    const spender = CONTRACT_ADDRESSES.MockSpender;
-
-    console.log("⏳ Starting batch revocation for ERC-20 approvals...");
-    
-    for (let tokenAddress of tokenContracts) {
-        try {
-            if (!getAddress(tokenAddress)) {
-                console.error(`❌ Invalid token address: ${tokenAddress}`);
-                continue;
-            }
-
-            console.log(`🔍 Checking allowance for ${tokenAddress}...`);
-            const contract = new Contract(tokenAddress, TOKEN_ABI, signer);
-            const owner = await signer.getAddress();
-            const currentAllowance = await contract.allowance(owner, spender);
-
-            if (currentAllowance === 0n) {
-                console.log(`🔹 Skipping ${tokenAddress}, already revoked.`);
-                continue;
-            }
-
-            console.log(`🚀 Revoking approval for ${tokenAddress}...`);
-            const tx = await contract.approve(spender, 0);
-            await tx.wait();
-
-            console.log(`✅ Successfully revoked approval for ${tokenAddress}`);
-        } catch (error) {
-            console.error(`❌ Error revoking approval for ${tokenAddress}:`, error);
+const BatchRevoke = ({ selectedApprovals, setSelectedApprovals }) => {
+    const handleBatchRevoke = async () => {
+        if (!window.confirm("🚨 Are you sure you want to revoke these approvals?")) {
+            return;
         }
-    }
-    console.log("🎉 Batch revocation process complete!");
-}
 
+        console.log("🚨 Revoking selected approvals:", selectedApprovals);
+        try {
+            const provider = await getProvider();
+            const signer = await provider.getSigner();
+            
+            const tokenContracts = selectedApprovals.map((approval) => approval.contract);
+            await batchRevokeERC20Approvals(tokenContracts, signer); // ✅ Call the function
+
+            setSelectedApprovals([]); // ✅ Clear selection after revocation
+            alert("✅ Batch revocation successful!");
+        } catch (error) {
+            console.error("❌ Error in batch revocation:", error);
+            alert(`Error: ${error.message}`);
+        }
+    };
+
+    return (
+        <div className="alert alert-warning">
+            <h5>🚨 Batch Revoke</h5>
+            <p>You have selected {selectedApprovals.length} approvals for revocation.</p>
+            <button className="btn btn-danger" onClick={handleBatchRevoke}>
+                Revoke Selected
+            </button>
+        </div>
+    );
+};
+
+// ✅ Ensure we export the React component
 export default BatchRevoke;
