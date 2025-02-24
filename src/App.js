@@ -1,170 +1,70 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import WalletConnect from "./components/WalletConnect.js";
-import TokenAllowanceManager from "./components/TokenAllowanceManager.js";
-import NFTApprovals from "./components/NFTApprovals.js";
-import ERC1155Approvals from "./components/ERC1155Approvals.js";
-import ApprovalDashboard from "./components/ApprovalDashboard.js";
 import NetworkSelector from "./components/NetworkSelector.js";
 import ExistingApprovals from "./components/ExistingApprovals.js";
-import { CONTRACT_ADDRESSES } from "./constants/abis";
-import { getProvider } from "./utils/provider";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { BootstrapWrapper } from "./utils/provider";
 
 const App = () => {
     const wallet = useSelector((state) => state.web3.account);
     const network = useSelector((state) => state.web3.network);
-    const [activeTab, setActiveTab] = useState("dashboard");
-    const [revokeLoading, setRevokeLoading] = useState(false);
 
     useEffect(() => {
         console.log("Wallet:", wallet);
         console.log("Network:", network);
     }, [wallet, network]);
 
-    const handleRevokeAll = async () => {
-        if (!window.confirm("⚠️ Warning: This will revoke ALL token approvals. This action cannot be undone. Continue?")) {
-            return;
-        }
-        
-        setRevokeLoading(true);
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            alert("Successfully revoked all approvals!");
-        } catch (error) {
-            console.error("Failed to revoke approvals:", error);
-            alert(`Error: ${error.message}`);
-        } finally {
-            setRevokeLoading(false);
-        }
-    };
-
     return (
         <BootstrapWrapper>
             <div className="container my-5">
-                <header className="mb-4">
-                    <h1 className="text-center text-primary fw-bold mb-4">
-                        <span className="me-2">🔒</span>
-                        Mini Revoke Cash
+                {/* 🔹 Header Section */}
+                <header className="mb-4 text-center">
+                    <h1 className="text-primary fw-bold">
+                        <span className="me-2">🔒</span> Mini Revoke Cash
                     </h1>
-                    
-                    <div className="row">
-                        <div className="col-md-6 mb-3">
-                            <WalletConnect />
-                        </div>
-                        <div className="col-md-6 mb-3">
-                            <NetworkSelector />
-                        </div>
-                    </div>
+                    <p className="text-muted">
+                        Review and revoke token approvals to protect your assets.
+                    </p>
                 </header>
 
+                {/* 🔹 Connection Section */}
+                <div className="row mb-4">
+                    <div className="col-md-6">
+                        <WalletConnect />
+                    </div>
+                    <div className="col-md-6">
+                        <NetworkSelector />
+                    </div>
+                </div>
+
+                {/* 🔹 If No Wallet is Connected */}
                 {!wallet ? (
-                    <div className="text-center py-5 my-5">
-                        <div className="display-1 mb-4">🔐</div>
+                    <div className="text-center py-5">
                         <h2>Connect Your Wallet</h2>
-                        <p className="text-muted mb-4">
-                            Connect your wallet to view and manage token approvals.
-                        </p>
-                        <div className="card mx-auto" style={{maxWidth: "550px"}}>
+                        <p className="text-muted">View and manage your active token approvals.</p>
+                        <div className="card mx-auto" style={{ maxWidth: "550px" }}>
                             <div className="card-body">
                                 <h5 className="card-title">Why use Mini Revoke Cash?</h5>
-                                <ul className="list-group list-group-flush mb-3">
-                                    <li className="list-group-item">✅ View all your active token approvals</li>
+                                <ul className="list-group list-group-flush">
+                                    <li className="list-group-item">✅ View all token approvals in one place</li>
                                     <li className="list-group-item">✅ Manage ERC-20, ERC-721, and ERC-1155 approvals</li>
                                     <li className="list-group-item">✅ Batch revoke multiple approvals at once</li>
-                                    <li className="list-group-item">✅ Stay safe by removing unwanted access to your tokens</li>
+                                    <li className="list-group-item">✅ Stay safe by removing unnecessary permissions</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 ) : (
+                    /* 🔹 Categorized Approval List (Everything in One Place) */
                     <div className="row mt-4">
-                        <div className="col-lg-8 mb-4">
-                            <ul className="nav nav-tabs mb-4">
-                                <li className="nav-item">
-                                    <button 
-                                        className={`nav-link ${activeTab === "dashboard" ? "active" : ""}`}
-                                        onClick={() => setActiveTab("dashboard")}
-                                    >
-                                        Dashboard
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button 
-                                        className={`nav-link ${activeTab === "erc20" ? "active" : ""}`}
-                                        onClick={() => setActiveTab("erc20")}
-                                    >
-                                        ERC-20 Tokens
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button 
-                                        className={`nav-link ${activeTab === "nft" ? "active" : ""}`}
-                                        onClick={() => setActiveTab("nft")}
-                                    >
-                                        NFTs
-                                    </button>
-                                </li>
-                            </ul>
-
-                            {activeTab === "dashboard" && (
-                                <>
-                                    <ApprovalDashboard />
-                                    <ExistingApprovals />
-                                </>
-                            )}
-                            
-                            {activeTab === "erc20" && (
-                                <TokenAllowanceManager wallet={wallet} />
-                            )}
-                            
-                            {activeTab === "nft" && (
-                                <div className="row">
-                                    <div className="col-md-12 mb-4">
-                                        <NFTApprovals 
-                                            contractAddress={CONTRACT_ADDRESSES.TestNFT}
-                                            spender={CONTRACT_ADDRESSES.MockSpender}
-                                        />
-                                    </div>
-                                    <div className="col-md-12">
-                                        <ERC1155Approvals
-                                            contractAddress={CONTRACT_ADDRESSES.ERC1155}
-                                            owner={wallet}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        
-                        <div className="col-lg-4">
-                            <div className="card mb-4 shadow-sm">
-                                <div className="card-header bg-light">
-                                    <h4 className="card-title mb-0">Connection Status</h4>
-                                </div>
-                                <div className="card-body">
-                                    <div className="mb-3">
-                                        <span className="fw-bold d-block mb-1">Wallet:</span>
-                                        <code>{wallet ? `${wallet.substring(0, 8)}...${wallet.substring(wallet.length - 6)}` : "Not Connected"}</code>
-                                    </div>
-                                    {network && (
-                                        <div className="mb-3">
-                                            <span className="fw-bold d-block mb-1">Network:</span>
-                                            <span className="badge bg-primary">
-                                                {network === 1 ? "Ethereum Fork" : 
-                                                 network === 56 ? "BSC Fork" :
-                                                 network === 137 ? "Polygon Fork" :
-                                                 network === 97 ? "BSC Testnet Fork" :
-                                                 "Hardhat Local"}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                        <div className="col-lg-12">
+                            <ExistingApprovals />
                         </div>
                     </div>
                 )}
-                
+
+                {/* 🔹 Footer */}
                 <footer className="mt-5 pt-4 border-top text-center text-muted">
                     <p><small>Mini Revoke Cash &copy; 2025</small></p>
                 </footer>
@@ -174,4 +74,3 @@ const App = () => {
 };
 
 export default App;
-
