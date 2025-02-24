@@ -3,6 +3,36 @@ console.log(await erc1155.isApprovedForAll(owner, spender));
 const spender = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5";
 const owner = "0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c";
 const erc1155 = await ethers.getContractAt("TestERC1155", "0x6e4F6340e92139F58Cf99e32fdfe33B1CA022e92");
+.exit
+console.log(await erc1155.isApprovedForAll(owner, spender));
+const spender = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5";
+const owner = "0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c";
+const erc1155 = await ethers.getContractAt("TestERC1155", "0x6e4F6340e92139F58Cf99e32fdfe33B1CA022e92");
+console.log(await erc1155.isApprovedForAll(owner, spender));
+const spender = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5";
+const owner = "0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c";
+const erc1155 = await ethers.getContractAt("TestERC1155", "0x6e4F6340e92139F58Cf99e32fdfe33B1CA022e92");
+.exit
+console.log("✅ Approval successful!");
+await erc1155.setApprovalForAll(spender, true);
+console.log("🚀 Approving ERC-1155 tokens...");
+const spender = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5"; // MockSpender
+const erc1155 = await ethers.getContractAt("TestERC1155", "0x6e4F6340e92139F58Cf99e32fdfe33B1CA022e92");
+console.log("✅ Approval successful!");
+await erc20.approve(spender, amount);
+console.log("🚀 Approving 100 ERC-20 tokens...");
+const amount = ethers.parseUnits("100", 18); // Approve 100 tokens
+const spender = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5"; // MockSpender
+const erc20 = await ethers.getContractAt("TestToken", "0xD0385A738f2D9CbdD8cE54D712d5Ed236f5D546e");
+console.log(await erc1155.isApprovedForAll(owner, spender));
+const spender = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5";
+const owner = "0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c";
+const erc1155 = await ethers.getContractAt("TestERC1155", "0x6e4F6340e92139F58Cf99e32fdfe33B1CA022e92");
+.exit
+console.log(await erc1155.isApprovedForAll(owner, spender));
+const spender = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5";
+const owner = "0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c";
+const erc1155 = await ethers.getContractAt("TestERC1155", "0x6e4F6340e92139F58Cf99e32fdfe33B1CA022e92");
 console.log(await tk1.allowance("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c", spender));
 await tk1.approve(spender, ethers.parseUnits("100", 18)); // Approve 100 tokens
 console.log(await tk1.allowance("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c", spender));

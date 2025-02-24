@@ -10,6 +10,7 @@ import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis"; // Importin
 const getERC1155Approvals = async (ownerAddress) => {
     try {
         console.log("🔍 Fetching ERC-1155 approvals for owner:", ownerAddress);
+        console.log("ERC1155 Contract Address:", CONTRACT_ADDRESSES.ERC1155);
 
         const provider = await getProvider();
         const erc1155Contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, provider);
@@ -18,14 +19,18 @@ const getERC1155Approvals = async (ownerAddress) => {
         console.log("Checking approval for spender:", spender);
 
         const isApproved = await erc1155Contract.isApprovedForAll(ownerAddress, spender);
-        console.log(`Approval status for ${spender}:`, isApproved);
+        console.log(`✅ Approval status for ${spender}:`, isApproved);
 
-        return isApproved ? [{ spender, isApproved }] : []; // 🛠️ **Fix: Ensure revoked approvals are removed**
+        const result = isApproved ? [{ spender, isApproved }] : [];
+        console.log("🔍 ERC-1155 Approvals Fetched:", result);
+
+        return result;
     } catch (error) {
         console.error("❌ Error fetching ERC-1155 approvals:", error);
         return [];
     }
 };
+
 
 /**
  * Revoke approval for a specific ERC-1155 spender address.
