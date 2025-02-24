@@ -17,21 +17,22 @@ interface IERC1155 {
 }
 
 contract MockSpender {
-    address public owner;
+    address public contractOwner;
 
-    event ERC20Approved(address indexed token, address indexed owner, uint256 amount);
-    event ERC721Approved(address indexed nft, address indexed owner, bool approved);
-    event ERC1155Approved(address indexed nft, address indexed owner, bool approved);
+    event ERC20Approved(address indexed token, address indexed owner, address indexed spender, uint256 amount);
+    event ERC721Approved(address indexed nft, address indexed owner, address indexed operator, bool approved);
+    event ERC1155Approved(address indexed nft, address indexed owner, address indexed operator, bool approved);
 
     constructor() {
-        owner = msg.sender;
+        contractOwner = msg.sender;
     }
 
     // Function to approve ERC-20 token spending
     function approveERC20(address token, address spender, uint256 amount) external {
         require(token != address(0) && spender != address(0), "Invalid address");
-        IERC20(token).approve(spender, amount);
-        emit ERC20Approved(token, msg.sender, amount);
+        bool success = IERC20(token).approve(spender, amount);
+        require(success, "ERC-20 approval failed");
+        emit ERC20Approved(token, msg.sender, spender, amount);
     }
 
     // Function to check ERC-20 allowance
@@ -43,7 +44,7 @@ contract MockSpender {
     function approveERC721(address nft, address operator, bool approved) external {
         require(nft != address(0) && operator != address(0), "Invalid address");
         IERC721(nft).setApprovalForAll(operator, approved);
-        emit ERC721Approved(nft, msg.sender, approved);
+        emit ERC721Approved(nft, msg.sender, operator, approved);
     }
 
     // Function to check if ERC-721 is approved
@@ -55,7 +56,7 @@ contract MockSpender {
     function approveERC1155(address nft, address operator, bool approved) external {
         require(nft != address(0) && operator != address(0), "Invalid address");
         IERC1155(nft).setApprovalForAll(operator, approved);
-        emit ERC1155Approved(nft, msg.sender, approved);
+        emit ERC1155Approved(nft, msg.sender, operator, approved);
     }
 
     // Function to check if ERC-1155 is approved
@@ -63,4 +64,3 @@ contract MockSpender {
         return IERC1155(nft).isApprovedForAll(msg.sender, operator);
     }
 }
-
