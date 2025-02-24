@@ -1,7 +1,7 @@
 import { Contract, JsonRpcProvider, getAddress } from "ethers";
 import { CONTRACT_ADDRESSES, TOKEN_ABI } from "../../src/constants/abis"; // ✅ Ensuring proper import
 
-const provider = new JsonRpcProvider("http://127.0.0.1:8545");
+const provider = new JsonRpcProvider(process.env.REACT_APP_ALCHEMY_SEPOLIA_URL);
 
 /**
  * Fetch ERC-20 approvals for given token contracts and an owner address.
