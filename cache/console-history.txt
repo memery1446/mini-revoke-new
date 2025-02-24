@@ -1,0 +1,42 @@
+.exit
+console.log("👤 Owner of Token 1:", tokenOwner);
+const tokenOwner = await nft.ownerOf(1);
+console.log("🔍 Approved Spender for Token 1:", approvedForToken1);
+const approvedForToken1 = await nft.getApproved(1);
+console.log("✅ Operator approved for token 1");
+await nft.approve("0x4330F46C529ADa1Ef8BAA8125800be556441F3A5", 1);
+console.log("🔍 Approved Spender for Token 1:", approvedForToken1);
+const approvedForToken1 = await nft.getApproved(1);
+console.log("✅ TestNFT Contract Loaded:", nftAddress);
+const nft = await ethers.getContractAt("TestNFT", nftAddress);
+const nftAddress = "0x6e4f6340e92139f58cf99e32fdfe33b1ca022e92"; 
+// Replace with your deployed contract address
+const { ethers } = require("hardhat");
+.exit
+console.log("🔍 Approved Spender for Token 1:", approvedForToken);
+const approvedForToken = await nft.getApproved(1);
+console.log("✅ Operator approved for token 1");
+await nft.approve(operator, 1);
+console.log("🔍 Approved Spender for Token 2:", approvedForToken2);
+const approvedForToken2 = await nft.getApproved(2);
+.exit
+console.log(`✅ Operator ${operator} is now approved for all.`);
+await nft.setApprovalForAll(operator, true);
+console.log("✅ Batch Revoke Completed!");
+await tx.wait();
+const tx = await nft.batchRevokeApprovals(tokenIds);
+console.log("🚨 Revoking Approvals...");
+const tokenIds = [1, 2, 3]; // Replace with your token IDs
+const signer = await ethers.getSigner(); // Get the Hardhat account signing transactions
+console.log(`🔍 Approved Spender for Token ${tokenId}:`, approvedForToken);
+const approvedForToken = await nft.getApproved(tokenId);
+const tokenId = 1; // Test with a valid token ID
+console.log("🔍 isApprovedForAll:", approvedForAll);
+const approvedForAll = await nft.isApprovedForAll(owner, operator);
+const operator = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5"; 
+const owner = "0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c"; 
+console.log("✅ TestNFT Contract Loaded:", nftAddress);
+const nft = await ethers.getContractAt("TestNFT", nftAddress);
+const nftAddress = "0x6e4f6340e92139f58cf99e32fdfe33b1ca022e92";
+// Replace with your actual deployed contract address
+const { ethers } = require("hardhat");

@@ -41,7 +41,8 @@ const ApprovalDashboard = () => {
 
       let erc721Approvals = [];
       try {
-        const erc721Result = await getERC721Approvals(wallet, contractAddresses.erc721);
+const signerAddress = await signer.getAddress();
+const erc721Result = await getERC721Approvals(signerAddress, contractAddresses.erc721);
         console.log("ERC-721 approval result:", erc721Result);
 
         if (typeof erc721Result === 'boolean') {
