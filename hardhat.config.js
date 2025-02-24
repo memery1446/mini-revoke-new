@@ -5,8 +5,11 @@ require("dotenv").config();
 require("@nomicfoundation/hardhat-chai-matchers");
 
 const INFURA_URL = process.env.INFURA_URL || "https://mainnet.infura.io/v3/873f1dfbc0294062843aadbe3d6afc9e";
+const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/873f1dfbc0294062843aadbe3d6afc9e";
 
-/** @type import('hardhat/config').HardhatUserConfig */
+// ✅ Load multiple accounts from `.env`
+const PRIVATE_KEYS = process.env.PRIVATE_KEYS ? process.env.PRIVATE_KEYS.split(",") : [];
+
 module.exports = {
   solidity: {
     version: "0.8.20",
@@ -18,9 +21,9 @@ module.exports = {
     }
   },
   networks: {
-        sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || "https://sepolia.infura.io/v3/873f1dfbc0294062843aadbe3d6afc9e",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    sepolia: {
+      url: SEPOLIA_RPC_URL,
+      accounts: PRIVATE_KEYS, // ✅ Now supports multiple accounts
       chainId: 11155111
     },
     hardhat: {
@@ -28,14 +31,14 @@ module.exports = {
         url: INFURA_URL,
         enabled: true,
       },
-      chainId: 1337, // Keep this for consistency with MetaMask
+      chainId: 1337,
     },
     localhost: {
       chainId: 1337,
       url: "http://127.0.0.1:8545"
     },
     polygon: {
-      url: "https://polygon-mainnet.infura.io/v3/873f1dfbc0294062843aadbe3d6afc9e",
+      url: "https://polygon-mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID",
       chainId: 137,
     },
     bsc: {
@@ -52,6 +55,6 @@ module.exports = {
     currency: "USD",
   },
   paths: {
-    artifacts: "./src/artifacts", // Point Hardhat to the correct artifacts directory
+    artifacts: "./src/artifacts",
   }
 };
