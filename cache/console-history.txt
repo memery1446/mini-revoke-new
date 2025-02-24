@@ -1,4 +1,35 @@
 .exit
+console.log(await erc1155.isApprovedForAll(owner, spender));
+const spender = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5";
+const owner = "0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c";
+const erc1155 = await ethers.getContractAt("TestERC1155", "0x6e4F6340e92139F58Cf99e32fdfe33B1CA022e92");
+console.log(await tk1.allowance("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c", spender));
+await tk1.approve(spender, ethers.parseUnits("100", 18)); // Approve 100 tokens
+console.log(await tk1.allowance("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c", spender));
+const spender = "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5"; // Correct checksum
+const tk1 = await ethers.getContractAt("TestToken", "0xD0385A738f2D9CbdD8cE54D712d5Ed236f5D546e");
+.exit
+console.log(fixedSpender);
+const fixedSpender = ethers.getAddress(spender);
+const ethers = require("ethers");
+console.log("Allowance:", allowance.toString());
+const allowance = await tk1.allowance("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c", spender);
+const spender = "0x4330f46c529ada1ef8baa8125800be556441f3a5"; // All lowercase
+.exit
+console.log(await tk1.allowance("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c", fixedSpender));
+const fixedSpender = ethers.getAddress("0x4330f46C529ADa1Ef8BAA8125800be556441F3A5");
+.exit
+console.log(await tk1.allowance("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c", spender));
+const spender = "0x4330f46C529ADa1Ef8BAA8125800be556441F3A5"; // MockSpender Address
+const tk1 = await ethers.getContractAt("TestToken", "0xD0385A738f2D9CbdD8cE54D712d5Ed236f5D546e");
+.exit
+console.log(await tk1.allowance("0xb54a23125D22D2B0AA0A3e8762E631cA19aB1b7c", spender));
+const spender = "0x4330f46C529ADa1Ef8BAA8125800be556441F3A5"; // MockSpender Address
+const tk1 = await ethers.getContractAt("TestToken", "0xD0385A738f2D9CbdD8cE54D712d5Ed236f5D546e");
+.exit
+accounts.map((a, i) => console.log(`${i + 1}: ${a.address}`));
+const accounts = await ethers.getSigners();
+.exit
 const tk1 = await hre.ethers.getContractAt("TestToken", "0xYour_TK1_Address");
 const hre = require("hardhat");
 .exit
