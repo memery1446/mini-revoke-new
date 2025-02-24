@@ -2,6 +2,9 @@ import { JsonRpcProvider, BrowserProvider } from "ethers";
 
 // ❌ REMOVE dotenv.config(); from frontend React apps
 const SEPOLIA_RPC_URL = process.env.REACT_APP_ALCHEMY_SEPOLIA_URL; // Use Vercel environment variable
+const BootstrapWrapper = ({ children }) => (
+    <div className="container mt-4">{children}</div>
+);
 
 async function getProvider() {
     try {
@@ -27,6 +30,6 @@ async function getProvider() {
     }
 }
 
-export { getProvider };
+export { getProvider, BootstrapWrapper };
 
 
