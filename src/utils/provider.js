@@ -1,7 +1,19 @@
 import { JsonRpcProvider, BrowserProvider } from "ethers";
 
-// ❌ REMOVE dotenv.config(); from frontend React apps
-const SEPOLIA_RPC_URL = process.env.REACT_APP_ALCHEMY_SEPOLIA_URL; // Use Vercel environment variable
+// ✅ Load API keys from environment variables
+const NETWORK_RPC_URLS = {
+    1: process.env.REACT_APP_ALCHEMY_MAINNET_URL, // Ethereum Mainnet
+    11155111: process.env.REACT_APP_ALCHEMY_SEPOLIA_URL, // Sepolia Testnet
+    10: process.env.REACT_APP_ALCHEMY_OPTIMISM_URL, // Optimism
+    42161: process.env.REACT_APP_ALCHEMY_ARBITRUM_URL, // Arbitrum One
+    137: process.env.REACT_APP_ALCHEMY_POLYGON_URL, // Polygon Mainnet
+    56: "https://bsc-dataseed.binance.org/", // Binance Smart Chain (Public RPC)
+    420: process.env.REACT_APP_ALCHEMY_OPTIMISM_GOERLI_URL, // Optimism Goerli
+    421613: process.env.REACT_APP_ALCHEMY_ARBITRUM_GOERLI_URL, // Arbitrum Goerli
+    80001: process.env.REACT_APP_ALCHEMY_POLYGON_MUMBAI_URL, // Polygon Mumbai
+};
+
+// ✅ Bootstrap Wrapper for UI Components
 const BootstrapWrapper = ({ children }) => (
     <div className="container mt-4">{children}</div>
 );
@@ -9,21 +21,22 @@ const BootstrapWrapper = ({ children }) => (
 async function getProvider() {
     try {
         if (typeof window !== "undefined" && window.ethereum) {
-            // ✅ Use MetaMask (BrowserProvider) if available
             const provider = new BrowserProvider(window.ethereum);
             const network = await provider.getNetwork();
             console.log(`✅ Connected to Chain ID: ${network.chainId}`);
 
-            // 🔥 Only allow Sepolia
-            if (network.chainId !== 11155111) {
-                console.warn("⚠️ WARNING: Connect wallet to Sepolia (11155111).");
+            // ✅ Check if the network is supported
+            if (!NETWORK_RPC_URLS[network.chainId]) {
+                console.warn(`⚠️ WARNING: Network (${network.chainId}) not supported.`);
+                return null;
             }
             return provider;
         }
 
-        // ✅ Always use Alchemy for Sepolia
-        console.log("📡 Using Sepolia RPC:", SEPOLIA_RPC_URL);
-        return new JsonRpcProvider(SEPOLIA_RPC_URL);
+        // ✅ Automatically detect the right network RPC
+        const defaultNetwork = 11155111; // Default to Sepolia if nothing is set
+        console.log("📡 Using RPC:", NETWORK_RPC_URLS[defaultNetwork]);
+        return new JsonRpcProvider(NETWORK_RPC_URLS[defaultNetwork]);
     } catch (error) {
         console.error("❌ Provider error:", error);
         return null;
@@ -31,5 +44,4 @@ async function getProvider() {
 }
 
 export { getProvider, BootstrapWrapper };
-
 

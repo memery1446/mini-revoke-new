@@ -3,27 +3,53 @@ import { useSelector, useDispatch } from "react-redux";
 import { setNetwork } from "../store/web3Slice";
 
 const isProduction = process.env.NODE_ENV === "production";
-const ALCHEMY_SEPOLIA_URL = process.env.ALCHEMY_SEPOLIA_URL; // Ensure .env contains this
 
+// ✅ Ensure all environment variables are correctly prefixed with `REACT_APP_`
 const supportedNetworks = {
   1: { 
     chainId: "0x1", 
     name: "Ethereum Mainnet", 
-    rpcUrl: isProduction ? ALCHEMY_SEPOLIA_URL : "http://127.0.0.1:8545",
-    currency: { name: "Ether", symbol: "ETH", decimals: 18 } 
+    rpcUrl: process.env.REACT_APP_ALCHEMY_MAINNET_URL,
   },
-  1337: {
-    chainId: "0x539", 
-    name: "Hardhat Local", 
-    rpcUrl: "http://127.0.0.1:8545", 
-    currency: { name: "Ether", symbol: "ETH", decimals: 18 },
-    isLocalNetwork: true
-  },
-  11155111: {  // ✅ Add Sepolia Properly
+  11155111: {  
     chainId: "0xaa36a7", 
     name: "Sepolia Testnet", 
-    rpcUrl: ALCHEMY_SEPOLIA_URL, 
-    currency: { name: "Ether", symbol: "ETH", decimals: 18 }
+    rpcUrl: process.env.REACT_APP_ALCHEMY_SEPOLIA_URL,
+  },
+  10: {  
+    chainId: "0xa", 
+    name: "Optimism", 
+    rpcUrl: process.env.REACT_APP_ALCHEMY_OPTIMISM_URL, 
+  },
+  42161: {  
+    chainId: "0xa4b1", 
+    name: "Arbitrum One", 
+    rpcUrl: process.env.REACT_APP_ALCHEMY_ARBITRUM_URL, 
+  },
+  137: {  
+    chainId: "0x89", 
+    name: "Polygon", 
+    rpcUrl: process.env.REACT_APP_ALCHEMY_POLYGON_URL, 
+  },
+  56: {  
+    chainId: "0x38", 
+    name: "Binance Smart Chain", 
+    rpcUrl: "https://bsc-dataseed.binance.org/", // ✅ No API Key Needed
+  },
+  420: {  
+    chainId: "0x1a4", 
+    name: "Optimism Goerli", 
+    rpcUrl: process.env.REACT_APP_ALCHEMY_OPTIMISM_GOERLI_URL, 
+  },
+  421613: {  
+    chainId: "0x66eed", 
+    name: "Arbitrum Goerli", 
+    rpcUrl: process.env.REACT_APP_ALCHEMY_ARBITRUM_GOERLI_URL, 
+  },
+  80001: {  
+    chainId: "0x13881", 
+    name: "Polygon Mumbai", 
+    rpcUrl: process.env.REACT_APP_ALCHEMY_POLYGON_MUMBAI_URL, 
   },
 };
 
@@ -33,16 +59,15 @@ const NetworkSelector = () => {
   
   const switchNetwork = async (chainId) => {
     const networkId = parseInt(chainId, 10);
-    console.warn(`⚠️ Switching to ${supportedNetworks[networkId].name}`);
+    console.warn(`⚠️ Switching to ${supportedNetworks[networkId]?.name || "Unknown Network"}`);
     dispatch(setNetwork(networkId));
-    console.log(`✅ Now using ${supportedNetworks[networkId].name}`);
+    console.log(`✅ Now using ${supportedNetworks[networkId]?.name || "Unknown Network"}`);
   };
 
   const getCurrentNetworkName = () => {
     if (!currentNetwork) return "Not Connected";
     const network = supportedNetworks[currentNetwork];
-    if (!network) return `Unknown Network (ID: ${currentNetwork})`;
-    return network.name;
+    return network ? network.name : `Unknown Network (ID: ${currentNetwork})`;
   };
 
   return (
@@ -90,3 +115,4 @@ const NetworkSelector = () => {
 };
 
 export default NetworkSelector;
+
