@@ -162,7 +162,7 @@ const fetchApprovals = async () => {
       setIsLoading(false);
     }
   };
-
+console.log("🟢 UI Approvals Before Rendering:", approvals.length, approvals);
   return (
     <div className="card shadow-sm mb-4">
 <div className="card-header bg-light d-flex justify-content-between align-items-center">
@@ -190,27 +190,23 @@ const fetchApprovals = async () => {
                     <th>Approved Amount/Status</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {approvals.length > 0 ? (
-                    approvals.map((approval, index) => (
-                      <tr key={index}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={selectedApprovals.some((a) => a.id === approval.id)}
-                            onChange={() => handleSelectApproval(approval)}
-                          />
-                        </td>
-                        <td>{approval.contract}</td>
-                        <td>{approval.type}</td>
-                        <td>{approval.spender}</td>
-                        <td>{approval.type === "ERC-20" ? approval.amount : approval.isApproved ? "✅ Approved" : "❌ Not Approved"}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan="5" className="text-center py-4">No approvals found.</td></tr>
-                  )}
-                </tbody>
+
+
+<tbody>
+    {approvals.length > 0 ? (
+        approvals.map((approval, index) => (
+            <tr key={index}>
+                <td>{approval.contract}</td>
+                <td>{approval.type}</td>
+                <td>{approval.spender}</td>
+                <td>{approval.type === "ERC-20" ? approval.amount : approval.isApproved ? "✅ Approved" : "❌ Not Approved"}</td>
+            </tr>
+        ))
+    ) : (
+        <tr><td colSpan="5" className="text-center py-4">No approvals found.</td></tr>
+    )}
+</tbody>
+
               </table>
             </div>
           </>

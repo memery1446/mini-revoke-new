@@ -5,7 +5,14 @@ const store = configureStore({
   reducer: {
     web3: web3Reducer,
   },
+  devTools: true, // ✅ Ensure DevTools are enabled
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false, // ✅ Prevent Redux from blocking unserializable state
+    }),
 });
 
-export default store;
+// 🔥 Expose Redux store for debugging
+window.reduxStore = store;
 
+export default store;
