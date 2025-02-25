@@ -37,12 +37,18 @@ useEffect(() => {
     console.log("📌 React Detected Redux Approvals Change:", approvals);
     console.log("🟢 Approvals Before Setting State:", approvals.length, approvals);
     
-    setFetchedApprovals([]); // Reset state first
     setTimeout(() => {
-        setFetchedApprovals([...approvals]); // Force UI update after delay
-        console.log("🔵 Approvals After Setting State:", fetchedApprovals.length, fetchedApprovals);
-    }, 100); // Small delay forces React to detect the change
+        if (approvals.length > 0) {
+            console.log("✅ Setting Approvals to State:", approvals);
+            setFetchedApprovals([...approvals]); // ✅ Force React to accept Redux state
+        } else {
+            console.warn("⚠️ Approvals List is Empty—Not Updating UI");
+        }
+    }, 100); // Small delay ensures React processes the update
+
+    console.log("🔵 Approvals After Setting State:", fetchedApprovals.length, fetchedApprovals);
 }, [approvals]);
+
 
 
 
