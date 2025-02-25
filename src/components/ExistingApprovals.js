@@ -36,15 +36,13 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 useEffect(() => {
     console.log("📌 React Detected Redux Approvals Change:", approvals);
     console.log("🟢 Approvals Before Setting State:", approvals.length, approvals);
-    
-    setTimeout(() => {
-        if (approvals.length > 0) {
-            console.log("✅ Setting Approvals to State:", approvals);
-            setFetchedApprovals([...approvals]); // ✅ Force React to accept Redux state
-        } else {
-            console.warn("⚠️ Approvals List is Empty—Not Updating UI");
-        }
-    }, 100); // Small delay ensures React processes the update
+
+    if (approvals.length > 0) {
+        console.log("✅ Directly Updating UI Without Redux");
+        setFetchedApprovals([...approvals]); // ✅ Directly updating UI state
+    } else {
+        console.warn("⚠️ Approvals List is Empty—Not Updating UI");
+    }
 
     console.log("🔵 Approvals After Setting State:", fetchedApprovals.length, fetchedApprovals);
 }, [approvals]);
