@@ -24,17 +24,23 @@ resetWeb3: (state) => {
 addApproval: (state, action) => {
     console.log("🚀 Attempting to Add Approval:", action.payload);
 
-    const exists = state.approvals.some(
+    // Clone state before modifying to force Redux update
+    const newApprovals = [...state.approvals];
+
+    // Prevent duplicates
+    const exists = newApprovals.some(
         (a) => a.contract === action.payload.contract && a.spender === action.payload.spender
     );
 
     if (!exists) {
-        state.approvals = [...state.approvals, action.payload]; // ✅ Creates new reference
+        newApprovals.push(action.payload); // ✅ Push new approval
+        state.approvals = newApprovals; // ✅ Force new reference for Redux
         console.log("✅ Approval Added to Redux:", state.approvals);
     } else {
         console.log("⚠️ Approval Already Exists in Redux:", action.payload);
     }
 },
+
 
 
 
