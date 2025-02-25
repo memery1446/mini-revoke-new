@@ -11,7 +11,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
     const dispatch = useDispatch();
     const account = useSelector((state) => state.web3.account);
     const approvals = useSelector((state) => state.web3.approvals);
-    
+
     const [fetchedApprovals, setFetchedApprovals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -31,61 +31,62 @@ const ExistingApprovals = ({ onToggleSelect }) => {
             console.log("🔄 Fetching approvals now...");
             fetchApprovals();
         }
-    }, [account, approvals]);
+    }, [account]);
 
-const fetchApprovals = async () => {
-    try {
-        setLoading(true);
-        setError(null);
+    useEffect(() => {
+        console.log("📌 React Detected Redux Approvals Change:", approvals);
+        setFetchedApprovals([...approvals]); // ✅ Force UI update
+    }, [approvals]); // ✅ React now listens for Redux updates
 
-        const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+    const fetchApprovals = async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-        console.log("🔄 Fetching ERC-20 approvals...");
-        const erc20Fetched = await getERC20Approvals(tokenContracts, account);
-        console.log("✅ ERC-20 Approvals Fetched:", erc20Fetched);
+            const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
 
-        console.log("🔄 Fetching ERC-721 approvals...");
-        const erc721Fetched = await getERC721Approvals(account);
-        console.log("✅ ERC-721 Approvals Fetched:", erc721Fetched);
+            console.log("🔄 Fetching ERC-20 approvals...");
+            const erc20Fetched = await getERC20Approvals(tokenContracts, account);
+            console.log("✅ ERC-20 Approvals Fetched:", erc20Fetched);
 
-        console.log("🔄 Fetching ERC-1155 approvals...");
-        const erc1155Fetched = await getERC1155Approvals(account);
-        console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
+            console.log("🔄 Fetching ERC-721 approvals...");
+            const erc721Fetched = await getERC721Approvals(account);
+            console.log("✅ ERC-721 Approvals Fetched:", erc721Fetched);
 
-        const allApprovals = [...(erc20Fetched || []), ...(erc721Fetched || []), ...(erc1155Fetched || [])];
+            console.log("🔄 Fetching ERC-1155 approvals...");
+            const erc1155Fetched = await getERC1155Approvals(account);
+            console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
 
-        if (allApprovals.length === 0) {
-            console.log("ℹ️ No approvals found.");
+            const allApprovals = [...(erc20Fetched || []), ...(erc721Fetched || []), ...(erc1155Fetched || [])];
+
+            if (allApprovals.length === 0) {
+                console.log("ℹ️ No approvals found.");
+            }
+
+            // 🔥 Ensure state updates before dispatching to Redux
+            setFetchedApprovals([...allApprovals]); // ✅ Forces React to update UI
+            console.log("🟢 Approvals before dispatching to Redux:", allApprovals);
+
+            // 🔥 Dispatch each approval to Redux
+            allApprovals.forEach((approval) => {
+                console.log("🚀 Dispatching Approval to Redux:", approval);
+                dispatch(addApprovalAction({ ...approval })); // ✅ Forces Redux to detect update
+            });
+
+            // ✅ Force Redux to persist approvals after dispatch
+            setTimeout(() => {
+                console.log("🔍 Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
+                if (window.reduxStore.getState().web3.approvals.length === 0) {
+                    console.error("❌ Redux state is still empty after dispatch! Something is blocking updates.");
+                }
+            }, 2000);
+        } catch (err) {
+            console.error("❌ Error fetching approvals:", err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
-
-        // 🔥 Ensure state updates before dispatching to Redux
-        setFetchedApprovals([...allApprovals]); // ✅ Forces React to update UI
-        console.log("🟢 Approvals before dispatching to Redux:", allApprovals);
-
-        // 🔥 Dispatch each approval to Redux
-allApprovals.forEach((approval) => {
-    console.log("🚀 Dispatching Approval to Redux:", approval);
-    dispatch(addApprovalAction({ ...approval })); // ✅ Forces Redux to detect update
-});
-
-// ✅ Force Redux to persist approvals after dispatch
-setTimeout(() => {
-    console.log("🔍 Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
-    if (window.reduxStore.getState().web3.approvals.length === 0) {
-        console.error("❌ Redux state is still empty after dispatch! Something is blocking updates.");
-    }
-}, 2000);
-
-    } catch (err) {
-        console.error("❌ Error fetching approvals:", err);
-        setError(err.message);
-    } finally {
-        setLoading(false);
-    }
-};
-
-
-
+    };
 
     const revokeApproval = async (approval) => {
         try {
@@ -115,11 +116,6 @@ setTimeout(() => {
 
             await tx.wait();
             console.log("✅ Approval revoked!");
-            console.log("🚀 Dispatching Approval to Redux:", approval);
-dispatch(addApprovalAction({ ...approval })); // ✅ Creates a new object reference
-
-console.log("🔍 Checking Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
-
             fetchApprovals();
         } catch (err) {
             console.error("❌ Error revoking approval:", err);
@@ -155,7 +151,7 @@ console.log("🔍 Checking Redux State After Dispatch:", window.reduxStore.getSt
                         <table className="table table-striped table-hover">
                             <thead className="table-light">
                                 <tr>
-                                    <th>Select</th> {/* ✅ Add checkboxes for batch revoke */}
+                                    <th>Select</th>
                                     <th>Contract</th>
                                     <th>Spender</th>
                                     <th>Amount</th>
@@ -165,39 +161,17 @@ console.log("🔍 Checking Redux State After Dispatch:", window.reduxStore.getSt
                             <tbody>
                                 {fetchedApprovals.map((approval, index) => (
                                     <tr key={index}>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                onChange={() => onToggleSelect(approval)}
-                                            />
-                                        </td>
+                                        <td><input type="checkbox" onChange={() => onToggleSelect(approval)} /></td>
                                         <td>{approval.contract}</td>
                                         <td>{approval.spender}</td>
                                         <td>{approval.amount}</td>
-                                        <td>
-                                            <button 
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() => revokeApproval(approval)}
-                                            >
-                                                🚨 Revoke
-                                            </button>
-                                        </td>
+                                        <td><button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)}>🚨 Revoke</button></td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 )}
-            </div>
-
-            <div className="card-footer bg-light">
-                <button 
-                    className="btn btn-outline-secondary"
-                    onClick={fetchApprovals}
-                    disabled={loading}
-                >
-                    🔄 Refresh
-                </button>
             </div>
         </div>
     );
