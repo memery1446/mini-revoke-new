@@ -17,7 +17,7 @@ const App = () => {
         console.log("Network:", network);
     }, [wallet, network]);
 
-    // ✅ Toggle selection of approvals for batch revoke
+       // ✅ Toggle selection of approvals for batch revoke
 const toggleApprovalSelection = (approval) => {
     setSelectedApprovals((prev) => {
         const updated = prev.some((a) => a.id === approval.id)
