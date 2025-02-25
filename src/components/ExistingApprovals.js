@@ -81,15 +81,6 @@ const fetchApprovals = async () => {
 
 
 
-
-        } catch (err) {
-            console.error("❌ Error fetching approvals:", err);
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const revokeApproval = async (approval) => {
         try {
             console.log("🚨 Revoking approval for:", approval.contract);
