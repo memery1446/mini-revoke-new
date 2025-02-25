@@ -111,7 +111,11 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 
             await tx.wait();
             console.log("✅ Approval revoked!");
-            dispatch(removeApprovalAction({ token: approval.contract }));
+            console.log("🚀 Dispatching Approval to Redux:", approval);
+dispatch(addApprovalAction(approval));
+
+console.log("🔍 Checking Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
+
             fetchApprovals();
         } catch (err) {
             console.error("❌ Error revoking approval:", err);

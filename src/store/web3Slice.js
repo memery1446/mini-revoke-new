@@ -17,17 +17,25 @@ setNetwork: (state, action) => {
     resetWeb3: (state) => {
       state.account = null;
       state.network = null;
-      state.approvals = [];
+   //   state.approvals = [];
     },
-    addApproval: (state, action) => {
-      // Prevent duplicates
-      const exists = state.approvals.find(
+addApproval: (state, action) => {
+    console.log("🚀 Attempting to Add Approval:", action.payload);
+
+    const exists = state.approvals.find(
         (a) => a.token === action.payload.token && a.spender === action.payload.spender
-      );
-      if (!exists) {
+    );
+
+    if (!exists) {
         state.approvals.push(action.payload);
-      }
-    },
+        console.log("✅ Approval Added to Redux:", action.payload);
+    } else {
+        console.log("⚠️ Approval Already Exists in Redux:", action.payload);
+    }
+
+    console.log("🟢 Redux Approvals After Add:", state.approvals);
+},
+
     removeApproval: (state, action) => {
       state.approvals = state.approvals.filter(
         (approval) =>
