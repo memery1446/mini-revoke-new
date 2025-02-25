@@ -8,9 +8,9 @@ import { CONTRACT_ADDRESSES } from "../constants/abis";
 import { addApproval as addApprovalAction, removeApproval as removeApprovalAction } from "../store/web3Slice";
 
 const ExistingApprovals = ({ onToggleSelect }) => {
-    const dispatch = useDispatch();
+    
     const account = useSelector((state) => state.web3.account);
-    const approvals = useSelector((state) => state.web3.approvals);
+const [approvals, setApprovals] = useState([]);
 
     const [fetchedApprovals, setFetchedApprovals] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -50,55 +50,40 @@ useEffect(() => {
 
 
 
-    const fetchApprovals = async () => {
-        try {
-            setLoading(true);
-            setError(null);
+ const fetchApprovals = async () => {
+    try {
+        setLoading(true);
+        setError(null);
 
-            const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+        const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+        console.log("🔄 Fetching ERC-20 approvals...");
+        const erc20Fetched = await getERC20Approvals(tokenContracts, account);
+        console.log("✅ ERC-20 Approvals Fetched:", erc20Fetched);
 
-            console.log("🔄 Fetching ERC-20 approvals...");
-            const erc20Fetched = await getERC20Approvals(tokenContracts, account);
-            console.log("✅ ERC-20 Approvals Fetched:", erc20Fetched);
+        console.log("🔄 Fetching ERC-721 approvals...");
+        const erc721Fetched = await getERC721Approvals(account);
+        console.log("✅ ERC-721 Approvals Fetched:", erc721Fetched);
 
-            console.log("🔄 Fetching ERC-721 approvals...");
-            const erc721Fetched = await getERC721Approvals(account);
-            console.log("✅ ERC-721 Approvals Fetched:", erc721Fetched);
+        console.log("🔄 Fetching ERC-1155 approvals...");
+        const erc1155Fetched = await getERC1155Approvals(account);
+        console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
 
-            console.log("🔄 Fetching ERC-1155 approvals...");
-            const erc1155Fetched = await getERC1155Approvals(account);
-            console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
+        const allApprovals = [...(erc20Fetched || []), ...(erc721Fetched || []), ...(erc1155Fetched || [])];
 
-            const allApprovals = [...(erc20Fetched || []), ...(erc721Fetched || []), ...(erc1155Fetched || [])];
-
-            if (allApprovals.length === 0) {
-                console.log("ℹ️ No approvals found.");
-            }
-
-            // 🔥 Ensure state updates before dispatching to Redux
-            setFetchedApprovals([...allApprovals]); // ✅ Forces React to update UI
-            console.log("🟢 Approvals before dispatching to Redux:", allApprovals);
-
-            // 🔥 Dispatch each approval to Redux
-            allApprovals.forEach((approval) => {
-                console.log("🚀 Dispatching Approval to Redux:", approval);
-                dispatch(addApprovalAction({ ...approval })); // ✅ Forces Redux to detect update
-            });
-
-            // ✅ Force Redux to persist approvals after dispatch
-            setTimeout(() => {
-                console.log("🔍 Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
-                if (window.reduxStore.getState().web3.approvals.length === 0) {
-                    console.error("❌ Redux state is still empty after dispatch! Something is blocking updates.");
-                }
-            }, 2000);
-        } catch (err) {
-            console.error("❌ Error fetching approvals:", err);
-            setError(err.message);
-        } finally {
-            setLoading(false);
+        if (allApprovals.length === 0) {
+            console.log("ℹ️ No approvals found.");
         }
-    };
+
+        // 🔥 Use React State Instead of Redux
+        setApprovals(allApprovals);
+    } catch (err) {
+        console.error("❌ Error fetching approvals:", err);
+        setError(err.message);
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     const revokeApproval = async (approval) => {
         try {
