@@ -70,14 +70,20 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       if (isERC1155) {
         const erc1155Contract = new Contract(
           approval.contract,
-          ["function setApprovalForAll(address operator, bool approved) external"],
+          [
+            "function setApprovalForAll(address operator, bool approved) external",
+            "function isApprovedForAll(address account, address operator) external view returns (bool)"
+          ],
           signer,
         )
         tx = await erc1155Contract.setApprovalForAll(approval.spender, false)
       } else if (isERC721) {
         const erc721Contract = new Contract(
           approval.contract,
-          ["function setApprovalForAll(address operator, bool approved) external"],
+          [
+            "function setApprovalForAll(address operator, bool approved) external",
+            "function isApprovedForAll(address owner, address operator) external view returns (bool)"
+          ],
           signer,
         )
         tx = await erc721Contract.setApprovalForAll(approval.spender, false)
