@@ -74,8 +74,11 @@ allApprovals.forEach((approval) => {
     console.log("🚀 Dispatching Approval to Redux:", approval);
     dispatch(addApprovalAction(approval));
 
-    console.log("🔍 Checking Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
+    setTimeout(() => {
+        console.log("🔍 Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
+    }, 2000);
 });
+
 
 
         } catch (err) {
