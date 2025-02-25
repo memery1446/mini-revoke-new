@@ -34,18 +34,25 @@ const [approvals, setApprovals] = useState([]);
     }, [account]);
 
 useEffect(() => {
-    console.log("📌 React Detected Redux Approvals Change:", approvals);
-    console.log("🟢 Approvals Before Setting State:", approvals.length, approvals);
-
+    console.log("📌 React Detected Approvals Change:", approvals);
+    
     if (approvals.length > 0) {
-        console.log("✅ Directly Updating UI Without Redux");
-        setFetchedApprovals([...approvals]); // ✅ Directly updating UI state
+        console.log("✅ Persisting Approvals in State:", approvals);
+        localStorage.setItem("approvalsBackup", JSON.stringify(approvals)); // 🔥 Backup in localStorage
+        setFetchedApprovals([...approvals]); // ✅ Force UI update
     } else {
-        console.warn("⚠️ Approvals List is Empty—Not Updating UI");
+        const storedApprovals = JSON.parse(localStorage.getItem("approvalsBackup")) || [];
+        if (storedApprovals.length > 0) {
+            console.log("♻️ Restoring Approvals from Backup:", storedApprovals);
+            setFetchedApprovals(storedApprovals); // 🔥 Restore lost state
+        } else {
+            console.warn("⚠️ Approvals List is Empty—Not Updating UI");
+        }
     }
 
     console.log("🔵 Approvals After Setting State:", fetchedApprovals.length, fetchedApprovals);
 }, [approvals]);
+
 
 
 
