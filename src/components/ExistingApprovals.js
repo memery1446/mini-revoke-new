@@ -63,15 +63,19 @@ const fetchApprovals = async () => {
         console.log("🟢 Approvals before dispatching to Redux:", allApprovals);
 
         // 🔥 Dispatch each approval to Redux
-        allApprovals.forEach((approval) => {
-            console.log("🚀 Dispatching Approval to Redux:", approval);
-            dispatch(addApprovalAction(approval));
-        });
+allApprovals.forEach((approval) => {
+    console.log("🚀 Dispatching Approval to Redux:", approval);
+    dispatch(addApprovalAction({ ...approval })); // ✅ Forces Redux to detect update
+});
 
-        // ✅ Check Redux after updating
-        setTimeout(() => {
-            console.log("🔍 Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
-        }, 2000);
+// ✅ Force Redux to persist approvals after dispatch
+setTimeout(() => {
+    console.log("🔍 Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
+    if (window.reduxStore.getState().web3.approvals.length === 0) {
+        console.error("❌ Redux state is still empty after dispatch! Something is blocking updates.");
+    }
+}, 2000);
+
     } catch (err) {
         console.error("❌ Error fetching approvals:", err);
         setError(err.message);
