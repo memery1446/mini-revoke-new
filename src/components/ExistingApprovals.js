@@ -35,8 +35,15 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 
 useEffect(() => {
     console.log("📌 React Detected Redux Approvals Change:", approvals);
-    setFetchedApprovals([...approvals]); // ✅ Force UI update
-}, [approvals]); // ✅ React now listens for Redux updates
+    console.log("🟢 Approvals Before Setting State:", approvals.length, approvals);
+    
+    setFetchedApprovals([]); // Reset state first
+    setTimeout(() => {
+        setFetchedApprovals([...approvals]); // Force UI update after delay
+        console.log("🔵 Approvals After Setting State:", fetchedApprovals.length, fetchedApprovals);
+    }, 100); // Small delay forces React to detect the change
+}, [approvals]);
+
 
 
     const fetchApprovals = async () => {
