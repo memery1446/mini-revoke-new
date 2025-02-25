@@ -33,51 +33,52 @@ const ExistingApprovals = ({ onToggleSelect }) => {
         }
     }, [account, approvals]);
 
-    const fetchApprovals = async () => {
-        try {
-            setLoading(true);
-            setError(null);
+const fetchApprovals = async () => {
+    try {
+        setLoading(true);
+        setError(null);
 
-            const tokenContracts = [
-                CONTRACT_ADDRESSES.TK1,
-                CONTRACT_ADDRESSES.TK2,
-            ];
+        const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
 
-            console.log("🔄 Fetching ERC-20 approvals...");
-            const erc20Fetched = await getERC20Approvals(tokenContracts, account);
-            console.log("✅ ERC-20 Approvals Fetched:", erc20Fetched);
+        console.log("🔄 Fetching ERC-20 approvals...");
+        const erc20Fetched = await getERC20Approvals(tokenContracts, account);
+        console.log("✅ ERC-20 Approvals Fetched:", erc20Fetched);
 
-            console.log("🔄 Fetching ERC-721 approvals...");
-            const erc721Fetched = await getERC721Approvals(account);
-            console.log("✅ ERC-721 Approvals Fetched:", erc721Fetched);
+        console.log("🔄 Fetching ERC-721 approvals...");
+        const erc721Fetched = await getERC721Approvals(account);
+        console.log("✅ ERC-721 Approvals Fetched:", erc721Fetched);
 
-            console.log("🔄 Fetching ERC-1155 approvals...");
-            const erc1155Fetched = await getERC1155Approvals(account);
-            console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
+        console.log("🔄 Fetching ERC-1155 approvals...");
+        const erc1155Fetched = await getERC1155Approvals(account);
+        console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
 
-            const allApprovals = [
-                ...(erc20Fetched || []),
-                ...(erc721Fetched || []),
-                ...(erc1155Fetched || [])
-            ];
+        const allApprovals = [...(erc20Fetched || []), ...(erc721Fetched || []), ...(erc1155Fetched || [])];
 
-            if (allApprovals.length === 0) {
-                console.log("ℹ️ No approvals found.");
-            }
+        if (allApprovals.length === 0) {
+            console.log("ℹ️ No approvals found.");
+        }
 
-            // ✅ Ensure state updates BEFORE Redux dispatch
-            console.log("🟢 Approvals before updating state:", fetchedApprovals);
-            setFetchedApprovals(allApprovals);
-            console.log("🔄 Approvals after updating state:", allApprovals);
+        // 🔥 FIX: Ensure state updates BEFORE dispatching to Redux
+        setFetchedApprovals([...allApprovals]); // ✅ Force React re-render
+        console.log("🟢 Approvals before dispatching to Redux:", allApprovals);
 
-allApprovals.forEach((approval) => {
-    console.log("🚀 Dispatching Approval to Redux:", approval);
-    dispatch(addApprovalAction(approval));
+        allApprovals.forEach((approval) => {
+            console.log("🚀 Dispatching Approval to Redux:", approval);
+            dispatch(addApprovalAction(approval));
+        });
 
-    setTimeout(() => {
-        console.log("🔍 Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
-    }, 2000);
-});
+        // 🔥 Check Redux after updating
+        setTimeout(() => {
+            console.log("🔍 Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
+        }, 2000);
+    } catch (err) {
+        console.error("❌ Error fetching approvals:", err);
+        setError(err.message);
+    } finally {
+        setLoading(false);
+    }
+};
+
 
 
 

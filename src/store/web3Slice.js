@@ -25,11 +25,11 @@ addApproval: (state, action) => {
     console.log("🚀 Attempting to Add Approval:", action.payload);
 
     const exists = state.approvals.find(
-        (a) => a.token === action.payload.token && a.spender === action.payload.spender
+        (a) => a.contract === action.payload.contract && a.spender === action.payload.spender
     );
 
     if (!exists) {
-        state.approvals.push(action.payload);
+        state.approvals = [...state.approvals, action.payload]; // ✅ Force Redux to trigger update
         console.log("✅ Approval Added to Redux:", action.payload);
     } else {
         console.log("⚠️ Approval Already Exists in Redux:", action.payload);
@@ -37,6 +37,7 @@ addApproval: (state, action) => {
 
     console.log("🟢 Redux Approvals After Add:", state.approvals);
 },
+
 
     removeApproval: (state, action) => {
       state.approvals = state.approvals.filter(
