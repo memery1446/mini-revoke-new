@@ -16,10 +16,9 @@ import { setApprovals } from "../store/web3Slice";
 const ApprovalDashboard = () => {
   const wallet = useSelector((state) => state.web3.account);
   const approvals = useSelector((state) => state.web3.approvals);
-  // const [approvals, setApprovals] = useState([]);
   const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
   const contractAddresses = {
     erc721: CONTRACT_ADDRESSES.TestNFT,
@@ -32,60 +31,29 @@ const dispatch = useDispatch();
     }
   }, [wallet]);
 
-const fetchApprovals = async () => {
+  const fetchApprovals = async () => {
     setIsLoading(true);
     console.log("🔄 Fetching approvals...");
 
     try {
-        const provider = await getProvider();
-        const signer = await provider.getSigner();
-        const userAddress = await signer.getAddress();
-        console.log("🔍 Wallet Address:", userAddress);
+      const provider = await getProvider();
+      const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
+      console.log("🔍 Wallet Address:", userAddress);
 
-        const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+      const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
 
-        console.log("📡 Fetching ERC-20 approvals...");
-        const erc20Approvals = await getERC20Approvals(tokenContracts, userAddress) || [];
-        console.log("✅ ERC-20 Approvals Fetched:", erc20Approvals);
+      console.log("📡 Fetching ERC-20 approvals...");
+      const erc20Approvals = await getERC20Approvals(tokenContracts, userAddress) || [];
+      console.log("✅ ERC-20 Approvals Fetched:", erc20Approvals);
 
-        console.log("📡 Fetching ERC-721 approvals...");
-        const erc721Approvals = await getERC721Approvals(userAddress) || [];
-        console.log("✅ ERC-721 Approvals Fetched:", erc721Approvals);
+      console.log("📡 Fetching ERC-721 approvals...");
+      const erc721Approvals = await getERC721Approvals(userAddress) || [];
+      console.log("✅ ERC-721 Approvals Fetched:", erc721Approvals);
 
-        console.log("📡 Fetching ERC-1155 approvals...");
-        const erc1155Approvals = await getERC1155Approvals(userAddress) || [];
-        console.log("✅ ERC-1155 Approvals Fetched:", erc1155Approvals);
-
-        const newApprovals = [
-            ...erc20Approvals.map((a) => ({
-                ...a,
-                type: "ERC-20",
-                id: `erc20-${a.contract || "unknown"}-${a.spender || "unknown"}`
-            })),
-            ...erc721Approvals.map((a) => ({
-                ...a,
-                type: "ERC-721",
-                id: `erc721-${a.tokenId || "0"}-${a.spender || CONTRACT_ADDRESSES.MockSpender}`
-            })),
-            ...erc1155Approvals.map((a) => ({
-                ...a,
-                type: "ERC-1155",
-                id: `erc1155-${a.spender || "unknown"}`
-            })),
-        ];
-
-        console.log("🟢 Updated Approvals:", newApprovals);
-        dispatch(setApprovals(newApprovals));
-
-    } catch (error) {
-        console.error("❌ Error fetching approvals:", error);
-        dispatch(setApprovals([]));
-    } finally {
-        setIsLoading(false);
-    }
-};
-
-
+      console.log("📡 Fetching ERC-1155 approvals...");
+      const erc1155Approvals = await getERC1155Approvals(userAddress) || [];
+      console.log("✅ ERC-1155 Approvals Fetched:", erc1155Approvals);
 
       const newApprovals = [
         ...erc20Approvals.map((a) => ({
@@ -106,11 +74,10 @@ const fetchApprovals = async () => {
       ];
 
       console.log("🟢 Updated Approvals:", newApprovals);
-      setApprovals(newApprovals);
-
+      dispatch(setApprovals(newApprovals));
     } catch (error) {
       console.error("❌ Error fetching approvals:", error);
-      setApprovals([]);
+      dispatch(setApprovals([]));
     } finally {
       setIsLoading(false);
     }
@@ -162,13 +129,15 @@ const fetchApprovals = async () => {
       setIsLoading(false);
     }
   };
-console.log("🟢 UI Approvals Before Rendering:", approvals.length, approvals);
+
+  console.log("🟢 UI Approvals Before Rendering:", approvals.length, approvals);
+  
   return (
     <div className="card shadow-sm mb-4">
-<div className="card-header bg-light d-flex justify-content-between align-items-center">
-  <h2 className="card-title">Approval Dashboard</h2>
-  <button className="btn btn-secondary" onClick={fetchApprovals}>🔄 Refresh Approvals</button>
-</div>
+      <div className="card-header bg-light d-flex justify-content-between align-items-center">
+        <h2 className="card-title">Approval Dashboard</h2>
+        <button className="btn btn-secondary" onClick={fetchApprovals}>🔄 Refresh Approvals</button>
+      </div>
       <div className="card-body">
         {isLoading ? (
           <div className="text-center py-4">
@@ -190,25 +159,40 @@ console.log("🟢 UI Approvals Before Rendering:", approvals.length, approvals);
                     <th>Approved Amount/Status</th>
                   </tr>
                 </thead>
-
-
-<tbody>
-    {approvals.length > 0 ? (
-        approvals.map((approval, index) => (
-            <tr key={index}>
-                <td>{approval.contract}</td>
-                <td>{approval.type}</td>
-                <td>{approval.spender}</td>
-                <td>{approval.type === "ERC-20" ? approval.amount : approval.isApproved ? "✅ Approved" : "❌ Not Approved"}</td>
-            </tr>
-        ))
-    ) : (
-        <tr><td colSpan="5" className="text-center py-4">No approvals found.</td></tr>
-    )}
-</tbody>
-
+                <tbody>
+                  {approvals.length > 0 ? (
+                    approvals.map((approval, index) => (
+                      <tr key={index}>
+                        <td>
+                          <input 
+                            type="checkbox" 
+                            onChange={() => handleSelectApproval(approval)}
+                            checked={selectedApprovals.some(a => a.id === approval.id)}
+                          />
+                        </td>
+                        <td>{approval.contract}</td>
+                        <td>{approval.type}</td>
+                        <td>{approval.spender}</td>
+                        <td>{approval.type === "ERC-20" ? approval.amount : approval.isApproved ? "✅ Approved" : "❌ Not Approved"}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="5" className="text-center py-4">No approvals found.</td></tr>
+                  )}
+                </tbody>
               </table>
             </div>
+            {selectedApprovals.length > 0 && (
+              <div className="d-flex justify-content-end mt-3">
+                <button 
+                  className="btn btn-danger" 
+                  onClick={handleBatchRevoke}
+                  disabled={isLoading}
+                >
+                  🚨 Revoke Selected ({selectedApprovals.length})
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

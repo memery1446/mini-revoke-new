@@ -12,7 +12,8 @@ const store = configureStore({
     }),
 });
 
-// 🔥 Expose Redux store for debugging
-window.reduxStore = store;
+if (typeof window !== 'undefined') {
+  window.reduxStore = store;
+}
 
 export default store;
