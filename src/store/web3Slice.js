@@ -14,11 +14,13 @@ setAccount: (state, action) => {
 setNetwork: (state, action) => {
   state.network = parseInt(action.payload, 10);  // ✅ Ensure it's always a number
 },
-    resetWeb3: (state) => {
-      state.account = null;
-      state.network = null;
-   //   state.approvals = [];
-    },
+resetWeb3: (state) => {
+    console.log("🛑 Resetting Web3 State");
+    state.account = null;
+    state.network = null;
+    // ❌ Do NOT reset approvals here
+    // state.approvals = [];
+},
 addApproval: (state, action) => {
     console.log("🚀 Attempting to Add Approval:", action.payload);
 
