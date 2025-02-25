@@ -1,33 +1,33 @@
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import WalletConnect from "./components/WalletConnect.js";
-import NetworkSelector from "./components/NetworkSelector.js";
-import ExistingApprovals from "./components/ExistingApprovals.js";
-import BatchRevoke from "./components/BatchRevoke.js"; // ✅ Add Batch Revoke Component
-import "bootstrap/dist/css/bootstrap.min.css";
-import { BootstrapWrapper } from "./utils/provider";
+    import React, { useEffect, useState } from "react";
+    import { useSelector } from "react-redux";
+    import WalletConnect from "./components/WalletConnect.js";
+    import NetworkSelector from "./components/NetworkSelector.js";
+    import ExistingApprovals from "./components/ExistingApprovals.js";
+    import BatchRevoke from "./components/BatchRevoke.js"; // ✅ Add Batch Revoke Component
+    import "bootstrap/dist/css/bootstrap.min.css";
+    import { BootstrapWrapper } from "./utils/provider";
 
-const App = () => {
-    const wallet = useSelector((state) => state.web3.account);
-    const network = useSelector((state) => state.web3.network);
-    const [selectedApprovals, setSelectedApprovals] = useState([]); // ✅ Track selected approvals
+    const App = () => {
+        const wallet = useSelector((state) => state.web3.account);
+        const network = useSelector((state) => state.web3.network);
+        const [selectedApprovals, setSelectedApprovals] = useState([]); // ✅ Track selected approvals
 
-    useEffect(() => {
-        console.log("Wallet:", wallet);
-        console.log("Network:", network);
-    }, [wallet, network]);
+        useEffect(() => {
+            console.log("Wallet:", wallet);
+            console.log("Network:", network);
+        }, [wallet, network]);
 
-       // ✅ Toggle selection of approvals for batch revoke
-const toggleApprovalSelection = (approval) => {
-    setSelectedApprovals((prev) => {
-        const updated = prev.some((a) => a.id === approval.id)
-            ? prev.filter((a) => a.id !== approval.id) // Remove if already selected
-            : [...prev, approval]; // Add if not selected
+           // ✅ Toggle selection of approvals for batch revoke
+    const toggleApprovalSelection = (approval) => {
+        setSelectedApprovals((prev) => {
+            const updated = prev.some((a) => a.id === approval.id)
+                ? prev.filter((a) => a.id !== approval.id) // Remove if already selected
+                : [...prev, approval]; // Add if not selected
 
-        console.log("✅ Updated Selected Approvals:", updated);
-        return updated;
-    });
-};
+            console.log("✅ Updated Selected Approvals:", updated);
+            return updated;
+        });
+    };
 
 
     return (
@@ -58,7 +58,7 @@ const toggleApprovalSelection = (approval) => {
                         <p className="text-muted">View and manage your active token approvals.</p>
                         <div className="card mx-auto" style={{ maxWidth: "550px" }}>
                             <div className="card-body">
-                                <h5 className="card-title">Why use Mini Revoke Cash?</h5>
+                                <h5 className="card-title">Why use Approval Manager?</h5>
                                 <ul className="list-group list-group-flush">
                                     <li className="list-group-item">✅ View all token approvals in one place</li>
                                     <li className="list-group-item">✅ Manage ERC-20, ERC-721, and ERC-1155 approvals</li>
