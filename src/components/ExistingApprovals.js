@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { BrowserProvider, Contract, JsonRpcProvider } from "ethers"
 import { useSelector, useDispatch } from "react-redux"
 import { getERC20Approvals } from "../utils/erc20Approvals"
@@ -13,25 +13,14 @@ const ExistingApprovals = ({ onToggleSelect }) => {
   const dispatch = useDispatch()
   const account = useSelector((state) => state.web3.account)
   const approvals = useSelector((state) => state.web3.approvals)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   const provider = window.ethereum ? new BrowserProvider(window.ethereum) : new JsonRpcProvider("http://127.0.0.1:8545")
 
-  useEffect(() => {
-    if (!account) {
-      console.log("⏳ Waiting for Redux to update account...")
-      return
-    }
+  const fetchApprovals = useCallback(async () => {
+    if (!account) return
 
-    console.log("📌 Redux Approvals State:", approvals)
-    if (approvals.length === 0) {
-      console.log("🔄 Fetching approvals now...")
-      fetchApprovals()
-    }
-  }, [account, approvals])
-
-  const fetchApprovals = async () => {
     try {
       setLoading(true)
       setError(null)
@@ -61,7 +50,13 @@ const ExistingApprovals = ({ onToggleSelect }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [account, dispatch])
+
+  useEffect(() => {
+    if (account && approvals.length === 0) {
+      fetchApprovals()
+    }
+  }, [account, approvals.length, fetchApprovals])
 
   const revokeApproval = async (approval) => {
     try {
