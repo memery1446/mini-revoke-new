@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";  // ✅ Correct import for React 18
 import { BootstrapWrapper } from "./utils/provider";  // ✅ Ensure Chakra is removed
 import { Provider } from "react-redux";
-import store from "./store";
+import store from "./store/index"; // ✅ Correct import
 import App from "./App";
 import "bootstrap/dist/css/bootstrap.min.css";  // ✅ Ensure Bootstrap styles are applied
 
