@@ -28,10 +28,10 @@ addApproval: (state, action) => {
         (a) => a.contract === action.payload.contract && a.spender === action.payload.spender
     );
 
-    if (!exists) {
-        state.approvals = [...state.approvals, action.payload]; // ✅ Force Redux update
-        console.log("✅ Approval Added to Redux:", action.payload);
-    } else {
+if (!exists) {
+    state.approvals.push(action.payload); // ✅ Direct mutation works with Redux Toolkit
+    state.approvals = [...state.approvals]; // ✅ Forces state change detection
+} else {
         console.log("⚠️ Approval Already Exists in Redux:", action.payload);
     }
 

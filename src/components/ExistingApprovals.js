@@ -112,7 +112,7 @@ const fetchApprovals = async () => {
             await tx.wait();
             console.log("✅ Approval revoked!");
             console.log("🚀 Dispatching Approval to Redux:", approval);
-dispatch(addApprovalAction(approval));
+dispatch(addApprovalAction({ ...approval })); // ✅ Creates a new object reference
 
 console.log("🔍 Checking Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
 
