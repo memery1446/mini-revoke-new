@@ -70,10 +70,13 @@ const ExistingApprovals = ({ onToggleSelect }) => {
             setFetchedApprovals(allApprovals);
             console.log("🔄 Approvals after updating state:", allApprovals);
 
-            // ✅ Dispatch approvals to Redux AFTER updating state
-            allApprovals.forEach((approval) => {
-                dispatch(addApprovalAction(approval));
-            });
+allApprovals.forEach((approval) => {
+    console.log("🚀 Dispatching Approval to Redux:", approval);
+    dispatch(addApprovalAction(approval));
+
+    console.log("🔍 Checking Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
+});
+
 
         } catch (err) {
             console.error("❌ Error fetching approvals:", err);
