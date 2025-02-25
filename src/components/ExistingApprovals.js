@@ -33,10 +33,11 @@ const ExistingApprovals = ({ onToggleSelect }) => {
         }
     }, [account]);
 
-    useEffect(() => {
-        console.log("📌 React Detected Redux Approvals Change:", approvals);
-        setFetchedApprovals([...approvals]); // ✅ Force UI update
-    }, [approvals]); // ✅ React now listens for Redux updates
+useEffect(() => {
+    console.log("📌 React Detected Redux Approvals Change:", approvals);
+    setFetchedApprovals([...approvals]); // ✅ Force UI update
+}, [approvals]); // ✅ React now listens for Redux updates
+
 
     const fetchApprovals = async () => {
         try {
