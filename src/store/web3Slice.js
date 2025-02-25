@@ -24,18 +24,16 @@ resetWeb3: (state) => {
 addApproval: (state, action) => {
     console.log("🚀 Attempting to Add Approval:", action.payload);
 
-    const exists = state.approvals.find(
+    const exists = state.approvals.some(
         (a) => a.contract === action.payload.contract && a.spender === action.payload.spender
     );
 
-if (!exists) {
-    state.approvals.push(action.payload); // ✅ Direct mutation works with Redux Toolkit
-    state.approvals = [...state.approvals]; // ✅ Forces state change detection
-} else {
+    if (!exists) {
+        state.approvals = [...state.approvals, action.payload]; // ✅ Creates new reference
+        console.log("✅ Approval Added to Redux:", state.approvals);
+    } else {
         console.log("⚠️ Approval Already Exists in Redux:", action.payload);
     }
-
-    console.log("🟢 Redux Approvals After Add:", state.approvals);
 },
 
 
