@@ -36,7 +36,7 @@ const toggleApprovalSelection = (approval) => {
                 {/* 🔹 Header Section */}
                 <header className="mb-4 text-center">
                     <h1 className="text-primary fw-bold">
-                        <span className="me-2">🔒</span> Mini Revoke Cash
+                        <span className="me-2">🔒</span> Approval Manager
                     </h1>
                     <p className="text-muted">Review and revoke token approvals to protect your assets.</p>
                 </header>
