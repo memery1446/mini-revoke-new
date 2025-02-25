@@ -166,17 +166,17 @@ useEffect(() => {
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {fetchedApprovals.map((approval, index) => (
-                                    <tr key={index}>
-                                        <td><input type="checkbox" onChange={() => onToggleSelect(approval)} /></td>
-                                        <td>{approval.contract}</td>
-                                        <td>{approval.spender}</td>
-                                        <td>{approval.amount}</td>
-                                        <td><button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)}>🚨 Revoke</button></td>
-                                    </tr>
-                                ))}
-                            </tbody>
+console.log("🟢 Approvals Before Rendering in UI:", fetchedApprovals.length, fetchedApprovals);
+
+<tbody>
+    {fetchedApprovals.map((approval, index) => (
+        <tr key={index}>
+            <td>{approval.contract}</td>
+            <td>{approval.spender}</td>
+            <td>{approval.amount}</td>
+        </tr>
+    ))}
+</tbody>
                         </table>
                     </div>
                 )}
