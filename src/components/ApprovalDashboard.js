@@ -10,12 +10,16 @@ import { getERC721Approvals } from "../utils/nftApprovals";
 import { getERC1155Approvals } from "../utils/erc1155Approvals";
 import { useSelector } from "react-redux";
 import { getProvider } from "../utils/provider";
+import { useDispatch } from "react-redux";
+import { setApprovals } from "../store/web3Slice";
 
 const ApprovalDashboard = () => {
   const wallet = useSelector((state) => state.web3.account);
-  const [approvals, setApprovals] = useState([]);
+  const approvals = useSelector((state) => state.web3.approvals);
+  // const [approvals, setApprovals] = useState([]);
   const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+const dispatch = useDispatch();
 
   const contractAddresses = {
     erc721: CONTRACT_ADDRESSES.TestNFT,
@@ -41,21 +45,41 @@ const fetchApprovals = async () => {
         const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
 
         console.log("📡 Fetching ERC-20 approvals...");
-        const erc20Approvals = (await getERC20Approvals(tokenContracts, userAddress)) || [];
-        console.log("✅ ERC-20 Approvals Fetched (Before State Update):", erc20Approvals);
+        const erc20Approvals = await getERC20Approvals(tokenContracts, userAddress) || [];
+        console.log("✅ ERC-20 Approvals Fetched:", erc20Approvals);
 
-        setApprovals(erc20Approvals);
-        console.log("🟢 Approvals state after update:", approvals); // This should NOT be empty
+        console.log("📡 Fetching ERC-721 approvals...");
+        const erc721Approvals = await getERC721Approvals(userAddress) || [];
+        console.log("✅ ERC-721 Approvals Fetched:", erc721Approvals);
 
-        // Force UI re-render
-        setTimeout(() => {
-            console.log("🔄 Refreshing UI...");
-            window.location.reload();
-        }, 2000);
+        console.log("📡 Fetching ERC-1155 approvals...");
+        const erc1155Approvals = await getERC1155Approvals(userAddress) || [];
+        console.log("✅ ERC-1155 Approvals Fetched:", erc1155Approvals);
+
+        const newApprovals = [
+            ...erc20Approvals.map((a) => ({
+                ...a,
+                type: "ERC-20",
+                id: `erc20-${a.contract || "unknown"}-${a.spender || "unknown"}`
+            })),
+            ...erc721Approvals.map((a) => ({
+                ...a,
+                type: "ERC-721",
+                id: `erc721-${a.tokenId || "0"}-${a.spender || CONTRACT_ADDRESSES.MockSpender}`
+            })),
+            ...erc1155Approvals.map((a) => ({
+                ...a,
+                type: "ERC-1155",
+                id: `erc1155-${a.spender || "unknown"}`
+            })),
+        ];
+
+        console.log("🟢 Updated Approvals:", newApprovals);
+        dispatch(setApprovals(newApprovals));
 
     } catch (error) {
         console.error("❌ Error fetching approvals:", error);
-        setApprovals([]);
+        dispatch(setApprovals([]));
     } finally {
         setIsLoading(false);
     }

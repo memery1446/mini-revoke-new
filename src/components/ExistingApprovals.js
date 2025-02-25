@@ -20,18 +20,18 @@ const ExistingApprovals = ({ onToggleSelect }) => {
         ? new BrowserProvider(window.ethereum)
         : new JsonRpcProvider("http://127.0.0.1:8545");
 
-    useEffect(() => {
-        if (!account) {
-            console.log("⏳ Waiting for Redux to update account...");
-            return;
-        }
+useEffect(() => {
+    if (!account) {
+        console.log("⏳ Waiting for Redux to update account...");
+        return;
+    }
 
-        console.log("📌 Redux Approvals State:", approvals);
-        if (approvals.length === 0) {
-            console.log("🔄 Fetching approvals now...");
-            fetchApprovals();
-        }
-    }, [account, approvals]);
+    console.log("📌 Redux Approvals State:", approvals);
+    if (approvals.length === 0) {
+        console.log("🔄 Fetching approvals now...");
+        fetchApprovals();
+    }
+}, [account, approvals]); // Changed from [account, fetchedApprovals]
 
     const fetchApprovals = async () => {
         try {
@@ -72,7 +72,8 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 
             // ✅ Dispatch approvals to Redux AFTER updating state
             allApprovals.forEach((approval) => {
-                dispatch(addApprovalAction(approval));
+                // Update Redux store
+dispatch({ type: "SET_APPROVALS", payload: allApprovals });
             });
 
         } catch (err) {
@@ -119,80 +120,79 @@ const ExistingApprovals = ({ onToggleSelect }) => {
         }
     };
 
-    return (
-        <div className="card shadow-sm mb-4">
-            <div className="card-header bg-light d-flex justify-content-between align-items-center">
-                <h3 className="mb-0">Existing Approvals</h3>
-                <button className="btn btn-secondary" onClick={fetchApprovals}>🔄 Refresh Approvals</button>
-            </div>
-
-            <div className="card-body">
-                {loading ? (
-                    <div className="text-center py-4">
-                        <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Loading approvals...</span>
-                        </div>
-                        <p className="mt-3">Fetching approvals...</p>
-                    </div>
-                ) : error ? (
-                    <div className="alert alert-danger">
-                        <p>{error}</p>
-                    </div>
-                ) : fetchedApprovals.length === 0 ? (
-                    <div className="alert alert-info">
-                        <p>No active approvals found.</p>
-                    </div>
-                ) : (
-                    <div className="table-responsive">
-                        <table className="table table-striped table-hover">
-                            <thead className="table-light">
-                                <tr>
-                                    <th>Select</th> {/* ✅ Add checkboxes for batch revoke */}
-                                    <th>Contract</th>
-                                    <th>Spender</th>
-                                    <th>Amount</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {fetchedApprovals.map((approval, index) => (
-                                    <tr key={index}>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                onChange={() => onToggleSelect(approval)}
-                                            />
-                                        </td>
-                                        <td>{approval.contract}</td>
-                                        <td>{approval.spender}</td>
-                                        <td>{approval.amount}</td>
-                                        <td>
-                                            <button 
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() => revokeApproval(approval)}
-                                            >
-                                                🚨 Revoke
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-
-            <div className="card-footer bg-light">
-                <button 
-                    className="btn btn-outline-secondary"
-                    onClick={fetchApprovals}
-                    disabled={loading}
-                >
-                    🔄 Refresh
-                </button>
-            </div>
+return (
+    <div className="card shadow-sm mb-4">
+        <div className="card-header bg-light d-flex justify-content-between align-items-center">
+            <h3 className="mb-0">Existing Approvals</h3>
+            <button className="btn btn-secondary" onClick={fetchApprovals}>🔄 Refresh Approvals</button>
         </div>
-    );
-};
+
+        <div className="card-body">
+            {loading ? (
+                <div className="text-center py-4">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading approvals...</span>
+                    </div>
+                    <p className="mt-3">Fetching approvals...</p>
+                </div>
+            ) : error ? (
+                <div className="alert alert-danger">
+                    <p>{error}</p>
+                </div>
+            ) : approvals.length === 0 ? (
+                <div className="alert alert-info">
+                    <p>No active approvals found.</p>
+                </div>
+            ) : (
+                <div className="table-responsive">
+                    <table className="table table-striped table-hover">
+                        <thead className="table-light">
+                            <tr>
+                                <th>Select</th>
+                                <th>Contract</th>
+                                <th>Spender</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {approvals.map((approval, index) => (
+                                <tr key={index}>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            onChange={() => onToggleSelect(approval)}
+                                        />
+                                    </td>
+                                    <td>{approval.contract}</td>
+                                    <td>{approval.spender}</td>
+                                    <td>{approval.amount}</td>
+                                    <td>
+                                        <button 
+                                            className="btn btn-danger btn-sm"
+                                            onClick={() => revokeApproval(approval)}
+                                        >
+                                            🚨 Revoke
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+
+        <div className="card-footer bg-light">
+            <button 
+                className="btn btn-outline-secondary"
+                onClick={fetchApprovals}
+                disabled={loading}
+            >
+                🔄 Refresh
+            </button>
+        </div>
+    </div>
+);
 
 export default ExistingApprovals;

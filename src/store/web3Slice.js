@@ -14,26 +14,30 @@ setAccount: (state, action) => {
 setNetwork: (state, action) => {
   state.network = parseInt(action.payload, 10);  // ✅ Ensure it's always a number
 },
+setApprovals: (state, action) => {
+  state.approvals = action.payload;
+},
     resetWeb3: (state) => {
       state.account = null;
       state.network = null;
       state.approvals = [];
     },
-    addApproval: (state, action) => {
-      // Prevent duplicates
-      const exists = state.approvals.find(
-        (a) => a.token === action.payload.token && a.spender === action.payload.spender
-      );
-      if (!exists) {
-        state.approvals.push(action.payload);
-      }
-    },
-    removeApproval: (state, action) => {
-      state.approvals = state.approvals.filter(
-        (approval) =>
-          !(approval.token === action.payload.token && approval.spender === action.payload.spender)
-      );
-    },
+addApproval: (state, action) => {
+  const index = state.approvals.findIndex(
+    (a) => a.contract === action.payload.contract && a.spender === action.payload.spender
+  );
+  if (index !== -1) {
+    state.approvals[index] = action.payload;
+  } else {
+    state.approvals.push(action.payload);
+  }
+},
+removeApproval: (state, action) => {
+  state.approvals = state.approvals.filter(
+    (approval) =>
+      !(approval.contract === action.payload.contract && approval.spender === action.payload.spender)
+  );
+},
   },
 });
 
