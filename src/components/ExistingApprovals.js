@@ -50,14 +50,13 @@ useEffect(() => {
 
 
 
- const fetchApprovals = async () => {
+const fetchApprovals = async () => {
     try {
         setLoading(true);
         setError(null);
 
-        const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
         console.log("🔄 Fetching ERC-20 approvals...");
-        const erc20Fetched = await getERC20Approvals(tokenContracts, account);
+        const erc20Fetched = await getERC20Approvals([CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2], account);
         console.log("✅ ERC-20 Approvals Fetched:", erc20Fetched);
 
         console.log("🔄 Fetching ERC-721 approvals...");
@@ -70,12 +69,13 @@ useEffect(() => {
 
         const allApprovals = [...(erc20Fetched || []), ...(erc721Fetched || []), ...(erc1155Fetched || [])];
 
-        if (allApprovals.length === 0) {
-            console.log("ℹ️ No approvals found.");
-        }
+        console.log("🟢 Approvals Before Setting State:", allApprovals.length, allApprovals);
 
-        // 🔥 Use React State Instead of Redux
         setApprovals(allApprovals);
+
+        setTimeout(() => {
+            console.log("🔵 Approvals After Setting State:", approvals.length, approvals);
+        }, 500);
     } catch (err) {
         console.error("❌ Error fetching approvals:", err);
         setError(err.message);
