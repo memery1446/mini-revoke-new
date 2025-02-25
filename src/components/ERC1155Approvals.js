@@ -104,7 +104,7 @@ const ERC1155Approvals = ({ contractAddress, owner }) => {
     };
 
     const formatAddress = (address) => `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-
+console.log("🟢 UI Approvals Before Rendering:", approvals.length, approvals);
     return (
         <div className="card shadow-sm mb-4">
             <div className="card-header bg-light d-flex justify-content-between align-items-center">
@@ -147,44 +147,53 @@ const ERC1155Approvals = ({ contractAddress, owner }) => {
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {approvals.map((approval) => (
-                                    <tr key={approval.id} className={approval.error ? "table-danger" : ""}>
-                                        <td>
-                                            <div className="d-flex align-items-center">
-                                                <span className="font-monospace">{formatAddress(approval.spender)}</span>
-                                                <button
-                                                    className="btn btn-sm btn-link ms-2"
-                                                    onClick={() => navigator.clipboard.writeText(approval.spender)}
-                                                    title="Copy address"
-                                                >
-                                                    📋
-                                                </button>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {approval.error ? (
-                                                <span className="badge bg-danger" title={approval.error}>Error</span>
-                                            ) : approval.isApproved ? (
-                                                <span className="badge bg-success">Approved</span>
-                                            ) : (
-                                                <span className="badge bg-secondary">Not Approved</span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            {approval.isApproved && !approval.error && (
-                                                <button
-                                                    className="btn btn-danger btn-sm"
-                                                    onClick={() => revokeApproval(approval.spender)}
-                                                    disabled={revoking[approval.spender]}
-                                                >
-                                                    {revoking[approval.spender] ? "Revoking..." : "🚫 Revoke"}
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
+
+
+<tbody>
+    {approvals.length > 0 ? (
+        approvals.map((approval) => (
+            <tr key={approval.id} className={approval.error ? "table-danger" : ""}>
+                <td>
+                    <div className="d-flex align-items-center">
+                        <span className="font-monospace">{formatAddress(approval.spender)}</span>
+                        <button
+                            className="btn btn-sm btn-link ms-2"
+                            onClick={() => navigator.clipboard.writeText(approval.spender)}
+                            title="Copy address"
+                        >
+                            📋
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    {approval.error ? (
+                        <span className="badge bg-danger" title={approval.error}>Error</span>
+                    ) : approval.isApproved ? (
+                        <span className="badge bg-success">Approved</span>
+                    ) : (
+                        <span className="badge bg-secondary">Not Approved"
+                    )}
+                </td>
+                <td>
+                    {approval.isApproved && !approval.error && (
+                        <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => revokeApproval(approval.spender)}
+                            disabled={revoking[approval.spender]}
+                        >
+                            {revoking[approval.spender] ? "Revoking..." : "🚫 Revoke"}
+                        </button>
+                    )}
+                </td>
+            </tr>
+        ))
+    ) : (
+        <tr>
+            <td colSpan="3" className="text-center py-3">No approvals found.</td>
+        </tr>
+    )}
+</tbody>
+
                         </table>
                     </div>
                 )}
