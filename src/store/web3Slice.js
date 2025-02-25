@@ -29,7 +29,7 @@ addApproval: (state, action) => {
     );
 
     if (!exists) {
-        state.approvals = [...state.approvals, action.payload]; // ✅ Force Redux to trigger update
+        state.approvals = [...state.approvals, action.payload]; // ✅ Force Redux update
         console.log("✅ Approval Added to Redux:", action.payload);
     } else {
         console.log("⚠️ Approval Already Exists in Redux:", action.payload);
@@ -37,6 +37,7 @@ addApproval: (state, action) => {
 
     console.log("🟢 Redux Approvals After Add:", state.approvals);
 },
+
 
 
     removeApproval: (state, action) => {

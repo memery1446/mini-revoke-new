@@ -58,16 +58,17 @@ const fetchApprovals = async () => {
             console.log("ℹ️ No approvals found.");
         }
 
-        // 🔥 FIX: Ensure state updates BEFORE dispatching to Redux
-        setFetchedApprovals([...allApprovals]); // ✅ Force React re-render
+        // 🔥 Ensure state updates before dispatching to Redux
+        setFetchedApprovals([...allApprovals]); // ✅ Forces React to update UI
         console.log("🟢 Approvals before dispatching to Redux:", allApprovals);
 
+        // 🔥 Dispatch each approval to Redux
         allApprovals.forEach((approval) => {
             console.log("🚀 Dispatching Approval to Redux:", approval);
             dispatch(addApprovalAction(approval));
         });
 
-        // 🔥 Check Redux after updating
+        // ✅ Check Redux after updating
         setTimeout(() => {
             console.log("🔍 Redux State After Dispatch:", window.reduxStore.getState().web3.approvals);
         }, 2000);
@@ -78,6 +79,7 @@ const fetchApprovals = async () => {
         setLoading(false);
     }
 };
+
 
 
 
