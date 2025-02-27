@@ -1,46 +1,97 @@
-    import React, { useEffect, useState } from "react";
-    import { useSelector } from "react-redux";
-    import WalletConnect from "./components/WalletConnect.js";
-    import NetworkSelector from "./components/NetworkSelector.js";
-    import ExistingApprovals from "./components/ExistingApprovals.js";
-    import BatchRevoke from "./components/BatchRevoke.js"; // ✅ Add Batch Revoke Component
-    import "bootstrap/dist/css/bootstrap.min.css";
-    import { BootstrapWrapper } from "./utils/provider";
-    import ApprovalDebugger from "./components/ApprovalDebugger";
-    import { initializeProvider } from "./utils/providerService";
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import WalletConnect from "./components/WalletConnect.js";
+import NetworkSelector from "./components/NetworkSelector.js";
+import ExistingApprovals from "./components/ExistingApprovals.js";
+import BatchRevoke from "./components/BatchRevoke.js";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { BootstrapWrapper } from "./utils/provider";
+import ApprovalDebugger from "./components/ApprovalDebugger";
+import { initializeProvider } from "./utils/providerService";
 
-    const App = () => {
-        const wallet = useSelector((state) => state.web3.account);
-        const network = useSelector((state) => state.web3.network);
-        const [selectedApprovals, setSelectedApprovals] = useState([]); // ✅ Track selected approvals
+// Add console log at the top level to verify file loading
+console.log("🔴 App.js loaded - " + new Date().toISOString());
 
-useEffect(() => {
-  // Initialize the provider service when the app loads
-  initializeProvider();
-}, []);
+const App = () => {
+    console.log("🔶 App component rendering");
+    const dispatch = useDispatch();
+    const wallet = useSelector((state) => state.web3.account);
+    const network = useSelector((state) => state.web3.network);
+    const approvals = useSelector((state) => state.web3.approvals);
+    const [selectedApprovals, setSelectedApprovals] = useState([]);
 
-        useEffect(() => {
-            console.log("Wallet:", wallet);
-            console.log("Network:", network);
-        }, [wallet, network]);
+    // Initialize provider and setup debugging
+    useEffect(() => {
+        // Initialize the provider service
+        console.log("🔄 Initializing provider service...");
+        initializeProvider().then(() => {
+            console.log("✅ Provider service initialized");
+        }).catch(error => {
+            console.error("❌ Provider initialization error:", error);
+        });
 
-           // ✅ Toggle selection of approvals for batch revoke
+        // Setup Redux debugging
+        if (typeof window !== 'undefined') {
+            // Expose Redux store to window
+            if (window.store) {
+                console.log("📊 Redux store already exposed to window");
+            } else {
+                window.store = require('./store/index').default;
+                console.log("📊 Redux store exposed to window");
+            }
+            
+            // Create debug helper
+            window.debugApp = {
+                getState: () => window.store ? window.store.getState() : "Store not available",
+                logState: () => {
+                    if (window.store) {
+                        const state = window.store.getState();
+                        console.log("Current Redux State:", state);
+                        return state;
+                    }
+                    return "Store not available";
+                }
+            };
+            
+            console.log("🛠️ Debug tools setup complete. Try window.debugApp.logState() in console");
+        }
+    }, []);
+
+    // Log wallet and network changes
+    useEffect(() => {
+        console.log("👛 Wallet:", wallet);
+        console.log("🌐 Network:", network);
+    }, [wallet, network]);
+
+    // Log approvals when they change
+    useEffect(() => {
+        console.log("📋 Approvals updated:", approvals);
+        console.log("📋 Total approvals:", approvals.length);
+    }, [approvals]);
+
+    // Toggle approval selection for batch revoke
     const toggleApprovalSelection = (approval) => {
+        console.log("🔄 Toggling approval selection:", approval);
+        
         setSelectedApprovals((prev) => {
-            const updated = prev.some((a) => a.id === approval.id)
+            const isSelected = prev.some((a) => a.id === approval.id);
+            
+            const updated = isSelected
                 ? prev.filter((a) => a.id !== approval.id) // Remove if already selected
                 : [...prev, approval]; // Add if not selected
 
-            console.log("✅ Updated Selected Approvals:", updated);
+            console.log("✅ Updated selected approvals:", updated);
+            console.log("✅ Total selected:", updated.length);
             return updated;
         });
     };
 
+    console.log("🔄 App render with wallet:", wallet ? "Connected" : "Not connected");
 
     return (
         <BootstrapWrapper>
             <div className="container my-5">
-                {/* 🔹 Header Section */}
+                {/* Header Section */}
                 <header className="mb-4 text-center">
                     <h1 className="text-primary fw-bold">
                         <span className="me-2">🔒</span> Approval Manager
@@ -48,7 +99,7 @@ useEffect(() => {
                     <p className="text-muted">Review and revoke token approvals to protect your assets.</p>
                 </header>
 
-                {/* 🔹 Connection Section */}
+                {/* Connection Section */}
                 <div className="row mb-4">
                     <div className="col-md-6">
                         <WalletConnect />
@@ -59,7 +110,7 @@ useEffect(() => {
                     </div>
                 </div>
 
-                {/* 🔹 If No Wallet is Connected */}
+                {/* Main Content */}
                 {!wallet ? (
                     <div className="text-center py-5">
                         <h2>Connect Your Wallet</h2>
@@ -77,22 +128,23 @@ useEffect(() => {
                         </div>
                     </div>
                 ) : (
-                    /* 🔹 Categorized Approval List with Batch Revoke */
                     <div className="row mt-4">
                         <div className="col-lg-12">
                             <ExistingApprovals onToggleSelect={toggleApprovalSelection} />
                         </div>
                         
-                        {/* 🔹 Batch Revoke Section (Only Visible When Selections Exist) */}
                         {selectedApprovals.length > 0 && (
                             <div className="col-lg-12 mt-3">
-                                <BatchRevoke selectedApprovals={selectedApprovals} setSelectedApprovals={setSelectedApprovals} />
+                                <BatchRevoke 
+                                    selectedApprovals={selectedApprovals} 
+                                    setSelectedApprovals={setSelectedApprovals} 
+                                />
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* 🔹 Footer */}
+                {/* Footer */}
                 <footer className="mt-5 pt-4 border-top text-center text-muted">
                     <p><small>Mini Revoke Cash &copy; 2025</small></p>
                 </footer>
@@ -102,5 +154,4 @@ useEffect(() => {
 };
 
 export default App;
-
 

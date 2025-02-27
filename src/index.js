@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import store from "./store/index"; // ✅ Correct import
 import App from "./App";
 import "bootstrap/dist/css/bootstrap.min.css";  // ✅ Ensure Bootstrap styles are applied
+import './storeDebug';  // Add this import
 
 const root = ReactDOM.createRoot(document.getElementById("root"));  // ✅ Use React 18 API
 
