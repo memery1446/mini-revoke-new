@@ -48,6 +48,7 @@
                     </div>
                     <div className="col-md-6">
                         <NetworkSelector />
+                        <ApprovalDebugger />
                     </div>
                 </div>
 
