@@ -18,7 +18,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 
   const provider = window.ethereum ? new BrowserProvider(window.ethereum) : new JsonRpcProvider("http://127.0.0.1:8545")
 
-const fetchApprovals = useCallback(async () => {
+  const fetchApprovals = useCallback(async () => {
     if (!account) return
 
     try {
@@ -41,9 +41,24 @@ const fetchApprovals = useCallback(async () => {
       const erc1155Fetched = await getERC1155Approvals(account)
       console.log("✅ Raw ERC-1155 Approvals Fetched:", erc1155Fetched)
 
-      const erc20Approvals = Array.isArray(erc20Fetched) ? erc20Fetched : []
-      const erc721Approvals = erc721Fetched ? [erc721Fetched] : []
-      const erc1155Approvals = Array.isArray(erc1155Fetched) ? erc1155Fetched : []
+      // Add unique IDs to each approval type
+      const erc20Approvals = Array.isArray(erc20Fetched) ? erc20Fetched.map(a => ({
+        ...a,
+        type: "ERC-20",
+        id: `erc20-${a.contract}-${a.spender}`
+      })) : []
+      
+      const erc721Approvals = erc721Fetched ? [{
+        ...erc721Fetched,
+        type: "ERC-721",
+        id: `erc721-${erc721Fetched.tokenId || "0"}-${erc721Fetched.spender || CONTRACT_ADDRESSES.MockSpender}`
+      }] : []
+      
+      const erc1155Approvals = Array.isArray(erc1155Fetched) ? erc1155Fetched.map(a => ({
+        ...a,
+        type: "ERC-1155",
+        id: `erc1155-${a.contract}-${a.spender || "unknown"}`
+      })) : []
       
       console.log("✅ Processed ERC-20 Approvals:", erc20Approvals)
       console.log("✅ Processed ERC-721 Approvals:", erc721Approvals)
@@ -74,7 +89,8 @@ const fetchApprovals = useCallback(async () => {
 
   const revokeApproval = async (approval) => {
     try {
-      console.log("🚨 Revoking approval for:", approval.contract)
+      console.log("🚨 Revoking specific approval:", JSON.stringify(approval))
+      console.log("🚨 Revoking for contract:", approval.contract, "spender:", approval.spender)
 
       const signer = await provider.getSigner()
       const isERC1155 = approval.type === "ERC-1155"
@@ -102,16 +118,21 @@ const fetchApprovals = useCallback(async () => {
         )
         tx = await erc721Contract.setApprovalForAll(approval.spender, false)
       } else {
+        // For ERC20, ensure we're using the specific spender from the approval
         const tokenContract = new Contract(
           approval.contract,
           ["function approve(address spender, uint256 amount) external returns (bool)"],
           signer,
         )
+        
+        console.log(`Revoking ERC20 approval for ${approval.spender} on contract ${approval.contract}`)
         tx = await tokenContract.approve(approval.spender, 0)
       }
 
       await tx.wait()
-      console.log("✅ Approval revoked!")
+      console.log("✅ Specific approval successfully revoked!")
+      
+      // Refresh approvals
       fetchApprovals()
     } catch (err) {
       console.error("❌ Error revoking approval:", err)
@@ -157,16 +178,24 @@ const fetchApprovals = useCallback(async () => {
                 </tr>
               </thead>
               <tbody>
-                {approvals.map((approval, index) => (
-                  <tr key={index}>
+                {approvals.map((approval) => (
+                  <tr key={approval.id || `${approval.contract}-${approval.spender}`}>
                     <td>
-                      <input type="checkbox" onChange={() => onToggleSelect(approval)} />
+                      <input 
+                        type="checkbox" 
+                        onChange={() => {
+                          console.log("Toggling selection for approval:", approval);
+                          onToggleSelect(approval);
+                        }} 
+                      />
                     </td>
                     <td>{approval.contract}</td>
                     <td>{approval.spender}</td>
                     <td>{approval.amount}</td>
                     <td>
-                      <button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)}>
+                      <button 
+                        className="btn btn-danger btn-sm" 
+                        onClick={() => revokeApproval(approval)}>
                         🚨 Revoke
                       </button>
                     </td>

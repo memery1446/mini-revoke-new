@@ -20,12 +20,15 @@ const BatchRevoke = ({ selectedApprovals, setSelectedApprovals }) => {
             const erc721Approvals = selectedApprovals.filter(a => a.type === "ERC-721");
             const erc1155Approvals = selectedApprovals.filter(a => a.type === "ERC-1155");
             
-            // Handle ERC-20 approvals
-            if (erc20Approvals.length > 0) {
-                const tokenContracts = erc20Approvals.map((approval) => approval.contract);
-                console.log("⏳ Sending batch revoke transaction for ERC-20:", tokenContracts);
-                await batchRevokeERC20Approvals(tokenContracts, signer);
-            }
+// Handle ERC-20 approvals
+if (erc20Approvals.length > 0) {
+  const tokenContractsWithSpenders = erc20Approvals.map((approval) => ({
+    contract: approval.contract,
+    spender: approval.spender
+  }));
+  console.log("⏳ Sending batch revoke transaction for ERC-20:", tokenContractsWithSpenders);
+  await batchRevokeERC20Approvals(tokenContractsWithSpenders, signer);
+}
             
             // Handle ERC-721 approvals
             if (erc721Approvals.length > 0) {
