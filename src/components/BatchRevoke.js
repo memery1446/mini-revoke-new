@@ -1,3 +1,4 @@
+// BatchRevoke.js Component
 import React from "react";
 import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";
 import { batchRevokeERC721Approvals } from "../utils/nftApprovals";
@@ -6,6 +7,11 @@ import { getProvider } from "../utils/provider";
 
 const BatchRevoke = ({ selectedApprovals, setSelectedApprovals }) => {
     const handleBatchRevoke = async () => {
+        if (selectedApprovals.length === 0) {
+            console.log("No approvals selected");
+            return;
+        }
+        
         if (!window.confirm(`🚨 Are you sure you want to revoke ${selectedApprovals.length} approvals?`)) {
             return;
         }
@@ -20,15 +26,15 @@ const BatchRevoke = ({ selectedApprovals, setSelectedApprovals }) => {
             const erc721Approvals = selectedApprovals.filter(a => a.type === "ERC-721");
             const erc1155Approvals = selectedApprovals.filter(a => a.type === "ERC-1155");
             
-// Handle ERC-20 approvals
-if (erc20Approvals.length > 0) {
-  const tokenContractsWithSpenders = erc20Approvals.map((approval) => ({
-    contract: approval.contract,
-    spender: approval.spender
-  }));
-  console.log("⏳ Sending batch revoke transaction for ERC-20:", tokenContractsWithSpenders);
-  await batchRevokeERC20Approvals(tokenContractsWithSpenders, signer);
-}
+            // Handle ERC-20 approvals - UPDATED to pass both contract and spender
+            if (erc20Approvals.length > 0) {
+                const tokenContractsWithSpenders = erc20Approvals.map((approval) => ({
+                    contract: approval.contract,
+                    spender: approval.spender
+                }));
+                console.log("⏳ Sending batch revoke transaction for ERC-20:", tokenContractsWithSpenders);
+                await batchRevokeERC20Approvals(tokenContractsWithSpenders, signer);
+            }
             
             // Handle ERC-721 approvals
             if (erc721Approvals.length > 0) {
@@ -46,6 +52,8 @@ if (erc20Approvals.length > 0) {
 
             setSelectedApprovals([]); // Clear selection after revocation
             alert("✅ Batch revocation successful!");
+            // You might want to trigger a refresh of approvals here
+            window.location.reload(); // Simple but effective way to refresh everything
         } catch (error) {
             console.error("❌ Error in batch revocation:", error);
             alert(`Error: ${error.message}`);
@@ -56,7 +64,11 @@ if (erc20Approvals.length > 0) {
         <div className="alert alert-warning">
             <h5>🚨 Batch Revoke</h5>
             <p>You have selected {selectedApprovals.length} approvals for revocation.</p>
-            <button className="btn btn-danger" onClick={handleBatchRevoke}>
+            <button 
+                className="btn btn-danger" 
+                onClick={handleBatchRevoke}
+                disabled={selectedApprovals.length === 0}
+            >
                 Revoke Selected
             </button>
         </div>
