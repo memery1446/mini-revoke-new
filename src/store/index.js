@@ -13,13 +13,13 @@ const store = configureStore({
 });
 
 // Expose store to window for debugging
-if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+if (typeof window !== 'undefined') {
   window.store = store;
   console.log("📊 Redux store exposed as window.store");
   
-  // Subscribe to store changes for debugging
+  // Add this new subscription to log state changes
   store.subscribe(() => {
-    console.log("🔄 Redux State Updated:", store.getState());
+    console.log("🔄 Redux State:", store.getState());
   });
 }
 
