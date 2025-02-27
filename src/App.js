@@ -6,6 +6,7 @@
     import BatchRevoke from "./components/BatchRevoke.js"; // ✅ Add Batch Revoke Component
     import "bootstrap/dist/css/bootstrap.min.css";
     import { BootstrapWrapper } from "./utils/provider";
+    import ApprovalDebugger from "./components/ApprovalDebugger";
 
     const App = () => {
         const wallet = useSelector((state) => state.web3.account);
