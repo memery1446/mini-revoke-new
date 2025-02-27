@@ -1,13 +1,14 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { BrowserProvider, Contract, JsonRpcProvider } from "ethers"
+import { useEffect, useState, useCallback, useRef } from "react"
+import { Contract } from "ethers"
 import { useSelector, useDispatch } from "react-redux"
 import { getERC20Approvals } from "../utils/erc20Approvals"
 import { getERC721Approvals } from "../utils/nftApprovals"
 import { getERC1155Approvals } from "../utils/erc1155Approvals"
 import { CONTRACT_ADDRESSES } from "../constants/abis"
 import { setApprovals, removeApproval } from "../store/web3Slice"
+import { getProvider, getSigner } from "../utils/providerService"
 
 const ExistingApprovals = ({ onToggleSelect }) => {
   const dispatch = useDispatch()
@@ -15,21 +16,20 @@ const ExistingApprovals = ({ onToggleSelect }) => {
   const approvals = useSelector((state) => state.web3.approvals)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [provider, setProvider] = useState(null)
+  const [revoking, setRevoking] = useState(false)
   
-  // Initialize provider only once when component mounts or account changes
+  // Use a ref to track if component is mounted
+  const isMounted = useRef(true)
+  
   useEffect(() => {
-    if (window.ethereum) {
-      const ethersProvider = new BrowserProvider(window.ethereum);
-      setProvider(ethersProvider);
-    } else {
-      setProvider(new JsonRpcProvider("http://127.0.0.1:8545"));
+    return () => {
+      isMounted.current = false
     }
-  }, []);
+  }, [])
 
-  // Update the fetchApprovals function - focus on the approval processing part
+  // Fetch approvals function
   const fetchApprovals = useCallback(async () => {
-    if (!account || !provider) return
+    if (!account || revoking) return
 
     try {
       setLoading(true)
@@ -39,22 +39,22 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       console.log("📋 Token contracts to check:", tokenContracts)
       console.log("📋 Account to check:", account)
 
+      // Get all approvals
       console.log("🔄 Fetching ERC-20 approvals...")
       const erc20Fetched = await getERC20Approvals(tokenContracts, account)
-      console.log("✅ Raw ERC-20 Approvals Fetched:", erc20Fetched)
-
+      
       console.log("🔄 Fetching ERC-721 approvals...")
       const erc721Fetched = await getERC721Approvals(account)
-      console.log("✅ Raw ERC-721 Approvals Fetched:", erc721Fetched)
-
+      
       console.log("🔄 Fetching ERC-1155 approvals...")
       const erc1155Fetched = await getERC1155Approvals(account)
-      console.log("✅ Raw ERC-1155 Approvals Fetched:", erc1155Fetched)
-
-      // Add unique IDs to each approval type and filter out invalid entries
+      
+      if (!isMounted.current) return
+      
+      // Process and deduplicate approvals
       const erc20Approvals = Array.isArray(erc20Fetched) 
         ? erc20Fetched
-            .filter(a => a && a.contract && a.spender) // Filter out invalid entries
+            .filter(a => a && a.contract && a.spender)
             .map(a => ({
               ...a,
               type: "ERC-20",
@@ -62,7 +62,6 @@ const ExistingApprovals = ({ onToggleSelect }) => {
             })) 
         : [];
       
-      // Only include ERC-721 approval if it's a valid object with required properties
       const erc721Approvals = (erc721Fetched && 
                               typeof erc721Fetched === 'object' && 
                               (erc721Fetched.contract || CONTRACT_ADDRESSES.TestNFT) && 
@@ -78,7 +77,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       
       const erc1155Approvals = Array.isArray(erc1155Fetched) 
         ? erc1155Fetched
-            .filter(a => a && a.contract) // Filter out invalid entries
+            .filter(a => a && a.contract)
             .map(a => ({
               ...a,
               type: "ERC-1155",
@@ -86,18 +85,13 @@ const ExistingApprovals = ({ onToggleSelect }) => {
             })) 
         : [];
       
-      console.log("✅ Processed ERC-20 Approvals:", erc20Approvals)
-      console.log("✅ Processed ERC-721 Approvals:", erc721Approvals)
-      console.log("✅ Processed ERC-1155 Approvals:", erc1155Approvals)
-
-      // Combine all approvals and filter out any duplicates using a Map
+      // Combine and deduplicate
       const allApprovalsArray = [
         ...erc20Approvals,
         ...erc721Approvals,
         ...erc1155Approvals
       ];
       
-      // Use a Map to deduplicate approvals by ID
       const uniqueApprovalsMap = new Map();
       allApprovalsArray.forEach(approval => {
         if (approval && approval.id) {
@@ -108,38 +102,50 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       const allApprovals = Array.from(uniqueApprovalsMap.values());
       console.log("🟢 All fetched approvals (deduplicated):", allApprovals);
 
-      dispatch(setApprovals(allApprovals));
+      if (isMounted.current) {
+        dispatch(setApprovals(allApprovals));
+      }
     } catch (err) {
       console.error("❌ Error fetching approvals:", err)
-      setError(err.message)
+      if (isMounted.current) {
+        setError(err.message)
+      }
     } finally {
-      setLoading(false)
+      if (isMounted.current) {
+        setLoading(false)
+      }
     }
-  }, [account, dispatch, provider]);
+  }, [account, dispatch, revoking]);
 
-  // Fix the useEffect to avoid duplicate fetching
+  // Fetch approvals when account changes
   useEffect(() => {
-    if (account && provider) {
+    if (account) {
       fetchApprovals();
     }
-  }, [account, provider, fetchApprovals]);
+  }, [account, fetchApprovals]);
 
+  // Revoke approval function
   const revokeApproval = async (approval) => {
-    if (!provider) {
-      console.error("Provider not initialized");
-      return;
-    }
-
+    if (revoking) return;
+    
     try {
-      console.log("🚨 Revoking specific approval:", JSON.stringify(approval))
-      console.log("🚨 Revoking for contract:", approval.contract, "spender:", approval.spender)
+      setRevoking(true);
+      console.log("🚨 Revoking approval:", JSON.stringify(approval));
+      
+      // Get signer from centralized service
+      const signer = await getSigner();
+      if (!signer) {
+        console.error("❌ Signer not available");
+        if (isMounted.current) {
+          setRevoking(false);
+        }
+        return;
+      }
+      
+      const isERC1155 = approval.type === "ERC-1155";
+      const isERC721 = approval.type === "ERC-721";
 
-      // Get a new signer for this specific transaction
-      const signer = await provider.getSigner()
-      const isERC1155 = approval.type === "ERC-1155"
-      const isERC721 = approval.type === "ERC-721"
-
-      let tx
+      let tx;
       if (isERC1155) {
         const erc1155Contract = new Contract(
           approval.contract,
@@ -148,8 +154,8 @@ const ExistingApprovals = ({ onToggleSelect }) => {
             "function isApprovedForAll(address account, address operator) external view returns (bool)"
           ],
           signer
-        )
-        tx = await erc1155Contract.setApprovalForAll(approval.spender, false)
+        );
+        tx = await erc1155Contract.setApprovalForAll(approval.spender, false);
       } else if (isERC721) {
         const erc721Contract = new Contract(
           approval.contract,
@@ -158,45 +164,57 @@ const ExistingApprovals = ({ onToggleSelect }) => {
             "function isApprovedForAll(address owner, address operator) external view returns (bool)"
           ],
           signer
-        )
-        tx = await erc721Contract.setApprovalForAll(approval.spender, false)
+        );
+        tx = await erc721Contract.setApprovalForAll(approval.spender, false);
       } else {
-        // For ERC20, ensure we're using the specific spender from the approval
+        // For ERC20
         const tokenContract = new Contract(
           approval.contract,
           ["function approve(address spender, uint256 amount) external returns (bool)"],
           signer
-        )
+        );
         
-        console.log(`Revoking ERC20 approval for ${approval.spender} on contract ${approval.contract}`)
-        tx = await tokenContract.approve(approval.spender, 0)
+        console.log(`Revoking ERC20 approval for ${approval.spender} on contract ${approval.contract}`);
+        tx = await tokenContract.approve(approval.spender, 0);
       }
 
-      console.log("Transaction submitted, waiting for confirmation...")
-      await tx.wait()
-      console.log("✅ Specific approval successfully revoked!")
+      console.log("Transaction sent, waiting for confirmation...");
+      await tx.wait();
+      console.log("✅ Approval successfully revoked!");
       
-      // First update the state directly to provide immediate feedback
-      dispatch(removeApproval(approval))
-      
-      // Then add a small delay before refreshing to prevent state conflicts
-      setTimeout(() => {
-        fetchApprovals()
-      }, 1000)
+      if (isMounted.current) {
+        // Update Redux first
+        dispatch(removeApproval(approval));
+        
+        // Wait before refreshing all approvals
+        setTimeout(() => {
+          if (isMounted.current) {
+            setRevoking(false);
+            fetchApprovals();
+          }
+        }, 2000);
+      }
     } catch (err) {
-      console.error("❌ Error revoking approval:", err)
-      if (err.code !== 'ACTION_REJECTED') { // Don't show alert if user rejected the transaction
-        alert(`Error: ${err.message}`)
+      console.error("❌ Error revoking approval:", err);
+      if (isMounted.current) {
+        setRevoking(false);
+        if (err.code !== 'ACTION_REJECTED') {
+          alert(`Error: ${err.message}`);
+        }
       }
     }
-  }
+  };
 
   return (
     <div className="card shadow-sm mb-4">
       <div className="card-header bg-light d-flex justify-content-between align-items-center">
         <h3 className="mb-0">Existing Approvals</h3>
-        <button className="btn btn-secondary" onClick={fetchApprovals} disabled={!provider || loading}>
-          🔄 Refresh Approvals
+        <button 
+          className="btn btn-secondary" 
+          onClick={fetchApprovals} 
+          disabled={loading || revoking}
+        >
+          {loading ? "Loading..." : "🔄 Refresh Approvals"}
         </button>
       </div>
 
@@ -211,10 +229,6 @@ const ExistingApprovals = ({ onToggleSelect }) => {
         ) : error ? (
           <div className="alert alert-danger">
             <p>{error}</p>
-          </div>
-        ) : !provider ? (
-          <div className="alert alert-warning">
-            <p>Initializing connection to blockchain...</p>
           </div>
         ) : approvals.length === 0 ? (
           <div className="alert alert-info">
@@ -255,8 +269,10 @@ const ExistingApprovals = ({ onToggleSelect }) => {
                     <td>
                       <button 
                         className="btn btn-danger btn-sm" 
-                        onClick={() => revokeApproval(approval)}>
-                        🚨 Revoke
+                        onClick={() => revokeApproval(approval)}
+                        disabled={revoking}
+                      >
+                        {revoking ? "Processing..." : "🚨 Revoke"}
                       </button>
                     </td>
                   </tr>
@@ -271,14 +287,14 @@ const ExistingApprovals = ({ onToggleSelect }) => {
         <button 
           className="btn btn-outline-secondary" 
           onClick={fetchApprovals} 
-          disabled={!provider || loading}
+          disabled={loading || revoking}
         >
           🔄 Refresh
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ExistingApprovals
+export default ExistingApprovals;
 

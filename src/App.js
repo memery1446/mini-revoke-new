@@ -7,11 +7,17 @@
     import "bootstrap/dist/css/bootstrap.min.css";
     import { BootstrapWrapper } from "./utils/provider";
     import ApprovalDebugger from "./components/ApprovalDebugger";
+    import { initializeProvider } from "./utils/providerService";
 
     const App = () => {
         const wallet = useSelector((state) => state.web3.account);
         const network = useSelector((state) => state.web3.network);
         const [selectedApprovals, setSelectedApprovals] = useState([]); // ✅ Track selected approvals
+
+useEffect(() => {
+  // Initialize the provider service when the app loads
+  initializeProvider();
+}, []);
 
         useEffect(() => {
             console.log("Wallet:", wallet);

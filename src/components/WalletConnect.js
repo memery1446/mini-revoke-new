@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setAccount, setNetwork, resetWeb3 } from "../store/web3Slice";
-import { ethers, BrowserProvider } from "ethers";
+import { resetWeb3 } from "../store/web3Slice";
+import { connectWallet, initializeProvider } from "../utils/providerService";
 
 const WalletConnect = () => {
   const dispatch = useDispatch();
@@ -9,34 +9,20 @@ const WalletConnect = () => {
   const network = useSelector((state) => state.web3.network);
   const [loading, setLoading] = useState(false);
 
+  // Initialize provider when component mounts
+  useEffect(() => {
+    initializeProvider();
+  }, []);
+
   useEffect(() => {
     console.log("🔄 Redux Account:", account);
     console.log("🔄 Redux Network:", network);
   }, [account, network]);
 
-  const connectWallet = async () => {
-    if (!window.ethereum) {
-      alert("❌ MetaMask is required. Please install it.");
-      return;
-    }
-
+  const handleConnectWallet = async () => {
     try {
       setLoading(true);
-
-      const provider = new BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      const network = await provider.getNetwork();
-
-      console.log("🌐 Connected to network:", network);
-
-      dispatch(setAccount(address));
-      dispatch(setNetwork(network.chainId));
-
-      console.log("✅ Redux Updated -> Account:", address);
-      console.log("✅ Redux Updated -> Network:", network.chainId);
+      await connectWallet();
     } catch (error) {
       console.error("❌ Connection error:", error);
     } finally {
@@ -59,7 +45,7 @@ const WalletConnect = () => {
           </button>
         </>
       ) : (
-        <button className="btn btn-success" onClick={connectWallet} disabled={loading}>
+        <button className="btn btn-success" onClick={handleConnectWallet} disabled={loading}>
           {loading ? "Connecting..." : "Connect Wallet"}
         </button>
       )}
@@ -68,3 +54,4 @@ const WalletConnect = () => {
 };
 
 export default WalletConnect;
+
