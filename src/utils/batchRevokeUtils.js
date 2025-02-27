@@ -7,7 +7,7 @@ import { TOKEN_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
  * @param {ethers.Signer} signer - The wallet signer executing the transactions.
  */
 export async function batchRevokeERC20Approvals(tokenContractsWithSpenders, signer) {
-  console.log("⏳ Starting batch revocation for ERC-20 approvals...");
+   console.log("⏳ Starting batch revocation for ERC-20 approvals...");
   
   for (let { contract: tokenAddress, spender } of tokenContractsWithSpenders) {
     try {
