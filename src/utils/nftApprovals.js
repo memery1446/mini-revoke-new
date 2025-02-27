@@ -10,7 +10,7 @@ import { CONTRACT_ADDRESSES } from "../constants/abis"; // ✅ Correct import
  */
 export async function getERC721Approvals(userAddress, tokenId = 1) {
     try {
-        const provider = await getProvider(); // ✅ Ensure proper provider handling
+        const provider = await getProvider();
         const contractAddress = CONTRACT_ADDRESSES.TestNFT;
 
         console.log("🔍 Fetching ERC-721 approvals for contract:", contractAddress);
@@ -36,6 +36,7 @@ export async function getERC721Approvals(userAddress, tokenId = 1) {
         let isApproved = false;
         try {
             isApproved = await contract.isApprovedForAll(getAddress(userAddress), getAddress(operatorAddress));
+            console.log("📌 isApprovedForAll result:", isApproved);
         } catch (error) {
             console.warn("⚠️ isApprovedForAll call failed. No approvals set or contract issue.");
         }
@@ -43,17 +44,32 @@ export async function getERC721Approvals(userAddress, tokenId = 1) {
         let specificApproval = ZeroAddress;
         try {
             specificApproval = await contract.getApproved(tokenId);
+            console.log("📌 getApproved result for token ID " + tokenId + ":", specificApproval);
         } catch (error) {
             console.warn("⚠️ getApproved call failed. No approval set for token ID:", tokenId);
         }
 
-        console.log("✅ ERC-721 Approval Status:", isApproved || specificApproval !== ZeroAddress);
-        return isApproved || specificApproval !== ZeroAddress;
+        const approvalStatus = isApproved || specificApproval !== ZeroAddress;
+        console.log("✅ ERC-721 Approval Status:", approvalStatus);
+        
+        // This is the crucial change - return an array of objects instead of a boolean
+        if (approvalStatus) {
+            return [{
+                contract: contractAddress,
+                spender: operatorAddress,
+                tokenId: tokenId.toString(),
+                isApproved: true,
+                approvedAddress: isApproved ? operatorAddress : specificApproval
+            }];
+        }
+        
+        return []; // Return empty array if no approvals
     } catch (error) {
         console.error("❌ Error fetching ERC-721 approvals:", error.message);
-        return false;
+        return []; // Return empty array on error
     }
 }
+
 
 /**
  * Revoke ERC-721 approval for a user.
