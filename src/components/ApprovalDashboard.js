@@ -214,7 +214,7 @@ const ApprovalDashboard = () => {
                             type="checkbox" 
                             onChange={() => handleSelectApproval(approval)}
                             checked={selectedApprovals.some(a => a.id === approval.id)}
-                          />
+                           />
                         </td>
                         <td>{approval.contract}</td>
                         <td>{approval.type}</td>
