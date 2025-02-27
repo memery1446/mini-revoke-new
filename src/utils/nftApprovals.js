@@ -89,7 +89,18 @@ export async function revokeERC721Approval(userAddress) {
  */
 export async function batchRevokeERC721Approvals(userAddresses) {
     try {
-        await Promise.all(userAddresses.map(revokeERC721Approval));
+        // Ensure userAddresses is an array
+        const addresses = Array.isArray(userAddresses) 
+            ? userAddresses 
+            : (userAddresses ? [userAddresses] : []);
+        
+        if (addresses.length === 0) {
+            console.log("⚠️ No addresses provided for batch revocation");
+            return;
+        }
+        
+        console.log(`🔄 Attempting to revoke approvals for ${addresses.length} address(es)`);
+        await Promise.all(addresses.map(revokeERC721Approval));
         console.log("✅ Batch revocation of ERC-721 approvals complete.");
     } catch (error) {
         console.error("❌ Error in batch revocation of ERC-721 approvals:", error);
