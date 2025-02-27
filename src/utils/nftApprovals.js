@@ -85,24 +85,58 @@ export async function revokeERC721Approval(userAddress) {
 
 /**
  * Batch revoke ERC-721 approvals for multiple users.
- * @param {Array<string>} userAddresses - List of user addresses.
+ * @param {string} userAddress - Address of the owner revoking approvals.
+ * @param {Array<number>} tokenIds - Optional token IDs for specific approvals.
  */
-export async function batchRevokeERC721Approvals(userAddresses) {
+export async function batchRevokeERC721Approvals(userAddress, tokenIds = []) {
     try {
-        // Ensure userAddresses is an array
-        const addresses = Array.isArray(userAddresses) 
-            ? userAddresses 
-            : (userAddresses ? [userAddresses] : []);
+        console.log("🚨 Batch revoking ERC-721 approvals");
+        console.log("👤 Owner address:", userAddress);
         
-        if (addresses.length === 0) {
-            console.log("⚠️ No addresses provided for batch revocation");
-            return;
+        const provider = await getProvider();
+        const signer = await provider.getSigner();
+        const contractAddress = CONTRACT_ADDRESSES.TestNFT;
+        
+        // Create contract instance with required methods
+        const nftContract = new Contract(
+            contractAddress,
+            [
+                "function setApprovalForAll(address operator, bool approved) external",
+                "function approve(address to, uint256 tokenId) external"
+            ],
+            signer
+        );
+
+        const operatorAddress = CONTRACT_ADDRESSES.MockSpender;
+        console.log("🔄 Revoking approval for operator:", operatorAddress);
+
+        // First, revoke global approval (setApprovalForAll)
+        const tx = await nftContract.setApprovalForAll(operatorAddress, false);
+        console.log("📤 Transaction sent:", tx.hash);
+        await tx.wait();
+        console.log("✅ Global ERC-721 approval revoked");
+        
+        // Then revoke specific token approvals if provided
+        if (tokenIds && tokenIds.length > 0) {
+            console.log("🔄 Revoking approvals for specific tokens:", tokenIds);
+            
+            for (const tokenId of tokenIds) {
+                try {
+                    const specificTx = await nftContract.approve(ZeroAddress, tokenId);
+                    console.log(`📤 Transaction sent for token ID ${tokenId}:`, specificTx.hash);
+                    await specificTx.wait();
+                    console.log(`✅ Approval revoked for token ID ${tokenId}`);
+                } catch (error) {
+                    console.error(`❌ Error revoking approval for token ID ${tokenId}:`, error);
+                }
+            }
         }
         
-        console.log(`🔄 Attempting to revoke approvals for ${addresses.length} address(es)`);
-        await Promise.all(addresses.map(revokeERC721Approval));
-        console.log("✅ Batch revocation of ERC-721 approvals complete.");
+        console.log("✅ Batch revocation of ERC-721 approvals complete");
+        return true;
     } catch (error) {
         console.error("❌ Error in batch revocation of ERC-721 approvals:", error);
+        return false;
     }
 }
+

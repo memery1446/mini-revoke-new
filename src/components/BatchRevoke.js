@@ -44,11 +44,21 @@ const BatchRevoke = ({ selectedApprovals, setSelectedApprovals }) => {
                 await batchRevokeERC20Approvals(tokenContractsWithSpenders, signer);
             }
             
-            // Handle ERC-721 approvals
-            if (erc721Approvals.length > 0) {
-                console.log(`⏳ Processing ${erc721Approvals.length} ERC-721 approvals...`);
-                await batchRevokeERC721Approvals(await signer.getAddress());
-            }
+// In BatchRevoke.js, update the ERC-721 section:
+
+// Handle ERC-721 approvals
+if (erc721Approvals.length > 0) {
+    console.log("⏳ Sending batch revoke transaction for ERC-721");
+    const signer = await getSigner();
+    const userAddress = await signer.getAddress();
+    
+    // Extract token IDs if available
+    const tokenIds = erc721Approvals
+        .filter(approval => approval.tokenId)
+        .map(approval => approval.tokenId);
+    
+    await batchRevokeERC721Approvals(userAddress, tokenIds);
+}
             
             // Handle ERC-1155 approvals
             if (erc1155Approvals.length > 0) {
