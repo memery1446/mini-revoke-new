@@ -31,9 +31,9 @@ const ApprovalDashboard = () => {
     }
   }, [wallet]);
 
-  const fetchApprovals = async () => {
+const fetchApprovals = async () => {
     setIsLoading(true);
-    console.log("🔄 Fetching approvals...");
+    console.log("🔄 Starting approval fetch process...");
 
     try {
       const provider = await getProvider();
@@ -42,38 +42,50 @@ const ApprovalDashboard = () => {
       console.log("🔍 Wallet Address:", userAddress);
 
       const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+      console.log("📋 Token contracts to check:", tokenContracts);
 
       console.log("📡 Fetching ERC-20 approvals...");
       const erc20Approvals = await getERC20Approvals(tokenContracts, userAddress) || [];
-      console.log("✅ ERC-20 Approvals Fetched:", erc20Approvals);
+      console.log("✅ Raw ERC-20 Approvals Fetched:", erc20Approvals);
 
       console.log("📡 Fetching ERC-721 approvals...");
       const erc721Approvals = await getERC721Approvals(userAddress) || [];
-      console.log("✅ ERC-721 Approvals Fetched:", erc721Approvals);
+      console.log("✅ Raw ERC-721 Approvals Fetched:", erc721Approvals);
 
       console.log("📡 Fetching ERC-1155 approvals...");
       const erc1155Approvals = await getERC1155Approvals(userAddress) || [];
-      console.log("✅ ERC-1155 Approvals Fetched:", erc1155Approvals);
+      console.log("✅ Raw ERC-1155 Approvals Fetched:", erc1155Approvals);
+
+      console.log("🔄 Mapping approval objects...");
+      
+      const mappedERC20 = erc20Approvals.map((a) => ({
+        ...a,
+        type: "ERC-20",
+        id: `erc20-${a.contract || "unknown"}-${a.spender || "unknown"}`
+      }));
+      console.log("✅ Mapped ERC-20 approvals:", mappedERC20);
+      
+      const mappedERC721 = erc721Approvals.map((a) => ({
+        ...a,
+        type: "ERC-721",
+        id: `erc721-${a.tokenId || "0"}-${a.spender || CONTRACT_ADDRESSES.MockSpender}`
+      }));
+      console.log("✅ Mapped ERC-721 approvals:", mappedERC721);
+      
+      const mappedERC1155 = erc1155Approvals.map((a) => ({
+        ...a,
+        type: "ERC-1155",
+        id: `erc1155-${a.spender || "unknown"}`
+      }));
+      console.log("✅ Mapped ERC-1155 approvals:", mappedERC1155);
 
       const newApprovals = [
-        ...erc20Approvals.map((a) => ({
-          ...a,
-          type: "ERC-20",
-          id: `erc20-${a.contract || "unknown"}-${a.spender || "unknown"}`
-        })),
-        ...erc721Approvals.map((a) => ({
-          ...a,
-          type: "ERC-721",
-          id: `erc721-${a.tokenId || "0"}-${a.spender || CONTRACT_ADDRESSES.MockSpender}`
-        })),
-        ...erc1155Approvals.map((a) => ({
-          ...a,
-          type: "ERC-1155",
-          id: `erc1155-${a.spender || "unknown"}`
-        })),
+        ...mappedERC20,
+        ...mappedERC721,
+        ...mappedERC1155
       ];
 
-      console.log("🟢 Updated Approvals:", newApprovals);
+      console.log("🟢 Final approvals before dispatch:", newApprovals);
       dispatch(setApprovals(newApprovals));
     } catch (error) {
       console.error("❌ Error fetching approvals:", error);

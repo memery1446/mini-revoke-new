@@ -18,7 +18,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 
   const provider = window.ethereum ? new BrowserProvider(window.ethereum) : new JsonRpcProvider("http://127.0.0.1:8545")
 
-  const fetchApprovals = useCallback(async () => {
+const fetchApprovals = useCallback(async () => {
     if (!account) return
 
     try {
@@ -26,20 +26,34 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       setError(null)
 
       const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2]
+      console.log("📋 Token contracts to check:", tokenContracts)
+      console.log("📋 Account to check:", account)
 
       console.log("🔄 Fetching ERC-20 approvals...")
       const erc20Fetched = await getERC20Approvals(tokenContracts, account)
-      console.log("✅ ERC-20 Approvals Fetched:", erc20Fetched)
+      console.log("✅ Raw ERC-20 Approvals Fetched:", erc20Fetched)
 
       console.log("🔄 Fetching ERC-721 approvals...")
       const erc721Fetched = await getERC721Approvals(account)
-      console.log("✅ ERC-721 Approvals Fetched:", erc721Fetched)
+      console.log("✅ Raw ERC-721 Approvals Fetched:", erc721Fetched)
 
       console.log("🔄 Fetching ERC-1155 approvals...")
       const erc1155Fetched = await getERC1155Approvals(account)
-      console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched)
+      console.log("✅ Raw ERC-1155 Approvals Fetched:", erc1155Fetched)
 
-      const allApprovals = [...(erc20Fetched || []), ...(erc721Fetched || []), ...(erc1155Fetched || [])]
+      const erc20Approvals = Array.isArray(erc20Fetched) ? erc20Fetched : []
+      const erc721Approvals = erc721Fetched ? [erc721Fetched] : []
+      const erc1155Approvals = Array.isArray(erc1155Fetched) ? erc1155Fetched : []
+      
+      console.log("✅ Processed ERC-20 Approvals:", erc20Approvals)
+      console.log("✅ Processed ERC-721 Approvals:", erc721Approvals)
+      console.log("✅ Processed ERC-1155 Approvals:", erc1155Approvals)
+
+      const allApprovals = [
+        ...erc20Approvals,
+        ...erc721Approvals,
+        ...erc1155Approvals
+      ]
 
       console.log("🟢 All fetched approvals:", allApprovals)
 
