@@ -1,9 +1,10 @@
+// batchRevokeUtils.js
 import { Contract, getAddress } from "ethers";
 import { TOKEN_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
 
 /**
  * Batch revoke ERC-20 approvals.
- * @param {Array<string>} tokenContracts - List of token contract addresses.
+ * @param {Array<Object>} tokenContractsWithSpenders - List of objects with token contract and spender addresses.
  * @param {ethers.Signer} signer - The wallet signer executing the transactions.
  */
 export async function batchRevokeERC20Approvals(tokenContractsWithSpenders, signer) {
@@ -11,8 +12,16 @@ export async function batchRevokeERC20Approvals(tokenContractsWithSpenders, sign
   
   for (let { contract: tokenAddress, spender } of tokenContractsWithSpenders) {
     try {
-      if (!getAddress(tokenAddress) || !getAddress(spender)) {
-        console.error(`❌ Invalid addresses: token=${tokenAddress}, spender=${spender}`);
+      if (!tokenAddress || !spender) {
+        console.error(`❌ Missing address data for revocation: token=${tokenAddress}, spender=${spender}`);
+        continue;
+      }
+      
+      try {
+        tokenAddress = getAddress(tokenAddress);
+        spender = getAddress(spender);
+      } catch (error) {
+        console.error(`❌ Invalid address format: ${error.message}`);
         continue;
       }
 
@@ -32,10 +41,9 @@ export async function batchRevokeERC20Approvals(tokenContractsWithSpenders, sign
 
       console.log(`✅ Successfully revoked approval for ${tokenAddress} with spender ${spender}`);
     } catch (error) {
-      console.error(`❌ Error revoking approval for ${tokenAddress} with spender ${spender}:`, error);
+      console.error(`❌ Error revoking approval:`, error);
     }
   }
   console.log("🎉 Batch revocation process complete!");
 }
-
 

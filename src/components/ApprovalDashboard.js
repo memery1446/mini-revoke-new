@@ -31,7 +31,7 @@ const ApprovalDashboard = () => {
     }
   }, [wallet]);
 
-const fetchApprovals = async () => {
+  const fetchApprovals = async () => {
     setIsLoading(true);
     console.log("🔄 Starting approval fetch process...");
 
@@ -86,6 +86,10 @@ const fetchApprovals = async () => {
       ];
 
       console.log("🟢 Final approvals before dispatch:", newApprovals);
+      
+      // Clear selections when approvals change
+      setSelectedApprovals([]);
+      
       dispatch(setApprovals(newApprovals));
     } catch (error) {
       console.error("❌ Error fetching approvals:", error);
@@ -96,23 +100,47 @@ const fetchApprovals = async () => {
   };
 
   const handleSelectApproval = (approval) => {
-    setSelectedApprovals((prev) =>
-      prev.some((a) => a.id === approval.id) ? prev.filter((a) => a.id !== approval.id) : [...prev, approval]
-    );
+    // Debug the selection process
+    console.log("🔍 Selection toggled for approval:", approval);
+    console.log("🔍 Current selections:", selectedApprovals);
+    
+    setSelectedApprovals((prev) => {
+      // Find if this approval is already selected by ID
+      const isSelected = prev.some((a) => a.id === approval.id);
+      
+      // Toggle selection
+      const updatedSelections = isSelected
+        ? prev.filter((a) => a.id !== approval.id) // Remove if selected
+        : [...prev, approval]; // Add if not selected
+      
+      console.log("🔍 Updated selections:", updatedSelections);
+      return updatedSelections;
+    });
   };
 
   const handleBatchRevoke = async () => {
-    console.log("🚨 Revoking selected approvals...");
+    if (selectedApprovals.length === 0) {
+      console.log("⚠️ No approvals selected for batch revoke");
+      return;
+    }
+    
+    console.log("🚨 Revoking selected approvals:", selectedApprovals);
     setIsLoading(true);
+    
     try {
       const provider = await getProvider();
       const signer = await provider.getSigner();
 
+      // Group by token type for proper handling
       const selectedERC20s = selectedApprovals
         .filter((a) => a.type === "ERC-20")
-        .map((a) => a.contract);
+        .map((a) => ({
+          contract: a.contract, 
+          spender: a.spender
+        }));
 
       if (selectedERC20s.length > 0) {
+        console.log("🔥 Batch revoking ERC-20 approvals:", selectedERC20s);
         await batchRevokeERC20Approvals(selectedERC20s, signer);
       }
 
@@ -121,6 +149,7 @@ const fetchApprovals = async () => {
         .map((a) => a.tokenId);
 
       if (selectedERC721s.length > 0) {
+        console.log("🔥 Batch revoking ERC-721 approvals:", selectedERC721s);
         await batchRevokeERC721Approvals(wallet, selectedERC721s);
       }
 
@@ -129,10 +158,14 @@ const fetchApprovals = async () => {
         .map((a) => a.spender);
 
       if (selectedERC1155s.length > 0) {
+        console.log("🔥 Batch revoking ERC-1155 approvals:", selectedERC1155s);
         await batchRevokeERC1155Approvals(selectedERC1155s);
       }
 
       alert("Batch revocation complete!");
+      // Clear selections after successful revocation
+      setSelectedApprovals([]);
+      // Refresh approvals to update the UI
       fetchApprovals();
     } catch (error) {
       console.error("❌ Error in batch revocation:", error);
@@ -143,6 +176,7 @@ const fetchApprovals = async () => {
   };
 
   console.log("🟢 UI Approvals Before Rendering:", approvals.length, approvals);
+  console.log("🟢 Selected Approvals Before Rendering:", selectedApprovals.length, selectedApprovals);
   
   return (
     <div className="card shadow-sm mb-4">
@@ -173,8 +207,8 @@ const fetchApprovals = async () => {
                 </thead>
                 <tbody>
                   {approvals.length > 0 ? (
-                    approvals.map((approval, index) => (
-                      <tr key={index}>
+                    approvals.map((approval) => (
+                      <tr key={approval.id || `${approval.contract}-${approval.spender}`}>
                         <td>
                           <input 
                             type="checkbox" 
@@ -194,17 +228,17 @@ const fetchApprovals = async () => {
                 </tbody>
               </table>
             </div>
-            {selectedApprovals.length > 0 && (
-              <div className="d-flex justify-content-end mt-3">
-                <button 
-                  className="btn btn-danger" 
-                  onClick={handleBatchRevoke}
-                  disabled={isLoading}
-                >
-                  🚨 Revoke Selected ({selectedApprovals.length})
-                </button>
-              </div>
-            )}
+            
+            {/* Always show the batch revoke section, but disable the button when no selections */}
+            <div className="d-flex justify-content-end mt-3">
+              <button 
+                className="btn btn-danger" 
+                onClick={handleBatchRevoke}
+                disabled={isLoading || selectedApprovals.length === 0}
+              >
+                🚨 Revoke Selected ({selectedApprovals.length})
+              </button>
+            </div>
           </>
         )}
       </div>
