@@ -38,7 +38,8 @@
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.14",
     "style-loader": "^4.0.0",
-    "typechain": "8.3.2"
+    "typechain": "8.3.2",
+    "yocto-queue": "^1.1.1"
   },
   "browserslist": {
     "production": [
