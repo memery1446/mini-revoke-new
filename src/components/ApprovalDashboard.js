@@ -7,8 +7,6 @@ import { CONTRACT_ADDRESSES } from "../constants/abis";
 import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
 import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";
-import { batchRevokeERC721Approvals } from "../utils/nftApprovals";
-import { batchRevokeERC1155Approvals } from "../utils/erc1155Approvals";
 
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
@@ -56,7 +54,6 @@ const ApprovalDashboard = () => {
       console.log("ERC-1155:", erc1155Approvals.length);
 
       console.log("🔄 Mapping approval objects...");
-      
       const mappedERC20 = erc20Approvals.map((a) => ({
         ...a,
         type: "ERC-20",
@@ -78,11 +75,6 @@ const ApprovalDashboard = () => {
       }));
       console.log("✅ Mapped ERC-1155 approvals:", mappedERC1155);
 
-      console.log("📊 Mapped approval counts:");
-      console.log("ERC-20:", mappedERC20.length);
-      console.log("ERC-721:", mappedERC721.length);
-      console.log("ERC-1155:", mappedERC1155.length);
-
       const newApprovals = [
         ...mappedERC20,
         ...mappedERC721,
@@ -90,7 +82,6 @@ const ApprovalDashboard = () => {
       ];
 
       console.log("🟢 Final approvals before dispatch:", newApprovals);
-      
       dispatch(setApprovals(newApprovals));
     } catch (error) {
       console.error("❌ Error fetching approvals:", error);
@@ -100,15 +91,59 @@ const ApprovalDashboard = () => {
     }
   };
 
-  // ... (keep the rest of the component code as is)
+  // Definition for handleBatchRevoke
+  const handleBatchRevoke = async () => {
+    if (selectedApprovals.length === 0) {
+      console.log("⚠️ No approvals selected");
+      return;
+    }
 
-return (
+    setIsLoading(true);
+    setRevokeResults(null);
+
+    try {
+      const provider = await getProvider();
+      const signer = await provider.getSigner();
+      console.log("🔄 Starting batch revocation with signer:", await signer.getAddress());
+
+      // Filter only for ERC-20 approvals
+      const erc20Approvals = selectedApprovals.filter(a => a.type === 'ERC-20');
+
+      if (erc20Approvals.length === 0) {
+        console.log("ℹ️ No ERC-20 approvals selected");
+        setRevokeResults({ success: true, message: "No ERC-20 approvals to revoke." });
+        return;
+      }
+
+      console.log("🚀 Revoking ERC-20 approvals:", erc20Approvals);
+      
+      const revokeResults = await batchRevokeERC20Approvals(erc20Approvals, signer);
+      console.log("✅ Revocation results:", revokeResults);
+      
+      setRevokeResults({
+        success: true,
+        failed: revokeResults.failed.length,
+        successful: revokeResults.successful.length,
+        details: revokeResults
+      });
+      
+      // Clear selections on success
+      setSelectedApprovals([]);
+    } catch (error) {
+      console.error("❌ Batch revocation error:", error);
+      setRevokeResults({ success: false, message: error.message || "Failed to revoke approvals" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
     <div className="card shadow-sm mb-4">
       <div className="card-header bg-light d-flex justify-content-between align-items-center">
         <h2 className="card-title">Approval Dashboard</h2>
         <button 
           className="btn btn-secondary" 
-          onClick={fetchApprovals}
+          onClick={fetchApprovals} 
           disabled={isLoading}
         >
           {isLoading ? 'Loading...' : '🔄 Refresh Approvals'}
@@ -162,7 +197,7 @@ return (
                             className="form-check-input"
                             onChange={() => handleSelectApproval(approval)}
                             checked={selectedApprovals.some(a => a.id === approval.id)}
-                           />
+                          />
                         </td>
                         <td className="text-truncate" style={{ maxWidth: '150px' }}>
                           {approval.tokenSymbol || approval.contract}
@@ -199,7 +234,6 @@ return (
     </div>
   );
 };
-
 
 export default ApprovalDashboard;
 
