@@ -116,7 +116,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
                   <td>{approval.contract}</td>
                   <td>{approval.spender}</td>
                   <td>
-                    <button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)} disabled={revoking}>
+                    <button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)} disabled={revoking && approval.id}>
                       {revoking ? "Processing..." : "🚨 Revoke"}
                     </button>
                   </td>
@@ -131,3 +131,4 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 };
 
 export default ExistingApprovals;
+
