@@ -23,47 +23,51 @@ const ApprovalDashboard = () => {
     }
   }, [wallet]);
 
-  const fetchApprovals = async () => {
+const fetchApprovals = async () => {
     setIsLoading(true);
     setRevokeResults(null);
     console.log("🔄 Starting approval fetch process...");
 
     try {
-      const provider = await getProvider();
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
-      console.log("🔍 Wallet Address:", userAddress);
+        const provider = await getProvider();
+        const signer = await provider.getSigner();
+        const userAddress = await signer.getAddress();
+        console.log("🔍 Wallet Address:", userAddress);
 
-      const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
-      console.log("📋 Token contracts to check:", tokenContracts);
+        const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+        console.log("📋 Token contracts to check:", tokenContracts);
 
-      console.log("📡 Fetching ERC-20 approvals...");
-      const erc20Approvals = await getERC20Approvals(tokenContracts, userAddress) || [];
-      console.log("✅ Raw ERC-20 Approvals Fetched:", erc20Approvals);
+        // Fetch and merge ERC-20 approvals
+        console.log("📡 Fetching ERC-20 approvals...");
+        const erc20Approvals = await getERC20Approvals(tokenContracts, userAddress) || [];
+        console.log("✅ Raw ERC-20 Approvals Fetched:", erc20Approvals);
 
-      console.log("📡 Fetching ERC-721 approvals...");
-      const erc721Approvals = await getERC721Approvals(userAddress) || [];
-      console.log("✅ Raw ERC-721 Approvals Fetched:", erc721Approvals);
+        // Fetch and merge ERC-721 approvals
+        console.log("📡 Fetching ERC-721 approvals...");
+        const erc721Approvals = await getERC721Approvals(userAddress) || [];
+        console.log("✅ Raw ERC-721 Approvals Fetched:", erc721Approvals);
 
-      console.log("📡 Fetching ERC-1155 approvals...");
-      const erc1155Approvals = await getERC1155Approvals(userAddress) || [];
-      console.log("✅ Raw ERC-1155 Approvals Fetched:", erc1155Approvals);
+        // Fetch and merge ERC-1155 approvals
+        console.log("📡 Fetching ERC-1155 approvals...");
+        const erc1155Approvals = await getERC1155Approvals(userAddress) || [];
+        console.log("✅ Raw ERC-1155 Approvals Fetched:", erc1155Approvals);
 
-      const newApprovals = [
-        ...erc20Approvals.map(a => ({ ...a, type: 'ERC-20', id: `erc20-${a.contract}-${a.spender}` })),
-        ...erc721Approvals.map(a => ({ ...a, type: 'ERC-721', id: `erc721-${a.contract}-${a.tokenId}` })),
-        ...erc1155Approvals.map(a => ({ ...a, type: 'ERC-1155', id: `erc1155-${a.contract}-${a.spender}` })),
-      ];
+        // Combine approvals
+        const newApprovals = [
+            ...erc20Approvals.map(a => ({ ...a, type: 'ERC-20', id: `erc20-${a.contract}-${a.spender}` })),
+            ...erc721Approvals.map(a => ({ ...a, type: 'ERC-721', id: `erc721-${a.contract}-${a.tokenId}` })),
+            ...erc1155Approvals.map(a => ({ ...a, type: 'ERC-1155', id: `erc1155-${a.contract}-${a.spender}` })),
+        ];
 
-      console.log("🟢 Final approvals before dispatch:", newApprovals);
-      dispatch(setApprovals(newApprovals));
+        console.log("🟢 Final approvals before dispatch:", newApprovals);
+        dispatch(setApprovals(newApprovals)); // Set new approvals
     } catch (error) {
-      console.error("❌ Error fetching approvals:", error);
-      dispatch(setApprovals([]));
+        console.error("❌ Error fetching approvals:", error);
+        dispatch(setApprovals([]));
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+};
 
   const handleSelectApproval = (approval) => {
     console.log("🔍 Toggling selection for:", approval);
@@ -77,47 +81,61 @@ const ApprovalDashboard = () => {
     });
   };
 
-  const handleBatchRevoke = async () => {
+const handleBatchRevoke = async () => {
     if (selectedApprovals.length === 0) {
-      console.warn("⚠️ No approvals selected");
-      return;
+        console.warn("⚠️ No approvals selected");
+        return;
     }
 
     setIsLoading(true);
-    setRevokeResults(null);
+    setRevokeResults(null); // Reset previous results
 
     try {
-      const provider = await getProvider();
-      const signer = await provider.getSigner();
+        const provider = await getProvider();
+        const signer = await provider.getSigner();
+        const userAddress = await signer.getAddress(); // Get the wallet address
 
-      // Filter and revoke ERC-20 approvals
-      const erc20Approvals = selectedApprovals.filter(a => a.type === 'ERC-20');
-      if (erc20Approvals.length > 0) {
-          const revokeResults = await batchRevokeERC20Approvals(erc20Approvals, signer);
-          console.log("✅ Revocation results for ERC-20:", revokeResults);
-      } else {
-          console.log("ℹ️ No ERC-20 approvals selected.");
-      }
+        // Filter and revoke ERC-20 approvals
+        const erc20Approvals = selectedApprovals.filter(a => a.type === 'ERC-20');
+        if (erc20Approvals.length > 0) {
+            const revokeResultsERC20 = await batchRevokeERC20Approvals(erc20Approvals, signer);
+            console.log("✅ Revocation results for ERC-20:", revokeResultsERC20);
+        } else {
+            console.log("ℹ️ No ERC-20 approvals selected.");
+        }
 
-      // Filter and revoke ERC-721 approvals
-      const erc721Approvals = selectedApprovals.filter(a => a.type === 'ERC-721');
-      if (erc721Approvals.length > 0) {
-          const revokeResults = await batchRevokeERC721Approvals(erc721Approvals, signer);
-          console.log("✅ Revocation results for ERC-721:", revokeResults);
-      } else {
-          console.log("ℹ️ No ERC-721 approvals selected.");
-      }
+        // Filter and revoke ERC-721 approvals
+        const erc721Approvals = selectedApprovals.filter(a => a.type === 'ERC-721');
+        if (erc721Approvals.length > 0) {
+            const idsToRevoke = [];
+            for (const approval of erc721Approvals) {
+                // Check ownership before attempting to revoke
+                const owner = await contract.ownerOf(approval.tokenId);
+                if (owner.toLowerCase() !== userAddress.toLowerCase()) {
+                    console.log(`💔 Not owner of token ID ${approval.tokenId}. Cannot revoke.`);
+                    continue; // Skip revocation for tokens not owned by the user
+                }
+                idsToRevoke.push(approval.tokenId);
+            }
 
-      // Update results in state as necessary
-      setRevokeResults({ success: true, message: "Revocation process completed!" });
-      setSelectedApprovals([]); // Clear selections on success
+            if (idsToRevoke.length > 0) {
+                const revokeResultsERC721 = await batchRevokeERC721Approvals(userAddress, idsToRevoke);
+                console.log("✅ Revocation results for ERC-721:", revokeResultsERC721);
+            } else {
+                console.log("ℹ️ No eligible ERC-721 approvals to revoke.");
+            }
+        }
+
+        // Update results state as necessary for UI feedback
+        setRevokeResults({ success: true, message: "Revocation process completed!" });
+        setSelectedApprovals([]); // Clear selections on success
     } catch (error) {
-      console.error("❌ Batch revocation error:", error);
-      setRevokeResults({ success: false, message: error.message || "Failed to revoke approvals" });
+        console.error("❌ Batch revocation error:", error);
+        setRevokeResults({ success: false, message: error.message || "Failed to revoke approvals" });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+};
 
   return (
     <div className="card shadow-sm mb-4">
