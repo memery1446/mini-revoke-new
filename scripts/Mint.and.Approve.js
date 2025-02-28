@@ -116,16 +116,16 @@ async function main() {
   // Contract addresses
   const addresses = {
     TestNFT: "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354",
-    ERC1155: "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A",
+ //   ERC1155: "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A",
     MockSpender: "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608"
   };
 
   // Connect to existing contracts
   const TestNFT = await hre.ethers.getContractFactory("TestNFT");
-  const TestERC1155 = await hre.ethers.getContractFactory("TestERC1155");
+ // const TestERC1155 = await hre.ethers.getContractFactory("TestERC1155");
   
   const testNFT = TestNFT.attach(addresses.TestNFT);
-  const testERC1155 = TestERC1155.attach(addresses.ERC1155);
+ // const testERC1155 = TestERC1155.attach(addresses.ERC1155);
   
   console.log("📌 Connected to existing contracts");
 
@@ -150,12 +150,12 @@ async function main() {
     await mintTx1155.wait();
     console.log(`✅ Minted ${amount} ERC1155 tokens with ID ${erc1155Id} - tx: ${mintTx1155.hash}`);
 
-    // Approve ERC-1155
-    const tx4 = await testERC1155.setApprovalForAll(addresses.MockSpender, true, gasOverrides);
-    await tx4.wait();
-    console.log(`✅ Approved ERC1155 for MockSpender - tx: ${tx4.hash}`);
+    // // Approve ERC-1155
+    // const tx4 = await testERC1155.setApprovalForAll(addresses.MockSpender, true, gasOverrides);
+    // await tx4.wait();
+    // console.log(`✅ Approved ERC1155 for MockSpender - tx: ${tx4.hash}`);
     
-    console.log("🎉 All tokens minted and approvals set up successfully!");
+    // console.log("🎉 All tokens minted and approvals set up successfully!");
   } catch (error) {
     console.error("❌ Error:", error.message);
     if (error.data) {

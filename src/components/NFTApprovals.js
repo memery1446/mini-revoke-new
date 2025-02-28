@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ethers, BrowserProvider } from "ethers";
 
 const NFTApprovals = ({ contractAddress, spender }) => {
-  const [approvals, setApprovals] = useState(null);
+  const [approvals, setApprovals] = useState([]); // Change initial state to array
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState(false);
@@ -17,67 +17,40 @@ const NFTApprovals = ({ contractAddress, spender }) => {
     try {
       setLoading(true);
       setError(null);
-      console.log("🔍 Fetching NFT approvals for contract:", contractAddress);
-
-      if (!contractAddress || !ethers.isAddress(contractAddress)) {
-        throw new Error("❌ Invalid or missing contract address.");
-      }
-      if (!spender || !ethers.isAddress(spender)) {
-        throw new Error("❌ Invalid or missing spender address.");
-      }
-      if (!window.ethereum) {
-        throw new Error("❌ MetaMask is not installed.");
-      }
 
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const owner = await signer.getAddress();
 
-      console.log("📌 Checking isApprovedForAll for:", owner, spender);
-
-      const abi = [
-        "function isApprovedForAll(address owner, address operator) view returns (bool)",
-        "function setApprovalForAll(address operator, bool approved) external",
-        "function getApproved(uint256 tokenId) view returns (address)"
-      ];
-      
-      const contract = new ethers.Contract(contractAddress, abi, signer);
-      const isApprovedForAll = await contract.isApprovedForAll(owner, spender);
-
-      console.log("✅ NFT Approval Status:", isApprovedForAll);
-      setApprovals(isApprovedForAll);
+      // Fetching ERC-721 approvals (assuming you have this function defined somewhere)
+      const fetchedApprovals = await getERC721Approvals(owner);
+      setApprovals(fetchedApprovals);
     } catch (error) {
-      console.error("❌ Error fetching approvals:", error);
       setError(error.message);
-      setApprovals(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRevoke = async () => {
+  const handleRevoke = async (tokenId) => {
     try {
       setRevoking(true);
       setError(null);
 
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      
-      const abi = [
-        "function setApprovalForAll(address operator, bool approved) external"
-      ];
-      
-      const contract = new ethers.Contract(contractAddress, abi, signer);
-      
-      console.log("🚨 Revoking approval...");
-      const tx = await contract.setApprovalForAll(spender, false);
-      await tx.wait();
-      
-      console.log("✅ Successfully revoked approval");
-      window.store.dispatch({ type: "web3/setApprovals", payload: [] });
-window.debugApp.logState(); // Check Redux update
+      const contract = new ethers.Contract(contractAddress, [
+        "function batchRevokeApprovals(uint256[] memory tokenIds) external"
+      ], signer);
 
-      setApprovals(false);
+      console.log("🚨 Revoking approval for token ID:", tokenId);
+      const tx = await contract.batchRevokeApprovals([tokenId]);
+      await tx.wait();
+
+      console.log(`✅ Successfully revoked approval for token ID: ${tokenId}`);
+      
+      // Refresh approvals
+      fetchApprovals();
     } catch (error) {
       console.error("❌ Error revoking approval:", error);
       setError(error.message);
@@ -104,30 +77,30 @@ window.debugApp.logState(); // Check Redux update
             <strong>⚠️ Error:</strong> {error}
           </div>
         ) : (
-          <div className="d-flex align-items-center justify-content-between">
-            <div>
-              <span className="me-3">Approval Status:</span>
-              <span className={`badge ${approvals ? 'bg-success' : 'bg-secondary'}`}>
-                {approvals ? 'Approved' : 'Not Approved'}
-              </span>
+          approvals.map((approval) => (
+            <div key={approval.tokenId} className="d-flex align-items-center justify-content-between my-2">
+              <div>
+                <span className="me-3">Token ID: {approval.tokenId}</span>
+                <span className={`badge ${approval.isApproved ? 'bg-success' : 'bg-secondary'}`}>
+                  {approval.isApproved ? 'Approved' : 'Not Approved'}
+                </span>
+              </div>
+              {approval.isApproved && (
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleRevoke(approval.tokenId)}
+                  disabled={revoking}
+                >
+                  {revoking ? 'Revoking...' : '🚨 Revoke Approval'}
+                </button>
+              )}
             </div>
-            {approvals && (
-              <button
-                className="btn btn-danger"
-                onClick={handleRevoke}
-                disabled={revoking}
-              >
-                {revoking ? 'Revoking...' : '🚨 Revoke Approval'}
-              </button>
-            )}
-          </div>
+          ))
         )}
       </div>
       <div className="card-footer">
         <small className="text-muted">
-          Contract: {contractAddress ? 
-            `${contractAddress.substring(0, 6)}...${contractAddress.substring(contractAddress.length - 4)}` : 
-            'Not specified'}
+          Contract: {contractAddress ? `${contractAddress.substring(0, 6)}...${contractAddress.substring(contractAddress.length - 4)}` : 'Not specified'}
         </small>
       </div>
     </div>
