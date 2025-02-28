@@ -8,6 +8,7 @@ import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
 import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";
 import { batchRevokeERC721Approvals } from "../utils/nftApprovals"; // Ensure this import exists
+import { Contract } from 'ethers';
 
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
