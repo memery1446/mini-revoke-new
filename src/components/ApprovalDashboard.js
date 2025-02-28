@@ -9,6 +9,7 @@ import { getProvider } from "../utils/provider";
 import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";
 import { batchRevokeERC721Approvals } from "../utils/nftApprovals"; // Ensure this import exists
 import { Contract } from 'ethers';
+import { NFT_ABI, CONTRACT_ADDRESSES } from "../constants/abis"; 
 
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
