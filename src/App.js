@@ -8,6 +8,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { BootstrapWrapper } from "./utils/provider";
 import ApprovalDebugger from "./components/ApprovalDebugger";
 import { initializeProvider } from "./utils/providerService";
+import { ethers } from "ethers";
+
 
 // Add console log at the top level to verify file loading
 console.log("🔴 App.js loaded - " + new Date().toISOString());

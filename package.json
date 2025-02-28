@@ -41,6 +41,10 @@
     "typechain": "8.3.2",
     "yocto-queue": "^1.1.1"
   },
+  "resolutions": {
+  "ethers": "6.13.0"
+},
+
   "browserslist": {
     "production": [
       ">0.2%",

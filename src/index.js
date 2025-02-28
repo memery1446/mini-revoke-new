@@ -6,6 +6,9 @@ import store from "./store/index"; // ✅ Correct import
 import App from "./App";
 import "bootstrap/dist/css/bootstrap.min.css";  // ✅ Ensure Bootstrap styles are applied
 //import './utils/storeDebug';  // Add this import
+import { ethers } from "ethers";
+window.ethers = ethers;
+
 
 const root = ReactDOM.createRoot(document.getElementById("root"));  // ✅ Use React 18 API
 
