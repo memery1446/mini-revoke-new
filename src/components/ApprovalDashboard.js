@@ -13,31 +13,15 @@ const ApprovalDashboard = () => {
   const wallet = useSelector((state) => state.web3.account);
   const approvals = useSelector((state) => state.web3.approvals);
   const [isLoading, setIsLoading] = useState(false);
-  const [processing, setProcessing] = useState(null); // Track which approval is being processed
+  const [processing, setProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [selectedApprovals, setSelectedApprovals] = useState([]);
+  const [selectedApproval, setSelectedApproval] = useState(null);
   
   useEffect(() => {
     if (wallet) {
       fetchApprovals();
     }
   }, [wallet]);
-  
-  // Handle checkbox selection
-  const handleToggleSelect = (approval) => {
-    setSelectedApprovals(prev => {
-      // Check if this approval is already selected
-      const isAlreadySelected = prev.some(a => a.id === approval.id);
-      
-      if (isAlreadySelected) {
-        // If selected, remove it
-        return prev.filter(a => a.id !== approval.id);
-      } else {
-        // If not selected, add it
-        return [...prev, approval];
-      }
-    });
-  };
 
   const fetchApprovals = async () => {
     setIsLoading(true);
@@ -74,135 +58,63 @@ const ApprovalDashboard = () => {
     }
   };
 
-  // Revoke a specific ERC-721 token approval
-  const handleRevokeERC721 = async (approval) => {
-    if (processing) return; // Prevent multiple concurrent revocation operations
+  // Handle single selection (radio button style)
+  const handleSelectApproval = (approval) => {
+    setSelectedApproval(approval);
+    console.log("Selected approval:", approval);
+  };
+
+  // Handle revocation of the selected approval
+  const handleRevokeSelected = async () => {
+    if (!selectedApproval || processing) return;
     
-    setProcessing(approval.id);
-    setStatusMessage(`Revoking approval for token ID ${approval.tokenId}...`);
+    setProcessing(true);
+    setStatusMessage(`Revoking approval...`);
     
     try {
       const provider = await getProvider();
       const signer = await provider.getSigner();
       
-      // Create contract instance with signer
-      const nftContract = new Contract(approval.contract, NFT_ABI, signer);
-      
-      // Proper revocation: Set approval to the zero address
-      console.log(`🔄 Revoking approval for token ID ${approval.tokenId}`);
-      const tx = await nftContract.approve(ZeroAddress, approval.tokenId);
-      
-      setStatusMessage(`Transaction submitted. Waiting for confirmation...`);
-      console.log(`📤 Transaction sent: ${tx.hash}`);
-      
-      await tx.wait();
-      console.log(`✅ Transaction confirmed!`);
-      setStatusMessage(`Successfully revoked approval for token ID ${approval.tokenId}!`);
-      
-      // Refresh approvals after successful revocation
-      setTimeout(() => {
-        fetchApprovals();
-        setStatusMessage('');
-      }, 2000);
+      if (selectedApproval.type === 'ERC-721') {
+        const nftContract = new Contract(selectedApproval.contract, NFT_ABI, signer);
+        
+        if (selectedApproval.tokenId === 'all') {
+          // If it's an "approve for all" type approval
+          console.log(`🔄 Revoking approval for all tokens to spender: ${selectedApproval.spender}`);
+          const tx = await nftContract.setApprovalForAll(selectedApproval.spender, false);
+          
+          setStatusMessage(`Transaction submitted. Waiting for confirmation...`);
+          console.log(`📤 Transaction sent: ${tx.hash}`);
+          
+          await tx.wait();
+        } else {
+          // If it's a specific token approval
+          console.log(`🔄 Revoking approval for token ID ${selectedApproval.tokenId}`);
+          const tx = await nftContract.approve(ZeroAddress, selectedApproval.tokenId);
+          
+          setStatusMessage(`Transaction submitted. Waiting for confirmation...`);
+          console.log(`📤 Transaction sent: ${tx.hash}`);
+          
+          await tx.wait();
+        }
+        
+        console.log(`✅ Transaction confirmed!`);
+        setStatusMessage(`Successfully revoked approval!`);
+        setSelectedApproval(null); // Clear selection
+        
+        // Refresh approvals after successful revocation
+        setTimeout(() => {
+          fetchApprovals();
+          setStatusMessage('');
+        }, 2000);
+      }
+      // We can add handlers for ERC-20 and ERC-1155 here later
       
     } catch (error) {
       console.error("❌ Error revoking approval:", error);
       setStatusMessage(`Error: ${error.message || "Transaction failed"}`);
     } finally {
-      setProcessing(null);
-    }
-  };
-
-  // For revoking an ERC-721 approval for all tokens
-  const handleRevokeERC721All = async (approval) => {
-    if (processing) return;
-    
-    setProcessing(approval.id);
-    setStatusMessage(`Revoking approval for all tokens...`);
-    
-    try {
-      const provider = await getProvider();
-      const signer = await provider.getSigner();
-      
-      // Create contract instance with signer
-      const nftContract = new Contract(approval.contract, NFT_ABI, signer);
-      
-      // Revoke approval for all tokens to this spender
-      console.log(`🔄 Revoking approval for all tokens to spender: ${approval.spender}`);
-      const tx = await nftContract.setApprovalForAll(approval.spender, false);
-      
-      setStatusMessage(`Transaction submitted. Waiting for confirmation...`);
-      console.log(`📤 Transaction sent: ${tx.hash}`);
-      
-      await tx.wait();
-      console.log(`✅ Transaction confirmed!`);
-      setStatusMessage(`Successfully revoked approval for all tokens!`);
-      
-      // Refresh approvals after successful revocation
-      setTimeout(() => {
-        fetchApprovals();
-        setStatusMessage('');
-      }, 2000);
-      
-    } catch (error) {
-      console.error("❌ Error revoking approval for all:", error);
-      setStatusMessage(`Error: ${error.message || "Transaction failed"}`);
-    } finally {
-      setProcessing(null);
-    }
-  };
-  
-  // Handle batch revocation for ERC-721 tokens
-  const handleBatchRevokeSelected = async () => {
-    if (processing || selectedApprovals.length === 0) return;
-    
-    // Only process ERC-721 approvals for now
-    const selectedERC721 = selectedApprovals.filter(a => a.type === 'ERC-721');
-    
-    if (selectedERC721.length === 0) {
-      setStatusMessage('No ERC-721 approvals selected');
-      return;
-    }
-    
-    setProcessing('batch');
-    setStatusMessage(`Revoking ${selectedERC721.length} selected approvals...`);
-    
-    try {
-      const provider = await getProvider();
-      const signer = await provider.getSigner();
-      
-      // Process each approval one by one
-      for (let i = 0; i < selectedERC721.length; i++) {
-        const approval = selectedERC721[i];
-        setStatusMessage(`Processing approval ${i+1} of ${selectedERC721.length}...`);
-        
-        const nftContract = new Contract(approval.contract, NFT_ABI, signer);
-        
-        if (approval.tokenId === 'all') {
-          // Revoke approval for all tokens
-          const tx = await nftContract.setApprovalForAll(approval.spender, false);
-          await tx.wait();
-        } else {
-          // Revoke approval for a specific token
-          const tx = await nftContract.approve(ZeroAddress, approval.tokenId);
-          await tx.wait();
-        }
-      }
-      
-      setStatusMessage(`Successfully revoked ${selectedERC721.length} approvals!`);
-      setSelectedApprovals([]); // Clear selections
-      
-      // Refresh approvals after successful revocation
-      setTimeout(() => {
-        fetchApprovals();
-        setStatusMessage('');
-      }, 2000);
-      
-    } catch (error) {
-      console.error("❌ Error in batch revocation:", error);
-      setStatusMessage(`Error: ${error.message || "Transaction failed"}`);
-    } finally {
-      setProcessing(null);
+      setProcessing(false);
     }
   };
 
@@ -219,6 +131,7 @@ const ApprovalDashboard = () => {
         </button>
       </div>
       <div className="card-body">
+        {/* Status messages */}
         {(isLoading || processing) && (
           <div className="alert alert-info">
             <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
@@ -232,30 +145,27 @@ const ApprovalDashboard = () => {
           <div className="alert alert-success">{statusMessage}</div>
         )}
         
-        {selectedApprovals.length > 0 && (
+        {/* Show selected approval and action button */}
+        {selectedApproval && !processing && (
           <div className="alert alert-primary mb-3">
             <div className="d-flex justify-content-between align-items-center">
-              <span>{selectedApprovals.length} approvals selected</span>
               <div>
-                <button 
-                  className="btn btn-sm btn-danger me-2"
-                  onClick={handleBatchRevokeSelected}
-                  disabled={processing !== null}
-                >
-                  Revoke Selected
-                </button>
-                <button 
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => setSelectedApprovals([])}
-                  disabled={processing !== null}
-                >
-                  Clear Selection
-                </button>
+                <strong>Selected:</strong> {selectedApproval.type} 
+                {selectedApproval.tokenId && ` (Token ID: ${selectedApproval.tokenId})`} 
+                to {selectedApproval.spenderName || selectedApproval.spender}
               </div>
+              <button 
+                className="btn btn-danger"
+                onClick={handleRevokeSelected}
+                disabled={processing}
+              >
+                Revoke Selected
+              </button>
             </div>
           </div>
         )}
         
+        {/* Approvals table */}
         <div className="table-responsive">
           <table className="table table-striped table-hover">
             <thead className="table-light">
@@ -265,23 +175,30 @@ const ApprovalDashboard = () => {
                 <th>Type</th>
                 <th>Spender</th>
                 <th>Details</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {approvals && approvals.length > 0 ? (
                 approvals.map((approval) => (
-                  <tr key={approval.id || `${approval.contract}-${approval.spender}-${approval.tokenId || 'all'}`}>
+                  <tr 
+                    key={approval.id || `${approval.contract}-${approval.spender}-${approval.tokenId || 'all'}`}
+                    className={selectedApproval && selectedApproval.id === approval.id ? 'table-primary' : ''}
+                    onClick={() => handleSelectApproval(approval)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <td>
-                      <input 
-                        type="checkbox" 
-                        className="form-check-input" 
-                        checked={selectedApprovals.some(a => a.id === approval.id)}
-                        onChange={() => handleToggleSelect(approval)}
-                        disabled={processing !== null}
-                      />
+                      <div className="form-check">
+                        <input 
+                          type="radio" 
+                          className="form-check-input" 
+                          name="approvalRadio"
+                          checked={selectedApproval && selectedApproval.id === approval.id} 
+                          onChange={() => handleSelectApproval(approval)}
+                          disabled={processing}
+                        />
+                      </div>
                     </td>
-                    <td>{approval.tokenSymbol || approval.contract.substring(0, 6) + '...' + approval.contract.substring(approval.contract.length - 4)}</td>
+                    <td>{approval.tokenSymbol || (approval.contract && `${approval.contract.substring(0, 6)}...${approval.contract.substring(approval.contract.length - 4)}`)}</td>
                     <td>{approval.type}</td>
                     <td>{approval.spenderName || (approval.spender && `${approval.spender.substring(0, 6)}...${approval.spender.substring(approval.spender.length - 4)}`)}</td>
                     <td>
@@ -297,26 +214,6 @@ const ApprovalDashboard = () => {
                       )}
                       {approval.type === 'ERC-1155' && (
                         <span>Token IDs: {approval.tokenIds ? approval.tokenIds.join(', ') : 'all'}</span>
-                      )}
-                    </td>
-                    <td>
-                      {approval.type === 'ERC-721' && approval.tokenId !== 'all' && (
-                        <button 
-                          onClick={() => handleRevokeERC721(approval)} 
-                          className="btn btn-danger"
-                          disabled={processing !== null}
-                        >
-                          {processing === approval.id ? 'Processing...' : 'Revoke'}
-                        </button>
-                      )}
-                      {approval.type === 'ERC-721' && approval.tokenId === 'all' && (
-                        <button 
-                          onClick={() => handleRevokeERC721All(approval)} 
-                          className="btn btn-danger"
-                          disabled={processing !== null}
-                        >
-                          {processing === approval.id ? 'Processing...' : 'Revoke All'}
-                        </button>
                       )}
                     </td>
                   </tr>
