@@ -5,8 +5,8 @@ import { getERC721Approvals } from "../utils/nftApprovals";
 import { getERC1155Approvals } from "../utils/erc1155Approvals";
 import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
-import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";
-import { batchRevokeERC721Approvals } from "../utils/nftApprovals"; // Ensure you have this import
+import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";  // Import necessary batching function if needed
+import { batchRevokeERC721Approvals } from "../utils/nftApprovals"; // Import for ERC-721 revocation
 import { Contract } from 'ethers';
 import { NFT_ABI, CONTRACT_ADDRESSES } from "../constants/abis"; 
 
@@ -14,10 +14,9 @@ const ApprovalDashboard = () => {
   const dispatch = useDispatch();
   const wallet = useSelector((state) => state.web3.account);
   const approvals = useSelector((state) => state.web3.approvals);
-  const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [revokeResults, setRevokeResults] = useState(null);
-
+  
   useEffect(() => {
     if (wallet) {
       fetchApprovals();
@@ -36,24 +35,11 @@ const ApprovalDashboard = () => {
       console.log("🔍 Wallet Address:", userAddress);
 
       const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
-      console.log("📋 Token contracts to check:", tokenContracts);
 
-      // Fetch and merge ERC-20 approvals
-      console.log("📡 Fetching ERC-20 approvals...");
       const erc20Approvals = await getERC20Approvals(tokenContracts, userAddress) || [];
-      console.log("✅ Raw ERC-20 Approvals Fetched:", erc20Approvals);
-
-      // Fetch and merge ERC-721 approvals
-      console.log("📡 Fetching ERC-721 approvals...");
       const erc721Approvals = await getERC721Approvals(userAddress) || [];
-      console.log("✅ Raw ERC-721 Approvals Fetched:", erc721Approvals);
-
-      // Fetch and merge ERC-1155 approvals
-      console.log("📡 Fetching ERC-1155 approvals...");
       const erc1155Approvals = await getERC1155Approvals(userAddress) || [];
-      console.log("✅ Raw ERC-1155 Approvals Fetched:", erc1155Approvals);
 
-      // Combine approvals
       const newApprovals = [
         ...erc20Approvals.map(a => ({ ...a, type: 'ERC-20' })),
         ...erc721Approvals.map(a => ({ ...a, type: 'ERC-721' })),
@@ -61,7 +47,7 @@ const ApprovalDashboard = () => {
       ];
 
       console.log("🟢 Final approvals before dispatch:", newApprovals);
-      dispatch(setApprovals(newApprovals)); // Set new approvals
+      dispatch(setApprovals(newApprovals));
     } catch (error) {
       console.error("❌ Error fetching approvals:", error);
       dispatch(setApprovals([]));
@@ -70,63 +56,30 @@ const ApprovalDashboard = () => {
     }
   };
 
-  const handleSelectApproval = (approval) => {
-    console.log("🔍 Toggling selection for:", approval);
-    setSelectedApprovals(prev => {
-      const isSelected = prev.some(a => a.id === approval.id);
-      if (isSelected) {
-        return prev.filter(a => a.id !== approval.id); // Deselect
-      } else {
-        return [...prev, approval]; // Select
-      }
-    });
-  };
-
-  const handleRevokeSingleNFT = async () => {
-    // Allow only single NFT revocation
-    if (selectedApprovals.length !== 1) {
-      alert("⚠️ Please select exactly one NFT to revoke.");
-      return;
-    }
-
-    const approvalToRevoke = selectedApprovals[0]; // Selected approval
-
-    // Only proceed if it's an ERC-721 approval
-    if (approvalToRevoke.type !== 'ERC-721') {
-      alert("⚠️ Selected approval is not an ERC-721 approval.");
-      return;
-    }
-
-    setIsLoading(true);
-    setRevokeResults(null); // Reset previous results
+  // Handle the revocation of a specific ERC-721 NFT approval
+  const handleRevokeERC721 = async (tokenId) => {
+    const provider = await getProvider();
+    const signer = await provider.getSigner();
+    const userAddress = await signer.getAddress(); // Get the wallet address
+    const nftContract = new Contract(CONTRACT_ADDRESSES.TestNFT, NFT_ABI, signer); // Instantiate contract for ERC-721
 
     try {
-      const provider = await getProvider();
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress(); // Get the wallet address
-
-      const nftContract = new Contract(CONTRACT_ADDRESSES.TestNFT, NFT_ABI, signer); // Instantiate contract
-
-      // Check ownership
-      const owner = await nftContract.ownerOf(approvalToRevoke.tokenId);
+      const owner = await nftContract.ownerOf(tokenId);
       if (owner.toLowerCase() !== userAddress.toLowerCase()) {
-        alert(`💔 You are not the owner of token ID ${approvalToRevoke.tokenId}.`);
-        return;
+        alert(`💔 You are not the owner of token ID ${tokenId}.`);
+        return; // Stop if the user is not the owner
       }
 
-      // Proceed to revoke the specific NFT approval
-      await nftContract.approve(userAddress, 0); // Revoke approval by setting to zero address
+      // Perform revocation of the specific NFT
+      await nftContract.approve(userAddress, 0); // Assuming you revoke by setting approval to the zero address
       alert("✅ Successfully revoked the NFT approval!");
 
-      // Clear selections after revocation
-      setSelectedApprovals([]);
-      setRevokeResults({ success: true, message: "Revocation process completed!" });
+      // Optionally refresh approvals after a successful revocation
+      fetchApprovals(); // Refresh the list of approvals
 
     } catch (error) {
       console.error("❌ Revocation error:", error);
-      setRevokeResults({ success: false, message: error.message || "Failed to revoke approval" });
-    } finally {
-      setIsLoading(false);
+      alert("❌ Error: " + error.message || "Failed to revoke the approval");
     }
   };
 
@@ -151,50 +104,38 @@ const ApprovalDashboard = () => {
             <p className="mt-3">Loading approvals...</p>
           </div>
         ) : (
-          <>
-            <div className="table-responsive">
-              <table className="table table-striped table-hover">
-                <thead className="table-light">
-                  <tr>
-                    <th>Select</th>
-                    <th>Contract</th>
-                    <th>Type</th>
-                    <th>Spender</th>
-                    <th>Approved Amount/Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {approvals.length > 0 ? (
-                    approvals.map((approval) => (
-                      <tr key={approval.id}>
-                        <td>
-                          <input 
-                            type="checkbox" 
-                            className="form-check-input"
-                            onChange={() => handleSelectApproval(approval)}
-                            checked={selectedApprovals.some(a => a.id === approval.id)}
-                          />
-                        </td>
-                        <td>{approval.tokenSymbol || approval.contract}</td>
-                        <td>{approval.type}</td>
-                        <td>{approval.spenderName || approval.spender}</td>
-                        <td>{approval.type === "ERC-20" ? approval.amount : approval.isApproved ? "✅ Approved" : "❌ Not Approved"}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan="5" className="text-center py-4">No approvals found.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <button 
-              className="btn btn-danger" 
-              onClick={handleRevokeSingleNFT}  // Call your single revoke function
-              disabled={!selectedApprovals.length || isLoading}
-            >
-              🚨 Revoke Selected NFT
-            </button>
-          </>
+          <div className="table-responsive">
+            <table className="table table-striped table-hover">
+              <thead className="table-light">
+                <tr>
+                  <th>Contract</th>
+                  <th>Type</th>
+                  <th>Spender</th>
+                  <th>Approved Amount/Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {approvals.length > 0 ? (
+                  approvals.map((approval) => (
+                    <tr key={approval.id}>
+                      <td>{approval.tokenSymbol || approval.contract}</td>
+                      <td>{approval.type}</td>
+                      <td>{approval.spenderName || approval.spender}</td>
+                      <td>{approval.type === "ERC-20" ? approval.amount : approval.isApproved ? "✅ Approved" : "❌ Not Approved"}</td>
+                      <td>
+                        {approval.type === 'ERC-721' && (
+                          <button onClick={() => handleRevokeERC721(approval.tokenId)} className="btn btn-danger">Revoke NFT</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="5" className="text-center py-4">No approvals found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
@@ -202,4 +143,3 @@ const ApprovalDashboard = () => {
 };
 
 export default ApprovalDashboard;
-
