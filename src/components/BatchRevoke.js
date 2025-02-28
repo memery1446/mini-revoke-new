@@ -1,119 +1,170 @@
-import React, { useState } from "react";
-import { Contract } from "ethers";
-import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";
-import { batchRevokeERC721Approvals } from "../utils/nftApprovals";
-import { batchRevokeERC1155Approvals } from "../utils/erc1155Approvals";
-import { getProvider, getSigner } from "../utils/providerService";
+// BatchRevoke.js
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { batchRevokeERC20Approvals } from '../utils/batchRevokeUtils';
+import { getProvider } from '../utils/provider';
 
-const BatchRevoke = ({ selectedApprovals = [], setSelectedApprovals }) => {
-    const [isRevoking, setIsRevoking] = useState(false);
+const BatchRevoke = () => {
+  const approvals = useSelector((state) => state.web3.approvals);
+  const [selectedApprovals, setSelectedApprovals] = useState([]);
+  const [isRevoking, setIsRevoking] = useState(false);
+  const [results, setResults] = useState(null);
+
+  const handleSelectApproval = (approval) => {
+    console.log("🔍 Toggling selection for:", approval);
     
-    // Debugging Logs
-    console.log("✅ BatchRevoke Component Loaded");
-    console.log("selectedApprovals:", selectedApprovals);
-    console.log("Type of selectedApprovals:", typeof selectedApprovals);
-    console.log("Is selectedApprovals an array:", Array.isArray(selectedApprovals));
+    setSelectedApprovals((prev) => {
+      // Check if the approval is already selected
+      const isSelected = prev.some((a) => 
+        a.contract === approval.contract && a.spender === approval.spender
+      );
+      
+      if (isSelected) {
+        // Remove if already selected
+        return prev.filter((a) => 
+          !(a.contract === approval.contract && a.spender === approval.spender)
+        );
+      } else {
+        // Add if not selected
+        return [...prev, approval];
+      }
+    });
+  };
+
+  const handleBatchRevoke = async () => {
+    if (selectedApprovals.length === 0) {
+      console.log("⚠️ No approvals selected");
+      return;
+    }
     
-    const handleBatchRevoke = async () => {
-        if (!Array.isArray(selectedApprovals) || selectedApprovals.length === 0) {
-            console.warn("No approvals selected or selectedApprovals is not an array");
-            return;
-        }
-        
-        if (!window.confirm(`🚨 Are you sure you want to revoke ${selectedApprovals.length} approvals?`)) {
-            console.log("User cancelled the revocation.");
-            return;
-        }
+    setIsRevoking(true);
+    setResults(null);
+    
+    try {
+      const provider = await getProvider();
+      const signer = await provider.getSigner();
+      console.log("🔄 Starting batch revocation with signer:", await signer.getAddress());
+      
+      // Only ERC-20 tokens for now
+      const erc20Approvals = selectedApprovals.filter(a => a.type === 'ERC-20');
+      
+      if (erc20Approvals.length === 0) {
+        console.log("ℹ️ No ERC-20 approvals selected");
+        setResults({ success: true, message: "No ERC-20 approvals to revoke." });
+        return;
+      }
+      
+      console.log("🚀 Revoking ERC-20 approvals:", erc20Approvals);
+      
+      const revokeResults = await batchRevokeERC20Approvals(erc20Approvals, signer);
+      console.log("✅ Revocation results:", revokeResults);
+      
+      setResults({
+        success: true,
+        failed: revokeResults.failed.length,
+        successful: revokeResults.successful.length,
+        details: revokeResults
+      });
+      
+      // Clear selections on success
+      setSelectedApprovals([]);
+      
+    } catch (error) {
+      console.error("❌ Batch revocation error:", error);
+      setResults({
+        success: false,
+        message: error.message || "Failed to revoke approvals"
+      });
+    } finally {
+      setIsRevoking(false);
+    }
+  };
 
-        console.log("🚀 Approvals being revoked:", selectedApprovals);
-        setIsRevoking(true);
-        
-        try {
-            const signer = await getSigner();
-            if (!signer) {
-                throw new Error("Failed to get signer. Please ensure wallet is connected.");
-            }
-            console.log("🪙 Signer retrieved successfully:", signer);
+  // Filter for ERC-20 approvals only for now
+  const erc20Approvals = approvals.filter(a => a.type === 'ERC-20');
+  
+  // Check if any approval is selected
+  const isAnySelected = selectedApprovals.length > 0;
+  
+  return (
+    <div className="card border-0 shadow-sm mb-4">
+      <div className="card-header bg-light">
+        <h3 className="h5 mb-0">Batch Revoke Approvals</h3>
+      </div>
+      <div className="card-body">
+        {erc20Approvals.length === 0 ? (
+          <div className="alert alert-info">No ERC-20 approvals found</div>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-sm">
+              <thead>
+                <tr>
+                  <th>Select</th>
+                  <th>Token</th>
+                  <th>Spender</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {erc20Approvals.map((approval, index) => (
+                  <tr key={index}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={selectedApprovals.some(
+                          (a) =>
+                            a.contract === approval.contract && a.spender === approval.spender
+                        )}
+                        onChange={() => handleSelectApproval(approval)}
+                      />
+                    </td>
+                    <td className="text-truncate" style={{ maxWidth: '150px' }}>
+                      {approval.tokenSymbol || approval.contract}
+                    </td>
+                    <td className="text-truncate" style={{ maxWidth: '150px' }}>
+                      {approval.spenderName || approval.spender}
+                    </td>
+                    <td>{approval.amount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-            const erc20Approvals = selectedApprovals.filter(a => a.type === "ERC-20");
-            const erc721Approvals = selectedApprovals.filter(a => a.type === "ERC-721");
-            const erc1155Approvals = selectedApprovals.filter(a => a.type === "ERC-1155");
-            
-            console.log(`Found ${erc20Approvals.length} ERC-20 approvals.`);
-            console.log(`Found ${erc721Approvals.length} ERC-721 approvals.`);
-            console.log(`Found ${erc1155Approvals.length} ERC-1155 approvals.`);
-            
-            // Batch Revoking ERC-20 Approvals
-            if (erc20Approvals.length > 0) {
-                console.log(`⏳ Processing ${erc20Approvals.length} ERC-20 approvals...`);
-                const tokenContractsWithSpenders = erc20Approvals.map(approval => ({
-                    contract: approval.contract,
-                    spender: approval.spender
-                }));
-                await batchRevokeERC20Approvals(tokenContractsWithSpenders, signer);
-                console.log("✅ ERC-20 approvals revoked successfully!");
-            }
-            
-            // Batch Revoking ERC-721 Approvals
-            if (erc721Approvals.length > 0) {
-                console.log("⏳ Processing ERC-721 approvals...");
-                const tokenIds = erc721Approvals.map(approval => approval.tokenId);
-                await batchRevokeERC721Approvals(await signer.getAddress(), tokenIds);
-                console.log("✅ ERC-721 approvals revoked successfully!");
-            }
-            
-            // Batch Revoking ERC-1155 Approvals
-            if (erc1155Approvals.length > 0) {
-                console.log(`⏳ Processing ${erc1155Approvals.length} ERC-1155 approvals...`);
-                const spenders = erc1155Approvals.map(approval => approval.spender);
-                await batchRevokeERC1155Approvals(spenders);
-                console.log("✅ ERC-1155 approvals revoked successfully!");
-            }
+        {results && (
+          <div className={`alert ${results.success ? 'alert-success' : 'alert-danger'} mt-3`}>
+            {results.success ? (
+              <div>
+                ✅ Successfully revoked {results.successful} approval(s)
+                {results.failed > 0 && <div>❌ Failed to revoke {results.failed} approval(s)</div>}
+              </div>
+            ) : (
+              <div>❌ Error: {results.message}</div>
+            )}
+          </div>
+        )}
 
-            setSelectedApprovals([]);
-            alert("✅ Batch revocation successful!");
-            console.log("🚀 Selected approvals cleared.");
-            
-            setTimeout(() => {
-                console.log("🔄 Reloading the page...");
-                window.location.reload();
-            }, 2000);
-        } catch (error) {
-            console.error("❌ Error in batch revocation:", error);
-            alert(`Error: ${error.message || "Unknown error during batch revocation"}`);
-        } finally {
-            setIsRevoking(false);
-            console.log("🔚 Revocation process completed.");
-        }
-    };
-
-    return (
-        <div className="alert alert-warning">
-            <h5>🚨 Batch Revoke</h5>
-            <p>
-                You have selected {selectedApprovals?.length || 0} approval{selectedApprovals.length !== 1 ? 's' : ''} 
-                for revocation.
-            </p>
-            <button 
-                className="btn btn-danger" 
-                onClick={handleBatchRevoke}
-                disabled={!selectedApprovals || selectedApprovals.length === 0 || isRevoking}
-            >
-                {isRevoking ? "Processing..." : "Revoke Selected"}
-            </button>
-            <button 
-                className="btn btn-outline-secondary" 
-                onClick={() => {
-                    console.log("🗑️ Clearing selected approvals...");
-                    setSelectedApprovals([]);
-                }}
-                disabled={!selectedApprovals || selectedApprovals.length === 0 || isRevoking}
-            >
-                Clear Selection
-            </button>
+        <div className="d-flex justify-content-end mt-3">
+          <button
+            className="btn btn-danger"
+            onClick={handleBatchRevoke}
+            disabled={!isAnySelected || isRevoking}
+          >
+            {isRevoking ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Revoking...
+              </>
+            ) : (
+              <>🔥 Revoke Selected ({selectedApprovals.length})</>
+            )}
+          </button>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default BatchRevoke;
-

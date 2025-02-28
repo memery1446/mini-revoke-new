@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { batchRevokeERC20Approvals } from "../components/BatchRevoke";
+// Fix: Corrected import path for batchRevokeERC20Approvals
+import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";
 import { batchRevokeERC721Approvals } from "../utils/nftApprovals";
 import { batchRevokeERC1155Approvals } from "../utils/erc1155Approvals";
 import { CONTRACT_ADDRESSES } from "../constants/abis";
@@ -58,6 +59,7 @@ const ApprovalDashboard = () => {
 
       console.log("🔄 Mapping approval objects...");
       
+      // Fix: Ensure all objects have proper IDs and properties
       const mappedERC20 = erc20Approvals.map((a) => ({
         ...a,
         type: "ERC-20",
@@ -68,14 +70,14 @@ const ApprovalDashboard = () => {
       const mappedERC721 = erc721Approvals.map((a) => ({
         ...a,
         type: "ERC-721",
-        id: `erc721-${a.tokenId || "0"}-${a.spender || CONTRACT_ADDRESSES.MockSpender}`
+        id: `erc721-${a.contract || "unknown"}-${a.tokenId || "0"}-${a.spender || CONTRACT_ADDRESSES.MockSpender}`
       }));
       console.log("✅ Mapped ERC-721 approvals:", mappedERC721);
       
       const mappedERC1155 = erc1155Approvals.map((a) => ({
         ...a,
         type: "ERC-1155",
-        id: `erc1155-${a.spender || "unknown"}`
+        id: `erc1155-${a.contract || "unknown"}-${a.spender || "unknown"}`
       }));
       console.log("✅ Mapped ERC-1155 approvals:", mappedERC1155);
 
@@ -100,9 +102,15 @@ const ApprovalDashboard = () => {
   };
 
   const handleSelectApproval = (approval) => {
-    // Debug the selection process
+    // Add additional debug info
     console.log("🔍 Selection toggled for approval:", approval);
     console.log("🔍 Current selections:", selectedApprovals);
+    
+    // Double-check the approval has an ID
+    if (!approval.id) {
+      console.error("⚠️ Approval missing ID:", approval);
+      return;
+    }
     
     setSelectedApprovals((prev) => {
       // Find if this approval is already selected by ID
@@ -214,6 +222,8 @@ const ApprovalDashboard = () => {
                             type="checkbox" 
                             onChange={() => handleSelectApproval(approval)}
                             checked={selectedApprovals.some(a => a.id === approval.id)}
+                          
+                            className="form-check-input" // Added Bootstrap styling
                            />
                         </td>
                         <td>{approval.contract}</td>
@@ -229,8 +239,11 @@ const ApprovalDashboard = () => {
               </table>
             </div>
             
-            {/* Always show the batch revoke section, but disable the button when no selections */}
-            <div className="d-flex justify-content-end mt-3">
+            {/* Added a debug info section */}
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <div className="small text-muted">
+                {selectedApprovals.length} approval(s) selected
+              </div>
               <button 
                 className="btn btn-danger" 
                 onClick={handleBatchRevoke}
@@ -247,4 +260,3 @@ const ApprovalDashboard = () => {
 };
 
 export default ApprovalDashboard;
-
