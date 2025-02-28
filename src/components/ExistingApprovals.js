@@ -16,7 +16,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
   const approvals = useSelector((state) => state.web3.approvals) || [];
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [revoking, setRevoking] = useState(false);
+  const [revoking, setRevoking] = useState(null);
   
   const isMounted = useRef(true);
   
@@ -59,9 +59,9 @@ const ExistingApprovals = ({ onToggleSelect }) => {
   }, [account, fetchApprovals]);
   
   const revokeApproval = async (approval) => {
-    if (revoking) return;
+    if (revoking === approval.id) return;
     try {
-      setRevoking(true);
+      setRevoking(approval.id);
       console.log("🚨 Revoking approval:", approval);
       
       const signer = await getSigner();
@@ -116,7 +116,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
                   <td>{approval.contract}</td>
                   <td>{approval.spender}</td>
                   <td>
-                    <button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)} disabled={revoking}>
+                    <button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)} disabled={revoking === approval.id}>
                       {revoking ? "Processing..." : "🚨 Revoke"}
                     </button>
                   </td>
