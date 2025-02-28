@@ -113,7 +113,7 @@ const ApprovalDashboard = () => {
   // Define handleBatchRevoke
 const handleBatchRevoke = async () => {
     if (selectedApprovals.length === 0) {
-        console.log("⚠️ No approvals selected");
+        console.warn("⚠️ No approvals selected");
         return;
     }
 
@@ -125,37 +125,29 @@ const handleBatchRevoke = async () => {
         const signer = await provider.getSigner();
         console.log("🔄 Starting batch revocation with signer:", await signer.getAddress());
 
-        // For managing revokes, we can handle each type as necessary
-        // Handle ERC-20 revocation
-        const erc20Approvals = selectedApprovals.filter(a => a.type === 'ERC-20');
-        if (erc20Approvals.length > 0) {
-            console.log("🚀 Revoking ERC-20 approvals:", erc20Approvals);
-      
-            const revokeResults = await batchRevokeERC20Approvals(erc20Approvals, signer);
-            console.log("✅ Revocation results for ERC-20:", revokeResults);
-        } else {
-            console.log("ℹ️ No ERC-20 approvals selected.");
-        }
-
-        // Handle ERC-721 revocation (Similar logic should be implemented if needed)
+        // Check selected ERC-721 approvals
         const erc721Approvals = selectedApprovals.filter(a => a.type === 'ERC-721');
-        if (erc721Approvals.length > 0) {
-            console.log("🚀 Revoking ERC-721 approvals:", erc721Approvals);
-            // Add the function to revoke ERC-721 approvals using their specific logic here, if applicable.
-        } else {
-            console.log("ℹ️ No ERC-721 approvals to revoke.");
+
+        if (erc721Approvals.length === 0) {
+            console.log("ℹ️ No ERC-721 approvals selected.");
+            setRevokeResults({ success: true, message: "No ERC-721 approvals to revoke." });
+            return;
         }
 
-        // Handle ERC-1155 revocation similarly if you want to support that as well
-
-        // For the results, aggregate as needed
-        // Example for successful/revoked messages
+        console.log("🚀 Revoking ERC-721 approvals:", erc721Approvals);
+        
+        // Make sure to await for this revocation
+        const revokeResults = await batchRevokeERC721Approvals(erc721Approvals, signer);
+        console.log("✅ Revocation results:", revokeResults);
+        
         setRevokeResults({
             success: true,
-            message: "Revocation process completed!"
+            failed: revokeResults.failed.length,
+            successful: revokeResults.successful.length,
+            details: revokeResults
         });
-        
-        // Clear selections after updating state
+
+        // Clear selections on success
         setSelectedApprovals([]);
     } catch (error) {
         console.error("❌ Batch revocation error:", error);
