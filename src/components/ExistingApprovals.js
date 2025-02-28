@@ -37,8 +37,13 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       console.log("📋 Token contracts:", tokenContracts);
       
       const erc20Fetched = await getERC20Approvals(tokenContracts, account) || [];
+      console.log("🟢 Fetched ERC-20 approvals:", erc20Fetched);
+      
       const erc721Fetched = await getERC721Approvals(account) || [];
+      console.log("🟢 Fetched ERC-721 approvals:", erc721Fetched);
+      
       const erc1155Fetched = await getERC1155Approvals(account) || [];
+      console.log("🟢 Fetched ERC-1155 approvals:", erc1155Fetched);
       
       if (!isMounted.current) return;
       
@@ -51,21 +56,31 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       if (isMounted.current) setError(err.message);
     } finally {
       if (isMounted.current) setLoading(false);
+      console.log("🔄 Loading state completed. Current loading state:", loading);
     }
   }, [account, dispatch, revoking]);
   
   useEffect(() => {
-    if (account) fetchApprovals();
+    if (account) {
+      console.log("🔄 Wallet account is defined, fetching approvals...");
+      fetchApprovals();
+    } else {
+      console.warn("⚠️ Account is not defined. Cannot fetch approvals.");
+    }
   }, [account, fetchApprovals]);
   
   const revokeApproval = async (approval) => {
-    if (revoking === approval.id) return;
+    if (revoking === approval.id) {
+      console.warn(`⚠️ Revocation already in progress for approval ID: ${approval.id}`);
+      return;
+    }
     try {
       setRevoking(approval.id);
       console.log("🚨 Revoking approval:", approval);
       
       const signer = await getSigner();
       if (!signer) throw new Error("❌ Signer not available");
+      console.log("🪙 Signer retrieved successfully:", signer);
       
       const contract = new Contract(
         approval.contract,
@@ -77,10 +92,11 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       console.log("Transaction sent, awaiting confirmation...");
       await tx.wait();
       console.log("✅ Approval revoked successfully!");
-      
+
       if (isMounted.current) {
         dispatch(removeApproval(approval));
-        setTimeout(fetchApprovals, 2000);
+        console.log(`🗑️ Approval removed from state:`, approval);
+        setTimeout(fetchApprovals, 2000); // Refresh approvals after 2 seconds
       }
     } catch (err) {
       console.error("❌ Error revoking approval:", err);
@@ -97,7 +113,13 @@ const ExistingApprovals = ({ onToggleSelect }) => {
         </button>
       </div>
       <div className="card-body">
-        {loading ? <p>Loading approvals...</p> : error ? <p className="text-danger">{error}</p> : approvals.length === 0 ? <p>No active approvals found.</p> : (
+        {loading ? (
+          <p>Loading approvals...</p>
+        ) : error ? (
+          <p className="text-danger">{error}</p>
+        ) : approvals.length === 0 ? (
+          <p>No active approvals found.</p>
+        ) : (
           <table className="table">
             <thead>
               <tr>
@@ -117,7 +139,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
                   <td>{approval.spender}</td>
                   <td>
                     <button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)} disabled={revoking === approval.id}>
-                      {revoking ? "Processing..." : "🚨 Revoke"}
+                      {revoking === approval.id ? "Processing..." : "🚨 Revoke"}
                     </button>
                   </td>
                 </tr>
@@ -131,3 +153,4 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 };
 
 export default ExistingApprovals;
+
