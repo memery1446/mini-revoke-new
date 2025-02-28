@@ -3,7 +3,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getERC20Approvals } from "../utils/erc20Approvals";
 import { getERC721Approvals } from "../utils/nftApprovals";
 import { getERC1155Approvals } from "../utils/erc1155Approvals";
-import { CONTRACT_ADDRESSES } from "../constants/abis";
 import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
 import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";
