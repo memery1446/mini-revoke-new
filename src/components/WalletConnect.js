@@ -1,131 +1,112 @@
-// This is a suggestion for your WalletConnect.js component with enhanced console logging
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setAccount } from "../store/web3Slice";
-import { ethers } from "ethers";
+import { connectWallet } from "../utils/providerService";
+
+// Force direct console access - bypass any potential overwrites
+const safeConsoleLog = window.console.log.bind(window.console);
 
 const WalletConnect = () => {
   const dispatch = useDispatch();
   const account = useSelector((state) => state.web3.account);
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Function to handle wallet connection
-  const connectWallet = async () => {
-    console.log("🔌 Attempting to connect wallet...");
+  // Log when component renders
+  safeConsoleLog("🔵 WalletConnect component rendering");
+  
+  useEffect(() => {
+    // Create a visible debug element
+    const debugElement = document.createElement('div');
+    debugElement.id = 'wallet-debug';
+    debugElement.style.position = 'fixed';
+    debugElement.style.top = '10px';
+    debugElement.style.left = '10px';
+    debugElement.style.backgroundColor = 'black';
+    debugElement.style.color = 'white';
+    debugElement.style.padding = '10px';
+    debugElement.style.zIndex = '9999';
+    debugElement.style.fontSize = '12px';
+    debugElement.style.maxWidth = '300px';
+    debugElement.style.maxHeight = '200px';
+    debugElement.style.overflow = 'auto';
+    document.body.appendChild(debugElement);
+    
+    function updateDebug(msg) {
+      const el = document.getElementById('wallet-debug');
+      if (el) {
+        el.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
+        el.scrollTop = el.scrollHeight;
+      }
+      safeConsoleLog(msg);
+    }
+    
+    updateDebug("WalletConnect mounted");
+    window._updateDebug = updateDebug; // Expose globally
+    
+    return () => {
+      const el = document.getElementById('wallet-debug');
+      if (el) el.remove();
+    };
+  }, []);
+
+  const handleConnect = async () => {
+    window._updateDebug?.("Connect button clicked");
+    safeConsoleLog("🔌 Connect button clicked");
+    
+    setConnecting(true);
+    setError(null);
+    
     try {
-      if (window.ethereum) {
-        console.log("🦊 MetaMask detected");
-        
-        // Request account access
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        console.log("📋 Accounts returned:", accounts);
-        
-        if (accounts && accounts.length > 0) {
-          const currentAccount = accounts[0];
-          console.log(`✅ Connected to account: ${currentAccount}`);
-          
-          // Dispatch the account to Redux
-          dispatch(setAccount(currentAccount));
-          console.log("📊 Account dispatched to Redux");
-          
-          // Log the current Redux state after dispatch
-          if (window.store) {
-            console.log("🔍 Redux state after wallet connection:", window.store.getState());
-          }
-          
-          return currentAccount;
-        } else {
-          console.warn("⚠️ No accounts found after connection attempt");
-          return null;
-        }
-      } else {
-        console.error("❌ No Ethereum provider (MetaMask) detected");
-        alert("Please install MetaMask to connect your wallet");
-        return null;
+      window._updateDebug?.("Attempting to connect wallet...");
+      
+      // Use the connectWallet function from providerService
+      const success = await connectWallet();
+      
+      window._updateDebug?.(`Wallet connection ${success ? "successful" : "failed"}`);
+      
+      if (!success) {
+        setError("Failed to connect wallet");
+        window._updateDebug?.("❌ Wallet connection failed");
       }
-    } catch (error) {
-      console.error("❌ Wallet connection error:", error);
-      if (error.code === 4001) {
-        console.log("🚫 User rejected the connection request");
-      }
-      return null;
+    } catch (err) {
+      safeConsoleLog("❌ Wallet connection error:", err);
+      window._updateDebug?.(`Error: ${err.message}`);
+      setError(err.message);
+    } finally {
+      setConnecting(false);
     }
   };
 
-  // Setup event listeners for wallet changes
-  useEffect(() => {
-    const setupWalletEvents = async () => {
-      if (window.ethereum) {
-        console.log("🔄 Setting up wallet event listeners");
-        
-        // Handle account changes
-        window.ethereum.on("accountsChanged", (accounts) => {
-          console.log("👛 Wallet accounts changed:", accounts);
-          if (accounts.length === 0) {
-            console.log("🔒 User disconnected wallet");
-            dispatch(setAccount(null));
-          } else {
-            console.log(`🔁 Switched to account: ${accounts[0]}`);
-            dispatch(setAccount(accounts[0]));
-          }
-          
-          // Log the Redux state after account change
-          if (window.store) {
-            console.log("🔍 Redux state after account change:", window.store.getState());
-          }
-        });
+  const handleDisconnect = () => {
+    window._updateDebug?.("Disconnecting wallet");
+    dispatch(setAccount(null));
+  };
 
-        // Handle chain/network changes
-        window.ethereum.on("chainChanged", (chainId) => {
-          console.log(`⛓️ Chain changed to: ${chainId}`);
-          // Log the Redux state after chain change
-          if (window.store) {
-            console.log("🔍 Redux state after chain change:", window.store.getState());
-          }
-          window.location.reload(); // Refresh the page on chain change
-        });
-        
-        // Auto-connect if previously connected
-        try {
-          const accounts = await window.ethereum.request({ method: "eth_accounts" });
-          if (accounts && accounts.length > 0) {
-            console.log(`🔄 Auto-connecting to previously connected account: ${accounts[0]}`);
-            dispatch(setAccount(accounts[0]));
-            
-            // Log the Redux state after auto-connection
-            if (window.store) {
-              console.log("🔍 Redux state after auto-connection:", window.store.getState());
-            }
-          }
-        } catch (error) {
-          console.error("❌ Error during auto-connect:", error);
-        }
-      }
-    };
-    
-    setupWalletEvents();
-    
-    // Cleanup function
-    return () => {
-      if (window.ethereum) {
-        console.log("🧹 Removing wallet event listeners");
-        window.ethereum.removeAllListeners("accountsChanged");
-        window.ethereum.removeAllListeners("chainChanged");
-      }
-    };
-  }, [dispatch]);
+  // Log when account changes
+  useEffect(() => {
+    window._updateDebug?.(`Account state: ${account || "not connected"}`);
+    safeConsoleLog("👛 Account state updated:", account);
+  }, [account]);
 
   return (
     <div className="card h-100">
       <div className="card-body">
-        <h5 className="card-title">Wallet</h5>
+        <h5 className="card-title">Wallet Connection</h5>
+        
+        {error && (
+          <div className="alert alert-danger" role="alert">
+            {error}
+          </div>
+        )}
         
         {!account ? (
           <button 
             className="btn btn-primary w-100" 
-            onClick={connectWallet}
+            onClick={handleConnect}
+            disabled={connecting}
           >
-            Connect Wallet
+            {connecting ? "Connecting..." : "Connect Wallet"}
           </button>
         ) : (
           <div>
@@ -134,15 +115,16 @@ const WalletConnect = () => {
             </div>
             <button 
               className="btn btn-outline-secondary w-100 mt-2"
-              onClick={() => {
-                console.log("🔌 Manually disconnecting wallet");
-                dispatch(setAccount(null));
-              }}
+              onClick={handleDisconnect}
             >
               Disconnect
             </button>
           </div>
         )}
+        
+        <div className="mt-3 text-muted small">
+          <p>Debug: {connecting ? "Connecting..." : account ? "Connected" : "Not connected"}</p>
+        </div>
       </div>
     </div>
   );

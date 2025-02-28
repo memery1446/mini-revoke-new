@@ -1,6 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+  // Install emergency console logging
+  (function() {
+    // Check if console is working
+    var originalLog = console.log;
+    var originalWarn = console.warn;
+    var originalError = console.error;
+    
+    // Flag to track if console seems broken
+    var consoleWorks = false;
+    
+    try {
+      // Try to use console
+      originalLog("Console initialization check");
+      consoleWorks = true;
+    } catch (e) {
+      // Console might be broken - create emergency logging
+      console = console || {};
+      
+      // Create a visible logging div
+      function setupLogDiv() {
+        var logDiv = document.createElement('div');
+        logDiv.id = 'emergency-console';
+        logDiv.style.position = 'fixed';
+        logDiv.style.bottom = '0';
+        logDiv.style.left = '0';
+        logDiv.style.right = '0';
+        logDiv.style.maxHeight = '200px';
+        logDiv.style.overflow = 'auto';
+        logDiv.style.backgroundColor = 'black';
+        logDiv.style.color = 'lime';
+        logDiv.style.fontFamily = 'monospace';
+        logDiv.style.fontSize = '10px';
+        logDiv.style.zIndex = '9999';
+        document.body.appendChild(logDiv);
+        return logDiv;
+      }
+      
+      // Log to the emergency div
+      function logToDiv(type, args) {
+        var logDiv = document.getElementById('emergency-console') || setupLogDiv();
+        var line = document.createElement('div');
+        line.style.borderBottom = '1px solid #333';
+        line.style.padding = '2px 5px';
+        
+        var timestamp = new Date().toLocaleTimeString();
+        var prefix = '[' + timestamp + '] [' + type + ']: ';
+        
+        var message = prefix;
+        for (var i = 0; i < args.length; i++) {
+          try {
+            message += (typeof args[i] === 'object') ? 
+              JSON.stringify(args[i]) : String(args[i]);
+            message += ' ';
+          } catch (e) {
+            message += '[Object]';
+          }
+        }
+        
+        line.textContent = message;
+        logDiv.appendChild(line);
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+      
+      // Override console methods
+      console.log = function() {
+        logToDiv('LOG', arguments);
+        try { originalLog.apply(console, arguments); } catch (e) {}
+      };
+      
+      console.warn = function() {
+        logToDiv('WARN', arguments);
+        try { originalWarn.apply(console, arguments); } catch (e) {}
+      };
+      
+      console.error = function() {
+        logToDiv('ERROR', arguments);
+        try { originalError.apply(console, arguments); } catch (e) {}
+      };
+      
+      // Provide debug info about window.store when it's available
+      var checkStoreInterval = setInterval(function() {
+        if (window.store) {
+          console.log("Redux store detected:", window.store);
+          try {
+            console.log("Redux state:", window.store.getState());
+          } catch (e) {
+            console.error("Error getting Redux state:", e);
+          }
+          clearInterval(checkStoreInterval);
+        }
+      }, 1000);
+    }
+    
+    // After DOM loads, report console status
+    window.addEventListener('DOMContentLoaded', function() {
+      if (consoleWorks) {
+        console.log("Browser console is working normally");
+      } else {
+        // Already using emergency console
+        console.log("Using emergency console logging");
+      }
+      
+      // Setup global error handler
+      window.onerror = function(message, source, lineno, colno, error) {
+        console.error("GLOBAL ERROR:", message, "at", source, lineno + ":" + colno);
+        console.error("Error details:", error);
+        return false;
+      };
+    });
+  })();
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mini Revoke</title>
