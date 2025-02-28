@@ -91,7 +91,26 @@ const ApprovalDashboard = () => {
     }
   };
 
-  // Definition for handleBatchRevoke
+  // Define handleSelectApproval
+  const handleSelectApproval = (approval) => {
+    console.log("🔍 Toggling selection for:", approval);
+    
+    setSelectedApprovals((prev) => {
+      const isSelected = prev.some((a) => 
+        a.contract === approval.contract && a.spender === approval.spender
+      );
+
+      if (isSelected) {
+        return prev.filter((a) => 
+          !(a.contract === approval.contract && a.spender === approval.spender)
+        );
+      } else {
+        return [...prev, approval];
+      }
+    });
+  };
+
+  // Define handleBatchRevoke
   const handleBatchRevoke = async () => {
     if (selectedApprovals.length === 0) {
       console.log("⚠️ No approvals selected");
@@ -106,7 +125,6 @@ const ApprovalDashboard = () => {
       const signer = await provider.getSigner();
       console.log("🔄 Starting batch revocation with signer:", await signer.getAddress());
 
-      // Filter only for ERC-20 approvals
       const erc20Approvals = selectedApprovals.filter(a => a.type === 'ERC-20');
 
       if (erc20Approvals.length === 0) {
@@ -119,15 +137,14 @@ const ApprovalDashboard = () => {
       
       const revokeResults = await batchRevokeERC20Approvals(erc20Approvals, signer);
       console.log("✅ Revocation results:", revokeResults);
-      
+
       setRevokeResults({
         success: true,
         failed: revokeResults.failed.length,
         successful: revokeResults.successful.length,
         details: revokeResults
       });
-      
-      // Clear selections on success
+
       setSelectedApprovals([]);
     } catch (error) {
       console.error("❌ Batch revocation error:", error);
@@ -143,7 +160,7 @@ const ApprovalDashboard = () => {
         <h2 className="card-title">Approval Dashboard</h2>
         <button 
           className="btn btn-secondary" 
-          onClick={fetchApprovals} 
+          onClick={fetchApprovals}
           disabled={isLoading}
         >
           {isLoading ? 'Loading...' : '🔄 Refresh Approvals'}
