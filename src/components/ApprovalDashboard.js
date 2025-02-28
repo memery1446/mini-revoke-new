@@ -95,11 +95,14 @@ const handleBatchRevoke = async () => {
         const signer = await provider.getSigner();
         const userAddress = await signer.getAddress(); // Get the wallet address
 
+        const contractAddress = CONTRACT_ADDRESSES.TestNFT; // Ensure this points to your NFT contract
+        const nftContract = new Contract(contractAddress, NFT_ABI, signer); // Instantiate contract for ERC-721
+
         // Filter and revoke ERC-20 approvals
         const erc20Approvals = selectedApprovals.filter(a => a.type === 'ERC-20');
         if (erc20Approvals.length > 0) {
-            const revokeResultsERC20 = await batchRevokeERC20Approvals(erc20Approvals, signer);
-            console.log("✅ Revocation results for ERC-20:", revokeResultsERC20);
+            const revokeResults = await batchRevokeERC20Approvals(erc20Approvals, signer);
+            console.log("✅ Revocation results for ERC-20:", revokeResults);
         } else {
             console.log("ℹ️ No ERC-20 approvals selected.");
         }
@@ -109,8 +112,7 @@ const handleBatchRevoke = async () => {
         if (erc721Approvals.length > 0) {
             const idsToRevoke = [];
             for (const approval of erc721Approvals) {
-                // Check ownership before attempting to revoke
-                const owner = await contract.ownerOf(approval.tokenId);
+                const owner = await nftContract.ownerOf(approval.tokenId); // Ensure the contract instance is used here
                 if (owner.toLowerCase() !== userAddress.toLowerCase()) {
                     console.log(`💔 Not owner of token ID ${approval.tokenId}. Cannot revoke.`);
                     continue; // Skip revocation for tokens not owned by the user
@@ -119,14 +121,14 @@ const handleBatchRevoke = async () => {
             }
 
             if (idsToRevoke.length > 0) {
-                const revokeResultsERC721 = await batchRevokeERC721Approvals(userAddress, idsToRevoke);
-                console.log("✅ Revocation results for ERC-721:", revokeResultsERC721);
+                const revokeResults = await batchRevokeERC721Approvals(userAddress, idsToRevoke);
+                console.log("✅ Revocation results for ERC-721:", revokeResults);
             } else {
                 console.log("ℹ️ No eligible ERC-721 approvals to revoke.");
             }
         }
 
-        // Update results state as necessary for UI feedback
+        // Optionally handle results accordingly
         setRevokeResults({ success: true, message: "Revocation process completed!" });
         setSelectedApprovals([]); // Clear selections on success
     } catch (error) {
