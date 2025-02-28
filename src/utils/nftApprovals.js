@@ -9,13 +9,13 @@ import { CONTRACT_ADDRESSES } from "../constants/abis"; // ✅ Correct import
  * @returns {Promise<boolean>} - Returns true if approved, otherwise false.
  */
 export async function getERC721Approvals(userAddress, tokenId = 1) {
+    console.log("🔍 Starting ERC-721 approval check for:", userAddress);
     try {
         const provider = await getProvider();
         const contractAddress = CONTRACT_ADDRESSES.TestNFT;
 
-        console.log("🔍 Fetching ERC-721 approvals for contract:", contractAddress);
-        console.log("👤 Owner address:", userAddress);
-        console.log("🔢 Token ID:", tokenId);
+        console.log("🔍 ERC-721 contract address:", contractAddress);
+        console.log("🔢 Checking for token ID:", tokenId);
 
         if (!contractAddress || contractAddress === ZeroAddress) {
             throw new Error("🚨 Invalid ERC-721 contract address!");
