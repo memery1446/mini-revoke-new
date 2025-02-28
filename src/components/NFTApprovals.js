@@ -74,6 +74,9 @@ const NFTApprovals = ({ contractAddress, spender }) => {
       await tx.wait();
       
       console.log("✅ Successfully revoked approval");
+      window.store.dispatch({ type: "web3/setApprovals", payload: [] });
+window.debugApp.logState(); // Check Redux update
+
       setApprovals(false);
     } catch (error) {
       console.error("❌ Error revoking approval:", error);

@@ -1,3 +1,6 @@
+import { ethers } from "ethers";
+window.ethers = ethers; // 🔥 This makes it accessible in the browser console
+
 import { configureStore } from "@reduxjs/toolkit";
 import web3Reducer from "./web3Slice";
 
@@ -17,11 +20,9 @@ if (typeof window !== 'undefined') {
   window.store = store;
   console.log("📊 Redux store exposed as window.store");
   
-  // Add this new subscription to log state changes
   store.subscribe(() => {
     console.log("🔄 Redux State:", store.getState());
   });
 }
 
 export default store;
-
