@@ -1,6 +1,4 @@
 import { JsonRpcProvider, BrowserProvider } from "ethers";
-import store from "../store/index"; // Import Redux store
-import { setNetwork } from "../store/web3Slice"; // Import actions
 
 // Log that the provider module is loaded
 console.log("🔌 provider.js loaded - " + new Date().toISOString());
@@ -56,9 +54,9 @@ async function getProvider() {
             const chainId = Number(network.chainId);
             console.log(`✅ Connected to Chain ID: ${chainId}`);
             
-            // Update Redux store with network info
-            if (store && store.dispatch) {
-                store.dispatch(setNetwork(chainId));
+            // Update Redux store with network info - using window.store instead of direct import
+            if (typeof window !== 'undefined' && window.store && window.store.dispatch) {
+                window.store.dispatch({ type: 'web3/setNetwork', payload: chainId });
                 console.log("🔄 Updated network in Redux:", chainId);
             } else {
                 console.warn("⚠️ Redux store not available, network not updated");
@@ -83,9 +81,9 @@ async function getProvider() {
         const defaultNetwork = 11155111; // Default to Sepolia if nothing is set
         console.log("📡 No wallet detected, using RPC:", NETWORK_RPC_URLS[defaultNetwork]);
         
-        // Update Redux with the default network
-        if (store && store.dispatch) {
-            store.dispatch(setNetwork(defaultNetwork));
+        // Update Redux with the default network - using window.store instead of direct import
+        if (typeof window !== 'undefined' && window.store && window.store.dispatch) {
+            window.store.dispatch({ type: 'web3/setNetwork', payload: defaultNetwork });
             console.log("🔄 Updated network in Redux to default:", defaultNetwork);
         }
         

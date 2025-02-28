@@ -1,65 +1,69 @@
-import React from "react";
-import ReactDOM from "react-dom/client";  // ✅ Correct import for React 18
-import { BootstrapWrapper } from "./utils/provider";  // ✅ Bootstrap wrapper
-import { Provider } from "react-redux";
-import store from "./store/index"; // ✅ Import Redux store
-import App from "./App";
-import "bootstrap/dist/css/bootstrap.min.css";  // ✅ Bootstrap styles
-import { ethers } from "ethers";
+import { createSlice } from "@reduxjs/toolkit";
 
-// Log when the file loads
-console.log("🚀 Root index.js loaded - " + new Date().toISOString());
-
-// Make ethers available globally with a safety check
-if (typeof window !== 'undefined') {
-  window.ethers = ethers;
-  console.log("🟢 window.ethers is now available in root index.js!");
-  
-  // Expose Redux store to window object
-  if (!window.store) {
-    window.store = store;
-    console.log("📊 Redux store exposed to window from root index.js");
-  } else {
-    console.log("📊 Redux store already exposed to window");
-  }
-  
-  // Enhanced debugging helpers
-  window.debugApp = {
-    getState: () => store.getState(),
-    logState: () => {
-      const state = store.getState();
-      console.log("Current Redux State:", state);
-      return state;
+const web3Slice = createSlice({
+  name: "web3",
+  initialState: {
+    account: null,
+    network: null,
+    approvals: [], // ✅ Ensure this is always an array
+  },
+  reducers: {
+    setAccount: (state, action) => {
+      state.account = action.payload; // ✅ Keep wallet as a string
+      console.log("👛 Account set:", action.payload); // Add logging for easier debugging
     },
-    dispatch: store.dispatch
-  };
-  
-  // Log initial state for verification
-  console.log("🔍 Initial Redux State:", store.getState());
-  
-  // Subscribe to store updates
-  const unsubscribe = store.subscribe(() => {
-    console.log("🔄 Redux State Updated:", store.getState());
-  });
-  
-  // Log helpful message about available commands
-  console.log(
-    "%c Redux Store Available in Console! \n" + 
-    "%c Try these commands: \n" +
-    "• window.store.getState() \n" +
-    "• window.debugApp.logState() \n" +
-    "• window.store.dispatch({ type: 'web3/setAccount', payload: '0x123...' })",
-    "font-size: 14px; font-weight: bold; color: #4CAF50;",
-    "font-size: 13px; color: #2196F3;"
-  );
+    setNetwork: (state, action) => {
+      state.network = Number.parseInt(action.payload, 10) || null; // ✅ Ensure it's always a number or null if parsing fails
+      console.log("🌐 Network set:", state.network); // Add logging for easier debugging
+    },
+    setApprovals: (state, action) => {
+      state.approvals = action.payload || []; // ✅ Prevent undefined errors
+      console.log("📋 Approvals Updated:", state.approvals);
+    },
+    resetWeb3: (state) => {
+      console.log("🛑 Resetting Web3 State");
+      state.account = null;
+      state.network = null;
+      state.approvals = []; // ✅ Reset to an empty array
+    },
+    addApproval: (state, action) => {
+      console.log("🚀 Attempting to Add Approval:", action.payload);
+      if (!action.payload || !action.payload.contract || !action.payload.spender) {
+        console.error("❌ Invalid approval data:", action.payload);
+        return;
+      }
+      
+      const index = state.approvals.findIndex(
+        (a) => a.contract === action.payload.contract && a.spender === action.payload.spender
+      );
+      if (index !== -1) {
+        state.approvals[index] = action.payload;
+        console.log("✅ Approval Updated in Redux:", action.payload);
+      } else {
+        state.approvals.push(action.payload);
+        console.log("✅ New Approval Added to Redux:", action.payload);
+      }
+    },
+    removeApproval: (state, action) => {
+      if (!action.payload || !action.payload.contract || !action.payload.spender) {
+        console.error("❌ Invalid approval data for removal:", action.payload);
+        return;
+      }
+      
+      state.approvals = state.approvals.filter(
+        (approval) => !(approval.contract === action.payload.contract && approval.spender === action.payload.spender)
+      );
+      console.log("🗑️ Approval Removed from Redux:", action.payload);
+    },
+  },
+});
+
+// Expose actions to window for debugging
+if (typeof window !== 'undefined') {
+  window.web3Actions = web3Slice.actions;
+  console.log("🛠️ Redux actions exposed as window.web3Actions");
 }
 
-// Create React root and render app
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
-  <Provider store={store}>
-    <BootstrapWrapper>
-      <App />
-    </BootstrapWrapper>
-  </Provider>
-);
+export const { setAccount, setNetwork, setApprovals, resetWeb3, addApproval, removeApproval } = web3Slice.actions;
+
+export default web3Slice.reducer;
