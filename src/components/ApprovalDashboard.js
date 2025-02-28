@@ -15,12 +15,29 @@ const ApprovalDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [processing, setProcessing] = useState(null); // Track which approval is being processed
   const [statusMessage, setStatusMessage] = useState('');
+  const [selectedApprovals, setSelectedApprovals] = useState([]);
   
   useEffect(() => {
     if (wallet) {
       fetchApprovals();
     }
   }, [wallet]);
+  
+  // Handle checkbox selection
+  const handleToggleSelect = (approval) => {
+    setSelectedApprovals(prev => {
+      // Check if this approval is already selected
+      const isAlreadySelected = prev.some(a => a.id === approval.id);
+      
+      if (isAlreadySelected) {
+        // If selected, remove it
+        return prev.filter(a => a.id !== approval.id);
+      } else {
+        // If not selected, add it
+        return [...prev, approval];
+      }
+    });
+  };
 
   const fetchApprovals = async () => {
     setIsLoading(true);
@@ -134,6 +151,60 @@ const ApprovalDashboard = () => {
       setProcessing(null);
     }
   };
+  
+  // Handle batch revocation for ERC-721 tokens
+  const handleBatchRevokeSelected = async () => {
+    if (processing || selectedApprovals.length === 0) return;
+    
+    // Only process ERC-721 approvals for now
+    const selectedERC721 = selectedApprovals.filter(a => a.type === 'ERC-721');
+    
+    if (selectedERC721.length === 0) {
+      setStatusMessage('No ERC-721 approvals selected');
+      return;
+    }
+    
+    setProcessing('batch');
+    setStatusMessage(`Revoking ${selectedERC721.length} selected approvals...`);
+    
+    try {
+      const provider = await getProvider();
+      const signer = await provider.getSigner();
+      
+      // Process each approval one by one
+      for (let i = 0; i < selectedERC721.length; i++) {
+        const approval = selectedERC721[i];
+        setStatusMessage(`Processing approval ${i+1} of ${selectedERC721.length}...`);
+        
+        const nftContract = new Contract(approval.contract, NFT_ABI, signer);
+        
+        if (approval.tokenId === 'all') {
+          // Revoke approval for all tokens
+          const tx = await nftContract.setApprovalForAll(approval.spender, false);
+          await tx.wait();
+        } else {
+          // Revoke approval for a specific token
+          const tx = await nftContract.approve(ZeroAddress, approval.tokenId);
+          await tx.wait();
+        }
+      }
+      
+      setStatusMessage(`Successfully revoked ${selectedERC721.length} approvals!`);
+      setSelectedApprovals([]); // Clear selections
+      
+      // Refresh approvals after successful revocation
+      setTimeout(() => {
+        fetchApprovals();
+        setStatusMessage('');
+      }, 2000);
+      
+    } catch (error) {
+      console.error("❌ Error in batch revocation:", error);
+      setStatusMessage(`Error: ${error.message || "Transaction failed"}`);
+    } finally {
+      setProcessing(null);
+    }
+  };
 
   return (
     <div className="card shadow-sm mb-4">
@@ -161,10 +232,35 @@ const ApprovalDashboard = () => {
           <div className="alert alert-success">{statusMessage}</div>
         )}
         
+        {selectedApprovals.length > 0 && (
+          <div className="alert alert-primary mb-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <span>{selectedApprovals.length} approvals selected</span>
+              <div>
+                <button 
+                  className="btn btn-sm btn-danger me-2"
+                  onClick={handleBatchRevokeSelected}
+                  disabled={processing !== null}
+                >
+                  Revoke Selected
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => setSelectedApprovals([])}
+                  disabled={processing !== null}
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="table-responsive">
           <table className="table table-striped table-hover">
             <thead className="table-light">
               <tr>
+                <th>Select</th>
                 <th>Contract</th>
                 <th>Type</th>
                 <th>Spender</th>
@@ -176,6 +272,15 @@ const ApprovalDashboard = () => {
               {approvals && approvals.length > 0 ? (
                 approvals.map((approval) => (
                   <tr key={approval.id || `${approval.contract}-${approval.spender}-${approval.tokenId || 'all'}`}>
+                    <td>
+                      <input 
+                        type="checkbox" 
+                        className="form-check-input" 
+                        checked={selectedApprovals.some(a => a.id === approval.id)}
+                        onChange={() => handleToggleSelect(approval)}
+                        disabled={processing !== null}
+                      />
+                    </td>
                     <td>{approval.tokenSymbol || approval.contract.substring(0, 6) + '...' + approval.contract.substring(approval.contract.length - 4)}</td>
                     <td>{approval.type}</td>
                     <td>{approval.spenderName || (approval.spender && `${approval.spender.substring(0, 6)}...${approval.spender.substring(approval.spender.length - 4)}`)}</td>
