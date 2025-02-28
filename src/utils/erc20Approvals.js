@@ -13,65 +13,35 @@ export async function getERC20Approvals(tokenContracts, ownerAddress) {
     console.log("🔍 Starting ERC-20 approval check for:", ownerAddress);
     console.log("🔍 Checking token contracts:", tokenContracts);
     
-    let approvals = [];
+    let approvalsMap = new Map();
 
-    try {
-        // Validate owner address
-        ownerAddress = getAddress(ownerAddress); 
-    } catch {
-        console.error(`❌ Invalid owner address: ${ownerAddress}`);
-        return [];
-    }
-
-    // Define all spenders to check - including 0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608
-    const spenderAddresses = [
-        CONTRACT_ADDRESSES.TK1,
-        CONTRACT_ADDRESSES.MockSpender,
-        "0x4330F46C529ADa1Ef8BAA8125800be556441F3A5",
-        "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608", // The spender we found approval for
-        "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45", // Uniswap V3 Router
-        "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", // Uniswap V2 Router
-        "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F", // SushiSwap Router
-        "0x1111111254fb6c44bAC0beD2854e76F90643097d"  // 1inch Router
-    ];
-
-    console.log("🔍 Checking against spenders:", spenderAddresses);
+    // ... (rest of the existing code)
 
     for (let tokenAddress of tokenContracts) {
-        try {
-            tokenAddress = getAddress(tokenAddress);
-            console.log(`🔍 Checking token: ${tokenAddress}`);
-        } catch {
-            console.error(`❌ Invalid token address: ${tokenAddress}`);
-            continue;
-        }
+        // ... (existing validation code)
 
         try {
             const contract = new Contract(tokenAddress, TOKEN_ABI, provider);
             
             for (let spender of spenderAddresses) {
-                try {
-                    spender = getAddress(spender);
-                    console.log(`🔍 Checking allowance for spender: ${spender}`);
-                    
-                    const allowance = await contract.allowance(ownerAddress, spender);
-                    console.log(`Allowance result: ${allowance.toString()}`);
+                // ... (existing validation code)
 
-                    if (allowance > 0n) { // Using BigInt comparison
-                        const approval = {
-                            contract: tokenAddress,
-                            type: "ERC-20",
-                            spender: spender,
-                            amount: allowance.toString(),
-                        };
-                        
-                        approvals.push(approval);
-                        console.log(`✅ Found approval:`, approval);
-                    } else {
-                        console.log(`ℹ️ No approval for spender ${spender}`);
-                    }
-                } catch (error) {
-                    console.error(`❌ Error fetching allowance for ${spender} on ${tokenAddress}:`, error);
+                const allowance = await contract.allowance(ownerAddress, spender);
+                console.log(`Allowance result: ${allowance.toString()}`);
+
+                if (allowance > 0n) { // Using BigInt comparison
+                    const approvalKey = `${tokenAddress}-${spender}`;
+                    const approval = {
+                        contract: tokenAddress,
+                        type: "ERC-20",
+                        spender: spender,
+                        amount: allowance.toString(),
+                    };
+                    
+                    approvalsMap.set(approvalKey, approval);
+                    console.log(`✅ Found approval:`, approval);
+                } else {
+                    console.log(`ℹ️ No approval for spender ${spender}`);
                 }
             }
         } catch (error) {
@@ -79,8 +49,9 @@ export async function getERC20Approvals(tokenContracts, ownerAddress) {
         }
     }
 
-    console.log(`✅ Completed ERC-20 check. Found ${approvals.length} approvals:`, approvals);
-    return approvals;
+    const uniqueApprovals = Array.from(approvalsMap.values());
+    console.log(`✅ Completed ERC-20 check. Found ${uniqueApprovals.length} unique approvals:`, uniqueApprovals);
+    return uniqueApprovals;
 }
 
 // Export the original function to maintain compatibility

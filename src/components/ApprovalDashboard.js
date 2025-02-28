@@ -79,7 +79,11 @@ const ApprovalDashboard = () => {
         ...mappedERC1155
       ];
 
-      console.log("🟢 Final approvals before dispatch:", newApprovals);
+const uniqueApprovals = Array.from(new Map(newApprovals.map(item => 
+      [item.id, item]
+    )).values());
+
+    console.log("🟢 Final unique approvals before dispatch:", uniqueApprovals);
       
       dispatch(setApprovals(newApprovals));
     } catch (error) {
