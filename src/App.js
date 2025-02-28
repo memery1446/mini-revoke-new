@@ -9,6 +9,8 @@ import { BootstrapWrapper } from "./utils/provider";
 import ApprovalDebugger from "./components/ApprovalDebugger";
 import { initializeProvider } from "./utils/providerService";
 import { ethers } from "ethers";
+import "./store/index"; // Ensures Redux is initialized
+
 
 
 // Add console log at the top level to verify file loading
