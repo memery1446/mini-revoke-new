@@ -7,11 +7,11 @@ import store from "./store/index" // Keep import for Redux store
 
 import WalletConnect from "./components/WalletConnect.js"
 import NetworkSelector from "./components/NetworkSelector.js"
-// Remove import for BatchRevoke component // add <ApprovalDebugger /> below
+
 import ApprovalDashboard from "./components/ApprovalDashboard.js" // Import the consolidated component
 import "bootstrap/dist/css/bootstrap.min.css"
 import { BootstrapWrapper } from "./utils/provider"
-// import ApprovalDebugger from "./components/ApprovalDebugger"
+
 import { initializeProvider } from "./utils/providerService"
 
 console.log("🔴 App.js loaded - " + new Date().toISOString())
