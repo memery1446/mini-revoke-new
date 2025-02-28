@@ -14,6 +14,8 @@ export async function getERC721Approvals(userAddress, tokenId = 1) {
         const contractAddress = CONTRACT_ADDRESSES.TestNFT;
 
         console.log("🔍 Fetching ERC-721 approvals for contract:", contractAddress);
+        console.log("👤 Owner address:", userAddress);
+        console.log("🔢 Token ID:", tokenId);
 
         if (!contractAddress || contractAddress === ZeroAddress) {
             throw new Error("🚨 Invalid ERC-721 contract address!");
@@ -30,15 +32,13 @@ export async function getERC721Approvals(userAddress, tokenId = 1) {
 
         const operatorAddress = CONTRACT_ADDRESSES.MockSpender;
         console.log("📌 Checking approval for operator:", operatorAddress);
-        console.log("📌 Checking approval for user:", userAddress);
-        console.log("📌 Checking approval for token ID:", tokenId);
 
         let isApproved = false;
         try {
             isApproved = await contract.isApprovedForAll(getAddress(userAddress), getAddress(operatorAddress));
             console.log("📌 isApprovedForAll result:", isApproved);
         } catch (error) {
-            console.warn("⚠️ isApprovedForAll call failed. No approvals set or contract issue.");
+            console.warn("⚠️ isApprovedForAll call failed:", error.message);
         }
 
         let specificApproval = ZeroAddress;
@@ -46,23 +46,23 @@ export async function getERC721Approvals(userAddress, tokenId = 1) {
             specificApproval = await contract.getApproved(tokenId);
             console.log("📌 getApproved result for token ID " + tokenId + ":", specificApproval);
         } catch (error) {
-            console.warn("⚠️ getApproved call failed. No approval set for token ID:", tokenId);
+            console.warn("⚠️ getApproved call failed:", error.message);
         }
 
         const approvalStatus = isApproved || specificApproval !== ZeroAddress;
         console.log("✅ ERC-721 Approval Status:", approvalStatus);
         
-        // This is the crucial change - return an array of objects instead of a boolean
         if (approvalStatus) {
             return [{
                 contract: contractAddress,
-                spender: operatorAddress,
+                type: "ERC-721",
+                spender: isApproved ? operatorAddress : specificApproval,
                 tokenId: tokenId.toString(),
-                isApproved: true,
-                approvedAddress: isApproved ? operatorAddress : specificApproval
+                isApproved: true
             }];
         }
         
+        console.log("ℹ️ No ERC-721 approvals found");
         return []; // Return empty array if no approvals
     } catch (error) {
         console.error("❌ Error fetching ERC-721 approvals:", error.message);

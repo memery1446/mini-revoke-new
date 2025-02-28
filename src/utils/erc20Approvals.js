@@ -10,48 +10,40 @@ const provider = new JsonRpcProvider(process.env.REACT_APP_ALCHEMY_SEPOLIA_URL);
  * @returns {Promise<Array>} - Resolves to an array of approval objects.
  */
 export async function getERC20Approvals(tokenContracts, ownerAddress) {
-    console.log("🔍 Starting ERC-20 approval check for:", ownerAddress);
-    console.log("🔍 Checking token contracts:", tokenContracts);
-    
-    let approvalsMap = new Map();
+  console.log("🔍 Starting ERC-20 approval check for:", ownerAddress);
+  console.log("🔍 Checking token contracts:", tokenContracts);
+  
+  let approvals = [];
 
-    // ... (rest of the existing code)
+  for (let tokenAddress of tokenContracts) {
+    try {
+      console.log(`🔍 Checking ERC-20 token: ${tokenAddress}`);
+      const contract = new Contract(tokenAddress, TOKEN_ABI, provider);
+      
+      for (let spender of spenderAddresses) {
+        console.log(`🔍 Checking allowance for spender: ${spender}`);
+        const allowance = await contract.allowance(ownerAddress, spender);
+        console.log(`Allowance result: ${allowance.toString()}`);
 
-    for (let tokenAddress of tokenContracts) {
-        // ... (existing validation code)
-
-        try {
-            const contract = new Contract(tokenAddress, TOKEN_ABI, provider);
-            
-            for (let spender of spenderAddresses) {
-                // ... (existing validation code)
-
-                const allowance = await contract.allowance(ownerAddress, spender);
-                console.log(`Allowance result: ${allowance.toString()}`);
-
-                if (allowance > 0n) { // Using BigInt comparison
-                    const approvalKey = `${tokenAddress}-${spender}`;
-                    const approval = {
-                        contract: tokenAddress,
-                        type: "ERC-20",
-                        spender: spender,
-                        amount: allowance.toString(),
-                    };
-                    
-                    approvalsMap.set(approvalKey, approval);
-                    console.log(`✅ Found approval:`, approval);
-                } else {
-                    console.log(`ℹ️ No approval for spender ${spender}`);
-                }
-            }
-        } catch (error) {
-            console.error(`❌ Error interacting with contract at ${tokenAddress}:`, error);
+        if (allowance > 0n) { // Using BigInt comparison
+          const approval = {
+            contract: tokenAddress,
+            type: "ERC-20",
+            spender: spender,
+            amount: allowance.toString(),
+          };
+          
+          approvals.push(approval);
+          console.log(`✅ Found ERC-20 approval:`, approval);
         }
+      }
+    } catch (error) {
+      console.error(`❌ Error checking ERC-20 token ${tokenAddress}:`, error);
     }
+  }
 
-    const uniqueApprovals = Array.from(approvalsMap.values());
-    console.log(`✅ Completed ERC-20 check. Found ${uniqueApprovals.length} unique approvals:`, uniqueApprovals);
-    return uniqueApprovals;
+  console.log(`✅ Completed ERC-20 check. Found ${approvals.length} approvals:`, approvals);
+  return approvals;
 }
 
 // Export the original function to maintain compatibility
