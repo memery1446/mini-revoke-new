@@ -33,7 +33,7 @@ export async function getERC721Approvals(userAddress) {
             try {
                 const owner = await contract.ownerOf(tokenId);
                 
-                // Only check approvals for tokens owned by the user
+                   // Only check approvals for tokens owned by the user
                 if (owner.toLowerCase() === userAddress.toLowerCase()) {
                     const approvedAddress = await contract.getApproved(tokenId);
                     
