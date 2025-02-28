@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// Fix: Corrected import path for batchRevokeERC20Approvals
 import { batchRevokeERC20Approvals } from "../utils/batchRevokeUtils";
 import { batchRevokeERC721Approvals } from "../utils/nftApprovals";
 import { batchRevokeERC1155Approvals } from "../utils/erc1155Approvals";
@@ -19,6 +18,7 @@ const ApprovalDashboard = () => {
   const approvals = useSelector((state) => state.web3.approvals);
   const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [revokeResults, setRevokeResults] = useState(null);
   const dispatch = useDispatch();
 
   const contractAddresses = {
@@ -34,6 +34,7 @@ const ApprovalDashboard = () => {
 
   const fetchApprovals = async () => {
     setIsLoading(true);
+    setRevokeResults(null);
     console.log("🔄 Starting approval fetch process...");
 
     try {
@@ -59,7 +60,6 @@ const ApprovalDashboard = () => {
 
       console.log("🔄 Mapping approval objects...");
       
-      // Fix: Ensure all objects have proper IDs and properties
       const mappedERC20 = erc20Approvals.map((a) => ({
         ...a,
         type: "ERC-20",
@@ -102,11 +102,11 @@ const ApprovalDashboard = () => {
   };
 
   const handleSelectApproval = (approval) => {
-    // Add additional debug info
+    // Debug the selection process
     console.log("🔍 Selection toggled for approval:", approval);
     console.log("🔍 Current selections:", selectedApprovals);
     
-    // Double-check the approval has an ID
+    // Ensure approval has an ID
     if (!approval.id) {
       console.error("⚠️ Approval missing ID:", approval);
       return;
@@ -134,6 +134,7 @@ const ApprovalDashboard = () => {
     
     console.log("🚨 Revoking selected approvals:", selectedApprovals);
     setIsLoading(true);
+    setRevokeResults(null);
     
     try {
       const provider = await getProvider();
@@ -147,9 +148,13 @@ const ApprovalDashboard = () => {
           spender: a.spender
         }));
 
+      let results = { successful: [], failed: [] };
+
       if (selectedERC20s.length > 0) {
         console.log("🔥 Batch revoking ERC-20 approvals:", selectedERC20s);
-        await batchRevokeERC20Approvals(selectedERC20s, signer);
+        const erc20Results = await batchRevokeERC20Approvals(selectedERC20s, signer);
+        results.successful = [...results.successful, ...erc20Results.successful];
+        results.failed = [...results.failed, ...erc20Results.failed];
       }
 
       const selectedERC721s = selectedApprovals
@@ -158,7 +163,11 @@ const ApprovalDashboard = () => {
 
       if (selectedERC721s.length > 0) {
         console.log("🔥 Batch revoking ERC-721 approvals:", selectedERC721s);
-        await batchRevokeERC721Approvals(wallet, selectedERC721s);
+        const erc721Results = await batchRevokeERC721Approvals(wallet, selectedERC721s);
+        if (erc721Results.successful && erc721Results.failed) {
+          results.successful = [...results.successful, ...erc721Results.successful];
+          results.failed = [...results.failed, ...erc721Results.failed];
+        }
       }
 
       const selectedERC1155s = selectedApprovals
@@ -167,17 +176,31 @@ const ApprovalDashboard = () => {
 
       if (selectedERC1155s.length > 0) {
         console.log("🔥 Batch revoking ERC-1155 approvals:", selectedERC1155s);
-        await batchRevokeERC1155Approvals(selectedERC1155s);
+        const erc1155Results = await batchRevokeERC1155Approvals(selectedERC1155s);
+        if (erc1155Results.successful && erc1155Results.failed) {
+          results.successful = [...results.successful, ...erc1155Results.successful];
+          results.failed = [...results.failed, ...erc1155Results.failed];
+        }
       }
 
-      alert("Batch revocation complete!");
+      console.log("✅ Batch revocation results:", results);
+      setRevokeResults({
+        success: true,
+        successful: results.successful.length,
+        failed: results.failed.length,
+        details: results
+      });
+      
       // Clear selections after successful revocation
       setSelectedApprovals([]);
       // Refresh approvals to update the UI
       fetchApprovals();
     } catch (error) {
       console.error("❌ Error in batch revocation:", error);
-      alert("Error in batch revocation: " + error.message);
+      setRevokeResults({
+        success: false,
+        message: error.message || "Failed to revoke approvals"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -190,7 +213,20 @@ const ApprovalDashboard = () => {
     <div className="card shadow-sm mb-4">
       <div className="card-header bg-light d-flex justify-content-between align-items-center">
         <h2 className="card-title">Approval Dashboard</h2>
-        <button className="btn btn-secondary" onClick={fetchApprovals}>🔄 Refresh Approvals</button>
+        <button 
+          className="btn btn-secondary" 
+          onClick={fetchApprovals}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Loading...
+            </>
+          ) : (
+            <>🔄 Refresh Approvals</>
+          )}
+        </button>
       </div>
       <div className="card-body">
         {isLoading ? (
@@ -202,6 +238,23 @@ const ApprovalDashboard = () => {
           </div>
         ) : (
           <>
+            {revokeResults && (
+              <div className={`alert ${revokeResults.success ? 'alert-success' : 'alert-danger'} mb-4`}>
+                {revokeResults.success ? (
+                  <div>
+                    <h5>✅ Batch Revocation Results</h5>
+                    <p>Successfully revoked {revokeResults.successful} approval(s)</p>
+                    {revokeResults.failed > 0 && <p>Failed to revoke {revokeResults.failed} approval(s)</p>}
+                  </div>
+                ) : (
+                  <div>
+                    <h5>❌ Revocation Error</h5>
+                    <p>{revokeResults.message}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="table-responsive">
               <table className="table table-striped table-hover">
                 <thead className="table-light">
@@ -220,15 +273,18 @@ const ApprovalDashboard = () => {
                         <td>
                           <input 
                             type="checkbox" 
+                            className="form-check-input"
                             onChange={() => handleSelectApproval(approval)}
                             checked={selectedApprovals.some(a => a.id === approval.id)}
-                          
-                            className="form-check-input" // Added Bootstrap styling
                            />
                         </td>
-                        <td>{approval.contract}</td>
+                        <td className="text-truncate" style={{ maxWidth: '150px' }}>
+                          {approval.tokenSymbol || approval.contract}
+                        </td>
                         <td>{approval.type}</td>
-                        <td>{approval.spender}</td>
+                        <td className="text-truncate" style={{ maxWidth: '150px' }}>
+                          {approval.spenderName || approval.spender}
+                        </td>
                         <td>{approval.type === "ERC-20" ? approval.amount : approval.isApproved ? "✅ Approved" : "❌ Not Approved"}</td>
                       </tr>
                     ))
@@ -239,7 +295,6 @@ const ApprovalDashboard = () => {
               </table>
             </div>
             
-            {/* Added a debug info section */}
             <div className="d-flex justify-content-between align-items-center mt-3">
               <div className="small text-muted">
                 {selectedApprovals.length} approval(s) selected
@@ -249,7 +304,14 @@ const ApprovalDashboard = () => {
                 onClick={handleBatchRevoke}
                 disabled={isLoading || selectedApprovals.length === 0}
               >
-                🚨 Revoke Selected ({selectedApprovals.length})
+                {isLoading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Revoking...
+                  </>
+                ) : (
+                  <>🚨 Revoke Selected ({selectedApprovals.length})</>
+                )}
               </button>
             </div>
           </>

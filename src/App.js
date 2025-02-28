@@ -6,7 +6,8 @@ import store from "./store/index"; // Keep import for Redux store
 import WalletConnect from "./components/WalletConnect.js";
 import NetworkSelector from "./components/NetworkSelector.js";
 import ExistingApprovals from "./components/ExistingApprovals.js";
-import BatchRevoke from "./components/BatchRevoke.js";
+// Remove import for BatchRevoke component
+import ApprovalDashboard from "./components/ApprovalDashboard.js"; // Import the consolidated component
 import "bootstrap/dist/css/bootstrap.min.css";
 import { BootstrapWrapper } from "./utils/provider";
 import ApprovalDebugger from "./components/ApprovalDebugger";
@@ -22,7 +23,6 @@ const AppContent = () => {
     const wallet = useSelector((state) => state.web3.account);
     const network = useSelector((state) => state.web3.network);
     const approvals = useSelector((state) => state.web3.approvals);
-    const [selectedApprovals, setSelectedApprovals] = useState([]);
 
     useEffect(() => {
         console.log("🔄 Initializing provider service...");
@@ -71,10 +71,8 @@ const AppContent = () => {
                 ) : (
                     <div className="row mt-4">
                         <div className="col-lg-12">
-                            <ExistingApprovals />
-                        </div>
-                        <div className="col-lg-12 mt-3">
-                            <BatchRevoke />
+                            {/* Replace the previous components with the consolidated ApprovalDashboard */}
+                            <ApprovalDashboard />
                         </div>
                     </div>
                 )}
