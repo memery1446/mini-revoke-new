@@ -84,7 +84,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       }
     } catch (err) {
       console.error("❌ Error revoking approval:", err);
-      if (isMounted.current) setRevoking(false);
+      if (isMounted.current) setRevoking(null);
     }
   };
   
