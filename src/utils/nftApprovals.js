@@ -53,7 +53,7 @@ export async function getERC721Approvals(userAddress) {
             }
         }
 
-        // Check if approved for all
+              // Check if approved for all
         const isApprovedForAll = await contract.isApprovedForAll(userAddress, CONTRACT_ADDRESSES.MockSpender);
         if (isApprovedForAll) {
             approvals.push({
