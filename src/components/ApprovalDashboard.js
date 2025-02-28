@@ -141,7 +141,75 @@ const ApprovalDashboard = () => {
           </div>
         ) : (
           <>
-            {/* Your existing rendering logic here */}
+          {revokeResults && (
+              <div className={`alert ${revokeResults.success ? 'alert-success' : 'alert-danger'} mb-4`}>
+                {revokeResults.success ? (
+                  <div>
+                    <h5>✅ Batch Revocation Results</h5>
+                    <p>Successfully revoked {revokeResults.successful} approval(s)</p>
+                    {revokeResults.failed > 0 && <p>Failed to revoke {revokeResults.failed} approval(s)</p>}
+                  </div>
+                ) : (
+                  <div>
+                    <h5>❌ Revocation Error</h5>
+                    <p>{revokeResults.message}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="table-responsive">
+              <table className="table table-striped table-hover">
+                <thead className="table-light">
+                  <tr>
+                    <th>Select</th>
+                    <th>Contract</th>
+                    <th>Type</th>
+                    <th>Spender</th>
+                    <th>Approved Amount/Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {approvals.length > 0 ? (
+                    approvals.map((approval) => (
+                      <tr key={approval.id}>
+                        <td>
+                          <input 
+                            type="checkbox" 
+                            className="form-check-input"
+                            onChange={() => handleSelectApproval(approval)}
+                            checked={selectedApprovals.some(a => a.id === approval.id)}
+                          />
+                        </td>
+                        <td className="text-truncate" style={{ maxWidth: '150px' }}>
+                          {approval.tokenSymbol || approval.contract}
+                        </td>
+                        <td>{approval.type}</td>
+                        <td className="text-truncate" style={{ maxWidth: '150px' }}>
+                          {approval.spenderName || approval.spender}
+                        </td>
+                        <td>{approval.type === "ERC-20" ? approval.amount : approval.isApproved ? "✅ Approved" : "❌ Not Approved"}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="5" className="text-center py-4">No approvals found.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <div className="small text-muted">
+                {selectedApprovals.length} approval(s) selected
+              </div>
+              <button 
+                className="btn btn-danger" 
+                onClick={handleBatchRevoke}
+                disabled={isLoading || selectedApprovals.length === 0}
+              >
+                {isLoading ? 'Revoking...' : `🚨 Revoke Selected (${selectedApprovals.length})`}
+              </button>
+            </div>
           </>
         )}
       </div>
