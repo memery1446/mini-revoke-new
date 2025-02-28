@@ -1,5 +1,9 @@
+console.log("🚀 store/index.js loaded successfully!"); // Debugging
+
 import { ethers } from "ethers";
 window.ethers = ethers; // 🔥 This makes it accessible in the browser console
+console.log("🟢 window.ethers is now available!", window.ethers);
+
 
 import { configureStore } from "@reduxjs/toolkit";
 import web3Reducer from "./web3Slice";
