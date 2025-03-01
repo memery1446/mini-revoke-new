@@ -450,7 +450,7 @@ const handleRevokeERC1155 = async () => {
                     onClick={handleDirectERC1155Revoke}
                     disabled={processing}
                   >
-                    {processing ? 'Processing...' : 'Direct Revoke'}
+                     {processing ? 'Processing...' : 'Direct Revoke'}
                   </button>
                 </>
               ) : (
