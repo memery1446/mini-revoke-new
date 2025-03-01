@@ -164,7 +164,7 @@ const ApprovalDashboard = () => {
     }
   };
 
-  // Handle selection of an approval
+    // Handle selection of an approval
   const handleSelect = (approval) => {
     // If already selected, deselect it
     if (selectedApproval && selectedApproval.id === approval.id) {
