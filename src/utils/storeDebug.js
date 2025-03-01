@@ -1,6 +1,4 @@
 // utils/storeDebug.js
-// Special utility file for enhanced Redux debugging
-// Import this in your src/index.js file
 
 console.log("🛠️ storeDebug.js loaded - " + new Date().toISOString());
 
@@ -175,3 +173,4 @@ if (typeof window !== 'undefined') {
 }
 
 export default { checkReduxStore, setupEnhancedLogging, monitorReduxState, initDebugUtils };
+

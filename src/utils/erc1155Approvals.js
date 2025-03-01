@@ -1,6 +1,6 @@
-import { isAddress, Contract } from "ethers"; // ✅ Updated import
+import { isAddress, Contract } from "ethers"; 
 import { getProvider } from "../utils/provider";
-import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis"; // Importing ABIs and addresses
+import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis"; 
 
 /**
  * Fetch ERC-1155 approvals for a given owner address.
@@ -73,55 +73,55 @@ async function revokeERC1155Approval(spenderAddress) {
     }
 }
 
-/**
- * Batch revoke approvals for multiple ERC-1155 spender addresses.
- * @param {Array<string>} spenderAddresses - The array of addresses to revoke approval for.
- * @returns {Promise<boolean>} - A promise that resolves to true if all approvals are revoked successfully, or false.
- */
-async function batchRevokeERC1155Approvals(spenderAddresses) {
-    try {
-        console.log("🚨 Revoking approvals for multiple ERC-1155 spenders:", spenderAddresses);
+    /**
+     * Batch revoke approvals for multiple ERC-1155 spender addresses.
+     * @param {Array<string>} spenderAddresses - The array of addresses to revoke approval for.
+     * @returns {Promise<boolean>} - A promise that resolves to true if all approvals are revoked successfully, or false.
+     */
+    async function batchRevokeERC1155Approvals(spenderAddresses) {
+        try {
+            console.log("🚨 Revoking approvals for multiple ERC-1155 spenders:", spenderAddresses);
 
-        const provider = await getProvider();
-        const signer = await provider.getSigner();
-        
-        // Updated ABI to include both functions
-        const erc1155Contract = new Contract(
-            CONTRACT_ADDRESSES.ERC1155, 
-            [
-                "function setApprovalForAll(address operator, bool approved) external",
-                "function isApprovedForAll(address account, address operator) external view returns (bool)"
-            ], 
-            signer
-        );
+            const provider = await getProvider();
+            const signer = await provider.getSigner();
+            
+            // Updated ABI to include both functions
+            const erc1155Contract = new Contract(
+                CONTRACT_ADDRESSES.ERC1155, 
+                [
+                    "function setApprovalForAll(address operator, bool approved) external",
+                    "function isApprovedForAll(address account, address operator) external view returns (bool)"
+                ], 
+                signer
+            );
 
-        for (let spender of spenderAddresses) {
-            if (!isAddress(spender)) {
-                console.error(`❌ Invalid spender address: ${spender}`);
-                continue;
+            for (let spender of spenderAddresses) {
+                if (!isAddress(spender)) {
+                    console.error(`❌ Invalid spender address: ${spender}`);
+                    continue;
+                }
+
+                const tx = await erc1155Contract.setApprovalForAll(spender, false);
+                await tx.wait();
+                
+                // Verify the approval was revoked
+                const owner = await signer.getAddress();
+                const isStillApproved = await erc1155Contract.isApprovedForAll(owner, spender);
+                
+                if (isStillApproved) {
+                    console.warn(`⚠️ Revocation transaction completed but approval for ${spender} still active!`);
+                } else {
+                    console.log(`✅ Approval revoked for spender: ${spender}`);
+                }
             }
 
-            const tx = await erc1155Contract.setApprovalForAll(spender, false);
-            await tx.wait();
-            
-            // Verify the approval was actually revoked
-            const owner = await signer.getAddress();
-            const isStillApproved = await erc1155Contract.isApprovedForAll(owner, spender);
-            
-            if (isStillApproved) {
-                console.warn(`⚠️ Revocation transaction completed but approval for ${spender} still active!`);
-            } else {
-                console.log(`✅ Approval revoked for spender: ${spender}`);
-            }
+            console.log("🎉 Batch approval revocations successful.");
+            return true;
+        } catch (error) {
+            console.error("❌ Error in batch revoking ERC-1155 approvals:", error);
+            return false;
         }
-
-        console.log("🎉 Batch approval revocations successful.");
-        return true;
-    } catch (error) {
-        console.error("❌ Error in batch revoking ERC-1155 approvals:", error);
-        return false;
     }
-}
 
-// Ensure all functions are exported properly
-export { getERC1155Approvals, revokeERC1155Approval, batchRevokeERC1155Approvals };
+    export { getERC1155Approvals, revokeERC1155Approval, batchRevokeERC1155Approvals };
+

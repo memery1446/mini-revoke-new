@@ -60,8 +60,6 @@ function ApprovalDashboard() {
     fetchApprovals()
   }, [])
 
-  // Keep all the imports and state management at the top
-
   // Add these functions after fetchApprovals
   const handleToggleSelect = (approval) => {
     setSelectedApprovals((prev) => {
@@ -157,7 +155,6 @@ function ApprovalDashboard() {
     }
   }
 
-  // Replace the return statement with this complete UI
   return (
     <div className="card shadow-sm mb-4">
       <div className="card-header bg-light d-flex justify-content-between align-items-center">

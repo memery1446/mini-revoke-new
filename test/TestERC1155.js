@@ -8,7 +8,7 @@ describe("TestERC1155", function () {
         [owner, addr1, addr2] = await ethers.getSigners();
 
         TestERC1155 = await ethers.getContractFactory("TestERC1155");
-        testERC1155 = await TestERC1155.deploy(owner.address); // Deploy with owner
+        testERC1155 = await TestERC1155.deploy(owner.address); 
     });
 
     it("Should deploy with correct initial values", async function () {
@@ -79,6 +79,7 @@ describe("TestERC1155", function () {
     it("Should not allow non-approved user to transfer tokens", async function () {
         await expect(
             testERC1155.connect(addr1).safeTransferFrom(owner.address, addr2.address, 1, 10, "0x")
-        ).to.be.reverted; // ✅ Fix: Just check if it reverts
+        ).to.be.reverted; 
     });
 });
+

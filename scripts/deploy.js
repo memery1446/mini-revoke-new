@@ -71,10 +71,10 @@ async function main() {
   console.log(`✅ Transferred 50 ERC1155 tokens`);
 
   console.log("🎉 Deployment successful!");
-}
+  }
 
-main().catch((error) => {
-  console.error("❌ Deployment Error:", error);
-  process.exit(1);
+  main().catch((error) => {
+    console.error("❌ Deployment Error:", error);
+    process.exit(1);
 });
 

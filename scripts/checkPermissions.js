@@ -87,7 +87,7 @@ async function revokeSinglePermission() {
     const AddressZero = "0x0000000000000000000000000000000000000000";
 
     // Check allowances for ERC-20 token
-    const allowance = await tk1.allowance(owner.address, addr1.address); // Get allowance for addr1
+    const allowance = await tk1.allowance(owner.address, addr1.address); 
     console.log(`Current allowance for addr1 (in TK1):`, allowance.toString());
 
     // Revoking allowance
@@ -111,16 +111,10 @@ async function revokeSinglePermission() {
     } else {
         console.log("No approval found for NFT (ID 1).");
     }
-}
+    }
 
-revokeSinglePermission().catch((error) => {
-    console.error("Error:", error);
-    process.exit(1);
+    revokeSinglePermission().catch((error) => {
+        console.error("Error:", error);
+        process.exit(1);
 });
-
-
-
-
-
-
 

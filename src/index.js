@@ -1,10 +1,10 @@
 import React from "react";
-import ReactDOM from "react-dom/client";  // ✅ Correct import for React 18
-import { BootstrapWrapper } from "./utils/provider";  // ✅ Bootstrap wrapper
+import ReactDOM from "react-dom/client";  
+import { BootstrapWrapper } from "./utils/provider";  
 import { Provider } from "react-redux";
-import store from "./store/index"; // ✅ Import Redux store
+import store from "./store/index"; 
 import App from "./App";
-import "bootstrap/dist/css/bootstrap.min.css";  // ✅ Bootstrap styles
+import "bootstrap/dist/css/bootstrap.min.css";  
 import { ethers } from "ethers";
 
 // Log when the file loads
@@ -54,12 +54,13 @@ if (typeof window !== 'undefined') {
   );
 }
 
-// Create React root and render app
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
-  <Provider store={store}>
-    <BootstrapWrapper>
-      <App />
-    </BootstrapWrapper>
-  </Provider>
-);
+  // Create React root and render app
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(
+    <Provider store={store}>
+      <BootstrapWrapper>
+        <App />
+      </BootstrapWrapper>
+    </Provider>
+  );
+

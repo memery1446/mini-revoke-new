@@ -64,3 +64,4 @@ contract MockSpender {
         return IERC1155(nft).isApprovedForAll(msg.sender, operator);
     }
 }
+

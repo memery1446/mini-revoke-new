@@ -34,12 +34,14 @@ async function main() {
         });
         console.log("✅ Verified on Etherscan");
     }
-}
+    }
 
-// Run deployment
-main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error("❌ Deployment failed:", error);
-        process.exit(1);
-    });
+    // Run deployment
+    main()
+        .then(() => process.exit(0))
+        .catch((error) => {
+            console.error("❌ Deployment failed:", error);
+            process.exit(1);
+        });
+
+    

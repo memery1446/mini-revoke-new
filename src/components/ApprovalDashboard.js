@@ -136,46 +136,46 @@ const ApprovalDashboard = () => {
       }
       
       // Combine and tag them with types and IDs
-const allApprovals = [
-  // ✅ Preserve old approvals, but remove outdated ERC-1155 entries
-  ...reduxApprovals.filter(a => a.type !== "ERC-1155"),
+      const allApprovals = [
+      // ✅ Preserve old approvals, but remove outdated ERC-1155 entries
+      ...reduxApprovals.filter(a => a.type !== "ERC-1155"),
 
-  // ✅ Keep ERC-20 approvals unchanged
-  ...erc20List.map(a => ({
-    ...a, 
-    type: 'ERC-20', 
-    id: `erc20-${a.contract}-${a.spender}`
-  })),
+      // ✅ Keep ERC-20 approvals unchanged
+      ...erc20List.map(a => ({
+        ...a, 
+        type: 'ERC-20', 
+        id: `erc20-${a.contract}-${a.spender}`
+      })),
 
-  // ✅ Keep ERC-721 approvals unchanged
-  ...erc721List.map(a => ({
-    ...a, 
-    type: 'ERC-721', 
-    id: `erc721-${a.contract}-${a.spender}-${a.tokenId || 'all'}`
-  })),
+      // ✅ Keep ERC-721 approvals unchanged
+      ...erc721List.map(a => ({
+        ...a, 
+        type: 'ERC-721', 
+        id: `erc721-${a.contract}-${a.spender}-${a.tokenId || 'all'}`
+      })),
 
-  // ✅ Ensure ERC-1155 approvals include contract & token details
-  ...erc1155List.map(a => ({
-    ...a, 
-    type: "ERC-1155",
-    id: `erc1155-${a.contract}-${a.spender}`,
-    tokenId: a.tokenId || "all",  // Default to "all" if no tokenId is provided
-    collectionName: a.collectionName || "Unknown Collection",  // Preserve additional metadata
-  }))
-];
+      // ✅ Ensure ERC-1155 approvals include contract & token details
+      ...erc1155List.map(a => ({
+        ...a, 
+        type: "ERC-1155",
+        id: `erc1155-${a.contract}-${a.spender}`,
+        tokenId: a.tokenId || "all",  
+        collectionName: a.collectionName || "Unknown Collection",  
+      }))
+    ];
 
       
-      console.log("Found approvals:", allApprovals);
-      dispatch(setApprovals(allApprovals));
-      
-      setMessage({type: 'success', text: `Found ${allApprovals.length} approvals`});
-    } catch (error) {
-      console.error("Error loading approvals:", error);
-      setMessage({type: 'danger', text: `Error: ${error.message}`});
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        console.log("Found approvals:", allApprovals);
+        dispatch(setApprovals(allApprovals));
+        
+        setMessage({type: 'success', text: `Found ${allApprovals.length} approvals`});
+      } catch (error) {
+        console.error("Error loading approvals:", error);
+        setMessage({type: 'danger', text: `Error: ${error.message}`});
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
     // Handle selection of an approval
   const handleSelect = (approval) => {
@@ -188,40 +188,39 @@ const allApprovals = [
     }
   };
 
-  // Function specifically for ERC-1155 revocation using the utility
-const handleRevokeERC1155 = async () => {
-  if (!selectedApproval || processing) return;
+    // Function specifically for ERC-1155 revocation using the utility
+  const handleRevokeERC1155 = async () => {
+    if (!selectedApproval || processing) return;
 
-  setProcessing(true);
-  setMessage({ type: "info", text: "Preparing ERC-1155 revocation..." });
+    setProcessing(true);
+    setMessage({ type: "info", text: "Preparing ERC-1155 revocation..." });
 
-  try {
-    console.log("🚀 Revoking ERC-1155 approval for:", selectedApproval.spender);
+    try {
+      console.log("🚀 Revoking ERC-1155 approval for:", selectedApproval.spender);
 
-    const provider = await getProvider();
-    const signer = await provider.getSigner();
-    const erc1155Contract = new Contract(
-      selectedApproval.contract,
-      ["function setApprovalForAll(address operator, bool approved) external"],
-      signer
-    );
+      const provider = await getProvider();
+      const signer = await provider.getSigner();
+      const erc1155Contract = new Contract(
+        selectedApproval.contract,
+        ["function setApprovalForAll(address operator, bool approved) external"],
+        signer
+      );
 
-    const tx = await erc1155Contract.setApprovalForAll(selectedApproval.spender, false);
-    await tx.wait();
+      const tx = await erc1155Contract.setApprovalForAll(selectedApproval.spender, false);
+      await tx.wait();
 
-    console.log("✅ ERC-1155 approval revoked:", tx.hash);
-    setMessage({ type: "success", text: "ERC-1155 approval revoked successfully!" });
+      console.log("✅ ERC-1155 approval revoked:", tx.hash);
+      setMessage({ type: "success", text: "ERC-1155 approval revoked successfully!" });
 
-    // Refresh approvals after revocation
-    setTimeout(loadApprovals, 3000);
-  } catch (error) {
-    console.error("❌ Error revoking ERC-1155 approval:", error);
-    setMessage({ type: "danger", text: `Error: ${error.message}` });
-  } finally {
-    setProcessing(false);
-  }
-};
-
+      // Refresh approvals after revocation
+      setTimeout(loadApprovals, 3000);
+    } catch (error) {
+      console.error("❌ Error revoking ERC-1155 approval:", error);
+      setMessage({ type: "danger", text: `Error: ${error.message}` });
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   // Direct interaction attempt with ERC-1155 contract
   const handleDirectERC1155Revoke = async () => {
@@ -239,7 +238,7 @@ const handleRevokeERC1155 = async () => {
       console.log("Contract:", ERC1155_CONTRACT);
       console.log("Spender:", ERC1155_SPENDER);
       
-      // Get provider the basic way - using the window.ethereum object
+      // Get provider using the window.ethereum object
       if (!window.ethereum) {
         throw new Error("No ethereum provider found in window.ethereum");
       }
@@ -259,7 +258,7 @@ const handleRevokeERC1155 = async () => {
       console.log("Contract created, calling setApprovalForAll");
       setMessage({type: 'info', text: 'Please confirm in your wallet...'});
       
-      // Call the function directly with minimal parameters
+      // Call the function directly
       const tx = await contract.setApprovalForAll(ERC1155_SPENDER, false);
       console.log("Transaction sent:", tx.hash);
       
@@ -347,59 +346,59 @@ const handleRevokeERC1155 = async () => {
           console.log("📝 Using Zero Address:", ZeroAddress);
         }
         
-        console.log("📝 Transaction sent:", tx);
-        console.log("📝 Transaction hash:", tx.hash);
-        
-        setMessage({type: 'info', text: `Waiting for confirmation... (TX: ${tx.hash.substring(0, 10)}...)`});
-        const receipt = await tx.wait();
-        console.log("✅ Transaction confirmed! Receipt:", receipt);
-        
-        // Verify the approval was actually revoked
-        try {
-          if (selectedApproval.tokenId === 'all') {
-            const isApprovedAfter = await contract.isApprovedForAll(userAddress, selectedApproval.spender);
-            console.log("🔍 AFTER REVOCATION - 'approved for all' status:", isApprovedAfter);
-            if (isApprovedAfter) {
-              console.error("❌ REVOCATION FAILED! Still approved for all tokens!");
+          console.log("📝 Transaction sent:", tx);
+          console.log("📝 Transaction hash:", tx.hash);
+          
+          setMessage({type: 'info', text: `Waiting for confirmation... (TX: ${tx.hash.substring(0, 10)}...)`});
+          const receipt = await tx.wait();
+          console.log("✅ Transaction confirmed! Receipt:", receipt);
+          
+          // Verify the approval was revoked
+          try {
+            if (selectedApproval.tokenId === 'all') {
+              const isApprovedAfter = await contract.isApprovedForAll(userAddress, selectedApproval.spender);
+              console.log("🔍 AFTER REVOCATION - 'approved for all' status:", isApprovedAfter);
+              if (isApprovedAfter) {
+                console.error("❌ REVOCATION FAILED! Still approved for all tokens!");
+              }
+            } else {
+              const approvedAddressAfter = await contract.getApproved(selectedApproval.tokenId);
+              console.log("🔍 AFTER REVOCATION - approved address:", approvedAddressAfter);
+              if (approvedAddressAfter !== ZeroAddress) {
+                console.error("❌ REVOCATION FAILED! Still approved to:", approvedAddressAfter);
+              }
             }
-          } else {
-            const approvedAddressAfter = await contract.getApproved(selectedApproval.tokenId);
-            console.log("🔍 AFTER REVOCATION - approved address:", approvedAddressAfter);
-            if (approvedAddressAfter !== ZeroAddress) {
-              console.error("❌ REVOCATION FAILED! Still approved to:", approvedAddressAfter);
-            }
+          } catch (err) {
+            console.warn("⚠️ Error verifying revocation:", err);
           }
-        } catch (err) {
-          console.warn("⚠️ Error verifying revocation:", err);
+          }
+          
+          setMessage({type: 'success', text: 'Approval successfully revoked!'});
+          setSelectedApproval(null);
+          
+          // Refresh approvals after a longer delay to ensure blockchain has updated
+          console.log("🔄 Scheduling refresh of approvals in 3 seconds...");
+          setTimeout(() => {
+            console.log("🔄 Executing refresh of approvals now!");
+            loadApprovals();
+          }, 3000);
+          
+        } catch (error) {
+          console.error("❌ Error revoking approval:", error);
+          setMessage({type: 'danger', text: `Error: ${error.message}`});
+        } finally {
+          setProcessing(false);
         }
-      }
-      
-      setMessage({type: 'success', text: 'Approval successfully revoked!'});
-      setSelectedApproval(null);
-      
-      // Refresh approvals after a longer delay to ensure blockchain has updated
-      console.log("🔄 Scheduling refresh of approvals in 3 seconds...");
-      setTimeout(() => {
-        console.log("🔄 Executing refresh of approvals now!");
-        loadApprovals();
-      }, 3000);
-      
-    } catch (error) {
-      console.error("❌ Error revoking approval:", error);
-      setMessage({type: 'danger', text: `Error: ${error.message}`});
-    } finally {
-      setProcessing(false);
-    }
-  };
+      };
 
-  // Render an empty state if no wallet connected
-  if (!wallet) {
-    return (
-      <div className="card text-center p-5">
-        <h4>Connect your wallet to view approvals</h4>
-      </div>
-    );
-  }
+      // Render an empty state if no wallet connected
+      if (!wallet) {
+        return (
+          <div className="card text-center p-5">
+            <h4>Connect your wallet to view approvals</h4>
+          </div>
+        );
+      }
 
   return (
     <div className="card">

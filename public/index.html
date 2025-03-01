@@ -9,15 +9,15 @@
     var originalWarn = console.warn;
     var originalError = console.error;
     
-    // Flag to track if console seems broken
+    // Flag to track console
     var consoleWorks = false;
     
     try {
-      // Try to use console
+     
       originalLog("Console initialization check");
       consoleWorks = true;
     } catch (e) {
-      // Console might be broken - create emergency logging
+     
       console = console || {};
       
       // Create a visible logging div

@@ -3,7 +3,7 @@ import { JsonRpcProvider, BrowserProvider } from "ethers";
 // Log that the provider module is loaded
 console.log("🔌 provider.js loaded - " + new Date().toISOString());
 
-// ✅ Load API keys from environment variables
+// ✅ Load API keys 
 const NETWORK_RPC_URLS = {
     1: process.env.REACT_APP_ALCHEMY_MAINNET_URL, // Ethereum Mainnet
     11155111: process.env.REACT_APP_ALCHEMY_SEPOLIA_URL, // Sepolia Testnet
@@ -38,7 +38,6 @@ if (typeof window !== 'undefined') {
     console.log("🌐 Network info exposed to window.NETWORK_INFO");
 }
 
-// ✅ Bootstrap Wrapper for UI Components
 const BootstrapWrapper = ({ children }) => (
     <div className="container mt-4">{children}</div>
 );
@@ -103,3 +102,4 @@ async function getProvider() {
 }
 
 export { getProvider, BootstrapWrapper };
+

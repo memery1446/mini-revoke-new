@@ -5,19 +5,19 @@ const web3Slice = createSlice({
   initialState: {
     account: null,
     network: null,
-    approvals: [], // ✅ Ensure this is always an array
+    approvals: [], // ✅ Always an array
   },
   reducers: {
     setAccount: (state, action) => {
-      state.account = action.payload; // ✅ Keep wallet as a string
-      console.log("👛 Account set:", action.payload); // Add logging for easier debugging
+      state.account = action.payload; // ✅ Always a string
+      console.log("👛 Account set:", action.payload); 
     },
     setNetwork: (state, action) => {
-      state.network = Number.parseInt(action.payload, 10) || null; // ✅ Ensure it's always a number or null if parsing fails
-      console.log("🌐 Network set:", state.network); // Add logging for easier debugging
+      state.network = Number.parseInt(action.payload, 10) || null; 
+      console.log("🌐 Network set:", state.network); 
     },
     setApprovals: (state, action) => {
-      state.approvals = action.payload || []; // ✅ Prevent undefined errors
+      state.approvals = action.payload || []; 
       console.log("📋 Approvals Updated:", state.approvals);
     },
     resetWeb3: (state) => {
@@ -55,15 +55,16 @@ const web3Slice = createSlice({
       );
       console.log("🗑️ Approval Removed from Redux:", action.payload);
     },
-  },
-});
+    },
+  });
 
-// Expose actions to window for debugging
-if (typeof window !== 'undefined') {
-  window.web3Actions = web3Slice.actions;
-  console.log("🛠️ Redux actions exposed as window.web3Actions");
-}
+  // Expose actions to window for debugging
+  if (typeof window !== 'undefined') {
+    window.web3Actions = web3Slice.actions;
+    console.log("🛠️ Redux actions exposed as window.web3Actions");
+  }
 
 export const { setAccount, setNetwork, setApprovals, resetWeb3, addApproval, removeApproval } = web3Slice.actions;
 
 export default web3Slice.reducer;
+

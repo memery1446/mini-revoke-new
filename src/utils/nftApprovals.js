@@ -40,8 +40,8 @@ export async function getERC721Approvals(userAddress) {
         const approvals = [];
         let approvalId = 1;
 
-        // Check approvals for a limited number of tokens
-        // Using Math.min to ensure we don't exceed array bounds or reasonable limits
+        // Check approvals 
+        // Using Math.min 
         const maxTokensToCheck = Math.min(totalSupply, 10); // Only check up to 10 tokens
         
         for (let tokenId = 1; tokenId <= maxTokensToCheck; tokenId++) {
@@ -70,7 +70,6 @@ export async function getERC721Approvals(userAddress) {
             }
         }
 
-        // Also check specific tokens we know exist (2, 3, 4)
         const specificTokens = [2, 3, 4];
         for (const tokenId of specificTokens) {
             // Skip if we already checked this token in the loop above

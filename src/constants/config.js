@@ -2,7 +2,7 @@
 export const FEATURES = {
   // Batch revocation features
   batchRevoke: {
-    enabled: true, // Master toggle for batch revocation feature
+    enabled: true, // Master toggle for batch revocation 
     erc20Enabled: true, // Toggle for ERC-20 batch revocation
     nftEnabled: true, // Toggle for NFT batch revocation (disabled by default)
     erc1155Enabled: true, // Toggle for ERC-1155 batch revocation (disabled by default)

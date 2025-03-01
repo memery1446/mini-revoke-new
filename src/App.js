@@ -2,13 +2,13 @@
 
 import { useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
-import { Provider } from "react-redux" // Keep this import
-import store from "./store/index" // Keep import for Redux store
+import { Provider } from "react-redux" 
+import store from "./store/index" 
 import WalletConnect from "./components/WalletConnect.js"
 import NetworkSelector from "./components/NetworkSelector.js"
 import ApprovalDashboard from "./components/ApprovalDashboard.js"
 import BatchRevoke from "./components/BatchRevoke.js" 
-import { FEATURES } from './constants/config' // Import feature toggles
+import { FEATURES } from './constants/config' 
 import "bootstrap/dist/css/bootstrap.min.css"
 import { BootstrapWrapper } from "./utils/provider"
 import { initializeProvider } from "./utils/providerService"
@@ -108,70 +108,70 @@ const AppContent = () => {
   )
 }
 
-const App = () => {
-  console.log("🔶 App component rendering")
+  const App = () => {
+    console.log("🔶 App component rendering")
 
-  useEffect(() => {
-    console.log("🔄 App component useEffect running")
-    // Expose store to window for debugging
-    if (typeof window !== "undefined") {
-      if (!window.store) {
-        window.store = store
-        console.log("📊 Redux store exposed to window")
-      }
-
-      // Setup debugging tools - keeping your exact implementation
-      window.debugApp = {
-        getState: () => (window.store ? window.store.getState() : "Store not available"),
-        logState: () => {
-          if (window.store) {
-            const state = window.store.getState()
-            console.log("Current Redux State:", state)
-            return state
-          }
-          return "Store not available"
-        },
-      }
-
-      // Add this new section to enable Redux logging in console
-      console.log(
-        "%c Redux Console Logging Enabled",
-        "background: #4CAF50; color: white; padding: 4px; border-radius: 4px;",
-      )
-      console.log("Try dispatching an action to see detailed logs")
-
-      // Test dispatch to demonstrate logging
-      setTimeout(() => {
-        if (window.store) {
-          window.store.dispatch({ type: "TEST_ACTION", payload: { message: "Redux logger test" } })
-          console.log("%c ✅ Redux logger test complete. You should see formatted logs above.", "color: #4CAF50;")
+    useEffect(() => {
+      console.log("🔄 App component useEffect running")
+      // Expose store to window for debugging
+      if (typeof window !== "undefined") {
+        if (!window.store) {
+          window.store = store
+          console.log("📊 Redux store exposed to window")
         }
-      }, 1000)
 
-      console.log("🛠️ Debug tools setup complete. Try window.debugApp.logState() in console")
-    }
+        // Setup debugging tools - keeping your exact implementation
+        window.debugApp = {
+          getState: () => (window.store ? window.store.getState() : "Store not available"),
+          logState: () => {
+            if (window.store) {
+              const state = window.store.getState()
+              console.log("Current Redux State:", state)
+              return state
+            }
+            return "Store not available"
+          },
+        }
 
-    // Display feature configuration in console for debugging
-    console.log("%c Feature Configuration:", "background: #007bff; color: white; padding: 4px; border-radius: 4px;")
-    console.log("Batch Revoke Enabled:", FEATURES.batchRevoke.enabled)
-    console.log("ERC-20 Batch Revoke:", FEATURES.batchRevoke.erc20Enabled)
-    console.log("NFT Batch Revoke:", FEATURES.batchRevoke.nftEnabled)
-    console.log("Max Batch Size:", FEATURES.batchRevoke.maxBatchSize)
+        // Add this new section to enable Redux logging in console
+        console.log(
+          "%c Redux Console Logging Enabled",
+          "background: #4CAF50; color: white; padding: 4px; border-radius: 4px;",
+        )
+        console.log("Try dispatching an action to see detailed logs")
 
-    // Dispatch a test action from the App component
-    store.dispatch({ type: "APP_LOADED", payload: "App has loaded" })
+        // Test dispatch to demonstrate logging
+        setTimeout(() => {
+          if (window.store) {
+            window.store.dispatch({ type: "TEST_ACTION", payload: { message: "Redux logger test" } })
+            console.log("%c ✅ Redux logger test complete. You should see formatted logs above.", "color: #4CAF50;")
+          }
+        }, 1000)
 
-    // Log the current state
-    console.log("Current Redux State:", store.getState())
-  }, [])
+        console.log("🛠️ Debug tools setup complete. Try window.debugApp.logState() in console")
+      }
 
-  // Return the AppContent wrapped in a Provider to fix the circular dependency issue
-  return (
-    <Provider store={store}>
-      <AppContent />
-    </Provider>
-  )
-}
+      // Display feature configuration in console for debugging
+      console.log("%c Feature Configuration:", "background: #007bff; color: white; padding: 4px; border-radius: 4px;")
+      console.log("Batch Revoke Enabled:", FEATURES.batchRevoke.enabled)
+      console.log("ERC-20 Batch Revoke:", FEATURES.batchRevoke.erc20Enabled)
+      console.log("NFT Batch Revoke:", FEATURES.batchRevoke.nftEnabled)
+      console.log("Max Batch Size:", FEATURES.batchRevoke.maxBatchSize)
+
+      // Dispatch a test action from the App component
+      store.dispatch({ type: "APP_LOADED", payload: "App has loaded" })
+
+      // Log the current state
+      console.log("Current Redux State:", store.getState())
+    }, [])
+
+    // Return the AppContent wrapped in a Provider to fix the circular dependency issue
+    return (
+      <Provider store={store}>
+        <AppContent />
+      </Provider>
+    )
+  }
 
 export default App
 

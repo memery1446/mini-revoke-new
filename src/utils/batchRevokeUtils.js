@@ -4,20 +4,19 @@ import { TOKEN_ABI, NFT_ABI, ERC1155_ABI, CONTRACT_ADDRESSES } from "../constant
 import { FEATURES } from "../constants/config";
 import { getProvider } from "../utils/provider";
 
-
 /**
  * Safely normalizes an Ethereum address with error handling.
  * @param {string} address - The address to normalize.
  * @returns {string} The normalized address or the original input if invalid.
  */
 function safeGetAddress(address) {
-  try {
-    return getAddress(address);
-  } catch (error) {
-    console.error(`Invalid Ethereum address: ${address}`);
-    return address; // Return original to allow downstream code to handle the error
+    try {
+      return getAddress(address);
+    } catch (error) {
+      console.error(`Invalid Ethereum address: ${address}`);
+      return address; // Return original to allow downstream code to handle the error
+    }
   }
-}
 
 /**
  * Batch revoke ERC-20 approvals with improved safety features.
@@ -194,230 +193,223 @@ export async function batchRevokeERC20Approvals(tokenContractsWithSpenders, sign
   return results;
 }
 
-/**
- * Batch revoke ERC-721 (NFT) approvals with safety measures using standard ERC-721 methods.
- * @param {Array<Object>} nftApprovals - List of NFT approval objects with contract and tokenId.
- * @param {ethers.Signer} signer - The wallet signer executing the transactions.
- */
-export async function batchRevokeNFTApprovals(nftApprovals, signer) {
-  // Safety check: feature flag
-  if (!FEATURES.batchRevoke.enabled || !FEATURES.batchRevoke.nftEnabled) {
-    throw new Error("NFT batch revocation is currently disabled.");
-  }
-  
-  console.log("⏳ Starting batch revocation for NFT approvals...");
-  console.log("📋 NFT Approvals to revoke:", nftApprovals);
-  
-  if (!signer) {
-    throw new Error("No signer provided for NFT batch revocation");
-  }
-  
-  // Safety check: enforce batch size limit
-  const maxBatchSize = FEATURES.batchRevoke.maxBatchSize || 5;
-  if (nftApprovals.length > maxBatchSize) {
-    throw new Error(`Safety limit: Cannot process more than ${maxBatchSize} NFT approvals at once.`);
-  }
-  
-  const ownerAddress = await signer.getAddress();
-  console.log("👤 Revoking as owner:", ownerAddress);
-  
-  const results = {
-    successful: [],
-    failed: []
-  };
-  
-  // Group approvals by contract address for efficiency
-  const approvalsByContract = {};
-  
-  // Validate and organize approvals
-  for (const approval of nftApprovals) {
-    // Skip 'all' tokenIds - they require setApprovalForAll
-    if (approval.tokenId === 'all') {
-      console.warn(`⚠️ Cannot batch revoke 'all tokens' approval: ${approval.contract}`);
-      results.failed.push({
-        contract: approval.contract,
-        tokenId: 'all',
-        reason: "Cannot batch revoke 'all tokens' approval"
-      });
-      continue;
+  /**
+   * Batch revoke ERC-721 (NFT) approvals with safety measures using standard ERC-721 methods.
+   * @param {Array<Object>} nftApprovals - List of NFT approval objects with contract and tokenId.
+   * @param {ethers.Signer} signer - The wallet signer executing the transactions.
+   */
+  export async function batchRevokeNFTApprovals(nftApprovals, signer) {
+    // Safety check: feature flag
+    if (!FEATURES.batchRevoke.enabled || !FEATURES.batchRevoke.nftEnabled) {
+      throw new Error("NFT batch revocation is currently disabled.");
     }
     
-    // Validate addresses and tokenId
-    try {
-      const normalizedContract = safeGetAddress(approval.contract);
-      
-      // Parse tokenId safely
-      const tokenId = parseInt(approval.tokenId, 10);
-      if (isNaN(tokenId) || tokenId < 0) {
-        throw new Error(`Invalid token ID: ${approval.tokenId}`);
-      }
-      
-      // Add to grouped approvals
-      if (!approvalsByContract[normalizedContract]) {
-        approvalsByContract[normalizedContract] = [];
-      }
-      
-      approvalsByContract[normalizedContract].push({
-        ...approval,
-        contract: normalizedContract,
-        tokenId
-      });
-    } catch (error) {
-      console.error(`❌ Validation error for NFT approval:`, error);
-      results.failed.push({
-        contract: approval.contract,
-        tokenId: approval.tokenId,
-        reason: "Validation error: " + error.message
-      });
+    console.log("⏳ Starting batch revocation for NFT approvals...");
+    console.log("📋 NFT Approvals to revoke:", nftApprovals);
+    
+    if (!signer) {
+      throw new Error("No signer provided for NFT batch revocation");
     }
-  }
-  
-  // Import ZeroAddress from ethers if not already available
-  const { ZeroAddress } = await import("ethers");
-  
-  // Process each contract's approvals
-  for (const contractAddress of Object.keys(approvalsByContract)) {
-    try {
-      const approvals = approvalsByContract[contractAddress];
-      if (approvals.length === 0) continue;
-      
-      console.log(`🔍 Processing ${approvals.length} NFT approvals for contract ${contractAddress}`);
-      
-      // Create contract instance with the standard ERC-721 approve function
-      let nftContract;
-      try {
-        nftContract = new Contract(
-          contractAddress,
-          ["function approve(address to, uint256 tokenId) public"],
-          signer
-        );
-      } catch (error) {
-        console.error(`❌ Contract creation error: ${error.message}`);
-        approvals.forEach(approval => {
-          results.failed.push({
-            contract: contractAddress,
-            tokenId: approval.tokenId,
-            reason: "Failed to create contract instance"
-          });
+    
+    // Safety check: enforce batch size limit
+    const maxBatchSize = FEATURES.batchRevoke.maxBatchSize || 5;
+    if (nftApprovals.length > maxBatchSize) {
+      throw new Error(`Safety limit: Cannot process more than ${maxBatchSize} NFT approvals at once.`);
+    }
+    
+    const ownerAddress = await signer.getAddress();
+    console.log("👤 Revoking as owner:", ownerAddress);
+    
+    const results = {
+      successful: [],
+      failed: []
+    };
+    
+    // Group approvals by contract address for efficiency
+    const approvalsByContract = {};
+    
+    // Validate and organize approvals
+    for (const approval of nftApprovals) {
+      // Skip 'all' tokenIds - they require setApprovalForAll
+      if (approval.tokenId === 'all') {
+        console.warn(`⚠️ Cannot batch revoke 'all tokens' approval: ${approval.contract}`);
+        results.failed.push({
+          contract: approval.contract,
+          tokenId: 'all',
+          reason: "Cannot batch revoke 'all tokens' approval"
         });
         continue;
       }
       
-      // Process each token ID individually
-      for (const approval of approvals) {
-        try {
-          console.log(`🚀 Revoking approval for NFT ${contractAddress} with token ID ${approval.tokenId}...`);
-          
-          // Gas estimation for safety
-          let gasEstimate, gasLimit;
-          try {
-            gasEstimate = await nftContract.approve.estimateGas(ZeroAddress, approval.tokenId);
-            console.log(`⛽ Estimated gas: ${gasEstimate.toString()}`);
-            
-            // Add 20% buffer for safety
-            gasLimit = (gasEstimate * 120n) / 100n;
-          } catch (error) {
-            console.error(`❌ Gas estimation failed: ${error.message}`);
-            results.failed.push({ 
-              contract: contractAddress, 
-              tokenId: approval.tokenId,
-              reason: "Gas estimation failed: " + error.message 
-            });
-            continue;
-          }
-          
-          // Send the transaction
-          let tx;
-          try {
-            console.log(`🚀 Sending revocation for NFT token ID ${approval.tokenId}...`);
-            tx = await nftContract.approve(ZeroAddress, approval.tokenId, { gasLimit });
-            console.log(`📤 Transaction sent: ${tx.hash}`);
-          } catch (error) {
-            console.error(`❌ Transaction failed: ${error.message}`);
-            results.failed.push({ 
-              contract: contractAddress, 
-              tokenId: approval.tokenId,
-              reason: "Transaction failed: " + error.message 
-            });
-            continue;
-          }
-          
-          // Wait for confirmation with timeout
-          let receipt;
-          try {
-            const receiptPromise = tx.wait();
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error("Transaction confirmation timed out after 2 minutes")), 120000)
-            );
-            
-            receipt = await Promise.race([receiptPromise, timeoutPromise]);
-            console.log(`✅ Revocation confirmed in block ${receipt.blockNumber}`);
-            
-            // Mark as successful
-            results.successful.push({ 
-              tokenId: approval.tokenId,
-              contract: contractAddress,
-              txHash: tx.hash
-            });
-          } catch (error) {
-            console.error(`❌ Transaction confirmation failed: ${error.message}`);
-            results.failed.push({ 
-              contract: contractAddress, 
-              tokenId: approval.tokenId,
-              reason: "Transaction confirmation failed: " + error.message,
-              txHash: tx.hash
-            });
-          }
-        } catch (error) {
-          console.error(`❌ Unexpected error revoking NFT approval:`, error);
-          results.failed.push({ 
-            contract: contractAddress, 
-            tokenId: approval.tokenId,
-            reason: "Unexpected error: " + error.message 
-          });
+      // Validate addresses and tokenId
+      try {
+        const normalizedContract = safeGetAddress(approval.contract);
+        
+        // Parse tokenId safely
+        const tokenId = parseInt(approval.tokenId, 10);
+        if (isNaN(tokenId) || tokenId < 0) {
+          throw new Error(`Invalid token ID: ${approval.tokenId}`);
         }
-      }
-    } catch (error) {
-      console.error(`❌ Unexpected error batch revoking NFT approvals for contract ${contractAddress}:`, error);
-      approvalsByContract[contractAddress].forEach(approval => {
-        results.failed.push({
-          contract: contractAddress,
-          tokenId: approval.tokenId,
-          reason: "Unexpected error: " + error.message
+        
+        // Add to grouped approvals
+        if (!approvalsByContract[normalizedContract]) {
+          approvalsByContract[normalizedContract] = [];
+        }
+        
+        approvalsByContract[normalizedContract].push({
+          ...approval,
+          contract: normalizedContract,
+          tokenId
         });
-      });
+      } catch (error) {
+        console.error(`❌ Validation error for NFT approval:`, error);
+        results.failed.push({
+          contract: approval.contract,
+          tokenId: approval.tokenId,
+          reason: "Validation error: " + error.message
+        });
+      }
     }
-  }
-  
-  console.log(`🎉 NFT batch revocation process complete! Success: ${results.successful.length}, Failed: ${results.failed.length}`);
-  return results;
-}
-
-
-
-export async function batchRevokeERC1155Approvals(spenderAddresses, signer) {
-    if (!signer) throw new Error("No signer provided for batch ERC-1155 revocation");
-
-    console.log("🚨 Batch revoking ERC-1155 approvals for:", spenderAddresses);
-
-    const erc1155Contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, signer);
-
-    for (let spender of spenderAddresses) {
+    
+    // Import ZeroAddress from ethers if not already available
+    const { ZeroAddress } = await import("ethers");
+    
+    // Process each contract's approvals
+    for (const contractAddress of Object.keys(approvalsByContract)) {
+      try {
+        const approvals = approvalsByContract[contractAddress];
+        if (approvals.length === 0) continue;
+        
+        console.log(`🔍 Processing ${approvals.length} NFT approvals for contract ${contractAddress}`);
+        
+        // Create contract instance with the standard ERC-721 approve function
+        let nftContract;
         try {
-            console.log(`🔹 Revoking approval for spender: ${spender}`);
-            const tx = await erc1155Contract.setApprovalForAll(spender, false);
-            await tx.wait();
-            console.log(`✅ Successfully revoked approval for spender: ${spender}`);
+          nftContract = new Contract(
+            contractAddress,
+            ["function approve(address to, uint256 tokenId) public"],
+            signer
+          );
         } catch (error) {
-            console.error(`❌ Failed to revoke approval for spender: ${spender}`, error);
+          console.error(`❌ Contract creation error: ${error.message}`);
+          approvals.forEach(approval => {
+            results.failed.push({
+              contract: contractAddress,
+              tokenId: approval.tokenId,
+              reason: "Failed to create contract instance"
+            });
+          });
+          continue;
         }
+        
+        // Process each token ID individually
+        for (const approval of approvals) {
+          try {
+            console.log(`🚀 Revoking approval for NFT ${contractAddress} with token ID ${approval.tokenId}...`);
+            
+            // Gas estimation for safety
+            let gasEstimate, gasLimit;
+            try {
+              gasEstimate = await nftContract.approve.estimateGas(ZeroAddress, approval.tokenId);
+              console.log(`⛽ Estimated gas: ${gasEstimate.toString()}`);
+              
+              // Add 20% buffer for safety
+              gasLimit = (gasEstimate * 120n) / 100n;
+            } catch (error) {
+              console.error(`❌ Gas estimation failed: ${error.message}`);
+              results.failed.push({ 
+                contract: contractAddress, 
+                tokenId: approval.tokenId,
+                reason: "Gas estimation failed: " + error.message 
+              });
+              continue;
+            }
+            
+            // Send the transaction
+            let tx;
+            try {
+              console.log(`🚀 Sending revocation for NFT token ID ${approval.tokenId}...`);
+              tx = await nftContract.approve(ZeroAddress, approval.tokenId, { gasLimit });
+              console.log(`📤 Transaction sent: ${tx.hash}`);
+            } catch (error) {
+              console.error(`❌ Transaction failed: ${error.message}`);
+              results.failed.push({ 
+                contract: contractAddress, 
+                tokenId: approval.tokenId,
+                reason: "Transaction failed: " + error.message 
+              });
+              continue;
+            }
+            
+            // Wait for confirmation with timeout
+            let receipt;
+            try {
+              const receiptPromise = tx.wait();
+              const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Transaction confirmation timed out after 2 minutes")), 120000)
+              );
+              
+              receipt = await Promise.race([receiptPromise, timeoutPromise]);
+              console.log(`✅ Revocation confirmed in block ${receipt.blockNumber}`);
+              
+              // Mark as successful
+              results.successful.push({ 
+                tokenId: approval.tokenId,
+                contract: contractAddress,
+                txHash: tx.hash
+              });
+            } catch (error) {
+              console.error(`❌ Transaction confirmation failed: ${error.message}`);
+              results.failed.push({ 
+                contract: contractAddress, 
+                tokenId: approval.tokenId,
+                reason: "Transaction confirmation failed: " + error.message,
+                txHash: tx.hash
+              });
+            }
+          } catch (error) {
+            console.error(`❌ Unexpected error revoking NFT approval:`, error);
+            results.failed.push({ 
+              contract: contractAddress, 
+              tokenId: approval.tokenId,
+              reason: "Unexpected error: " + error.message 
+            });
+          }
+        }
+      } catch (error) {
+        console.error(`❌ Unexpected error batch revoking NFT approvals for contract ${contractAddress}:`, error);
+        approvalsByContract[contractAddress].forEach(approval => {
+          results.failed.push({
+            contract: contractAddress,
+            tokenId: approval.tokenId,
+            reason: "Unexpected error: " + error.message
+          });
+        });
+      }
     }
-}
+    
+    console.log(`🎉 NFT batch revocation process complete! Success: ${results.successful.length}, Failed: ${results.failed.length}`);
+    return results;
+  }
 
 
 
+  export async function batchRevokeERC1155Approvals(spenderAddresses, signer) {
+      if (!signer) throw new Error("No signer provided for batch ERC-1155 revocation");
 
+      console.log("🚨 Batch revoking ERC-1155 approvals for:", spenderAddresses);
 
+      const erc1155Contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, signer);
 
-
+      for (let spender of spenderAddresses) {
+          try {
+              console.log(`🔹 Revoking approval for spender: ${spender}`);
+              const tx = await erc1155Contract.setApprovalForAll(spender, false);
+              await tx.wait();
+              console.log(`✅ Successfully revoked approval for spender: ${spender}`);
+          } catch (error) {
+              console.error(`❌ Failed to revoke approval for spender: ${spender}`, error);
+          }
+      }
+  }
 

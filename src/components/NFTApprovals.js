@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ethers, BrowserProvider } from "ethers";
 
 const NFTApprovals = ({ contractAddress, spender }) => {
-  const [approvals, setApprovals] = useState([]); // Change initial state to array
+  const [approvals, setApprovals] = useState([]); 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState(false);
@@ -108,3 +108,4 @@ const NFTApprovals = ({ contractAddress, spender }) => {
 };
 
 export default NFTApprovals;
+

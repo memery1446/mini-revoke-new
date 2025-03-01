@@ -118,58 +118,59 @@ async function deployApprovals() {
       }
       
       console.log("✅ ERC-721 approvals complete!\n");
-    }
-    
-    // ============= ERC-1155 APPROVALS =============
-    // Comment out this entire section to skip ERC-1155 approvals
-    {
-      console.log("🧩 CREATING ERC-1155 APPROVALS");
-      
-      const erc1155Contract = new ethers.Contract(ADDRESSES.ERC1155, ERC1155_ABI, signer);
-      
-      // For ERC-1155, we typically use setApprovalForAll
-      try {
-        console.log(`Approving ALL tokens in ERC-1155 contract ${ADDRESSES.ERC1155} for spender ${ADDRESSES.MockSpender}`);
-        const tx = await erc1155Contract.setApprovalForAll(ADDRESSES.MockSpender, true);
-        await displayTx(tx, "ERC-1155 approval");
-      } catch (error) {
-        console.error("❌ Error with ERC-1155 setApprovalForAll:", error.message);
       }
       
-      // To create two approvals, we could approve for a second spender address
-      // But since we don't have one, let's simulate by re-approving the same spender
-      // In a real scenario, you'd use different spender addresses
-      try {
-        console.log("Creating second ERC-1155 approval for demonstration purposes");
-        const tx2 = await erc1155Contract.setApprovalForAll(ADDRESSES.MockSpender, true);
-        await displayTx(tx2, "ERC-1155 second approval");
-      } catch (error) {
-        console.error("❌ Error with second ERC-1155 approval:", error.message);
+      // ============= ERC-1155 APPROVALS =============
+      // Comment out this entire section to skip ERC-1155 approvals
+      {
+        console.log("🧩 CREATING ERC-1155 APPROVALS");
+        
+        const erc1155Contract = new ethers.Contract(ADDRESSES.ERC1155, ERC1155_ABI, signer);
+        
+        // For ERC-1155, we typically use setApprovalForAll
+        try {
+          console.log(`Approving ALL tokens in ERC-1155 contract ${ADDRESSES.ERC1155} for spender ${ADDRESSES.MockSpender}`);
+          const tx = await erc1155Contract.setApprovalForAll(ADDRESSES.MockSpender, true);
+          await displayTx(tx, "ERC-1155 approval");
+        } catch (error) {
+          console.error("❌ Error with ERC-1155 setApprovalForAll:", error.message);
+        }
+        
+        // To create two approvals, we could approve for a second spender address
+        // But since we don't have one, let's simulate by re-approving the same spender
+        // In a real scenario, you'd use different spender addresses
+        try {
+          console.log("Creating second ERC-1155 approval for demonstration purposes");
+          const tx2 = await erc1155Contract.setApprovalForAll(ADDRESSES.MockSpender, true);
+          await displayTx(tx2, "ERC-1155 second approval");
+        } catch (error) {
+          console.error("❌ Error with second ERC-1155 approval:", error.message);
+        }
+        
+        console.log("✅ ERC-1155 approvals complete!\n");
+        }
+          
+          console.log("🎉 ALL APPROVALS DEPLOYED SUCCESSFULLY!");
+          console.log("You can now test batch revocation with these approvals.");
+          
+        } catch (error) {
+          console.error("❌ Deployment failed:", error);
+        }
       }
-      
-      console.log("✅ ERC-1155 approvals complete!\n");
-    }
-    
-    console.log("🎉 ALL APPROVALS DEPLOYED SUCCESSFULLY!");
-    console.log("You can now test batch revocation with these approvals.");
-    
-  } catch (error) {
-    console.error("❌ Deployment failed:", error);
-  }
-}
 
-// Export the main function for Hardhat to execute
-module.exports = async function() {
-  await deployApprovals();
-}
+      // Export the main function for Hardhat to execute
+      module.exports = async function() {
+        await deployApprovals();
+      }
 
-// Make the script runnable directly with node
-if (require.main === module) {
-  deployApprovals()
-    .then(() => process.exit(0))
-    .catch(error => {
-      console.error(error);
-      process.exit(1);
-    });
-}
+      // Make the script runnable directly with node
+      if (require.main === module) {
+        deployApprovals()
+          .then(() => process.exit(0))
+          .catch(error => {
+            console.error(error);
+            process.exit(1);
+        });
+          
+      }
 

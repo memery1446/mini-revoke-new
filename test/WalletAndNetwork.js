@@ -8,6 +8,7 @@ describe("Wallet Connection & Network Selection", function () {
 
     beforeEach(async function () {
         [owner, addr1] = await ethers.getSigners();
+        
         // Mock contract setup instead of deploying NetworkSelector contract
         networkSelector = {
             connectedWallet: AddressZero,

@@ -139,97 +139,97 @@ export async function initializeProvider() {
     window._updateDebug?.(`Init error: ${error.message}`);
     return null;
   }
-}
+  }
 
-// Get provider instance (creates if doesn't exist)
-export async function getProvider() {
-  safeConsole.log("Getting provider");
-  
-  if (!providerInstance) {
-    safeConsole.log("Provider not initialized, refreshing");
-    return await refreshProvider();
+  // Get provider instance (creates if doesn't exist)
+  export async function getProvider() {
+    safeConsole.log("Getting provider");
+    
+    if (!providerInstance) {
+      safeConsole.log("Provider not initialized, refreshing");
+      return await refreshProvider();
+    }
+    return providerInstance;
   }
-  return providerInstance;
-}
 
-// Get signer from provider
-export async function getSigner() {
-  safeConsole.log("Getting signer");
-  
-  const provider = await getProvider();
-  if (!provider) {
-    safeConsole.error("Provider not available for signer");
-    return null;
-  }
-  
-  try {
-    const signer = await provider.getSigner();
-    safeConsole.log("Signer retrieved successfully");
-    return signer;
-  } catch (error) {
-    safeConsole.error("❌ Error getting signer:", error);
-    window._updateDebug?.(`Signer error: ${error.message}`);
-    return null;
-  }
-}
-
-// Request wallet connection
-export async function connectWallet() {
-  safeConsole.log("Connecting wallet");
-  window._updateDebug?.("Connecting wallet");
-  
-  if (typeof window === 'undefined' || !window.ethereum) {
-    safeConsole.error("❌ MetaMask not installed");
-    window._updateDebug?.("MetaMask not installed");
-    return false;
-  }
-  
-  try {
-    await refreshProvider();
+  // Get signer from provider
+  export async function getSigner() {
+    safeConsole.log("Getting signer");
     
-    // Request accounts
-    safeConsole.log("Requesting accounts");
-    window._updateDebug?.("Requesting accounts...");
-    
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    safeConsole.log("Accounts received:", accounts);
-    window._updateDebug?.(`Accounts received: ${accounts.length}`);
-    
-    if (accounts.length > 0) {
-      // Update Redux store
-      safeDispatch({ type: 'web3/setAccount', payload: accounts[0] });
-      
-      // Get and set network ID
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      safeDispatch({ type: 'web3/setNetwork', payload: parseInt(chainId, 16) });
-      
-      // Make sure event listeners are set up
-      if (!initialized) {
-        setupEventListeners();
-        initialized = true;
-      }
-      
-      safeConsole.log("Wallet connected successfully");
-      window._updateDebug?.("Wallet connected!");
-      return true;
+    const provider = await getProvider();
+    if (!provider) {
+      safeConsole.error("Provider not available for signer");
+      return null;
     }
     
-    safeConsole.warn("No accounts returned after connection request");
-    window._updateDebug?.("No accounts returned");
-    return false;
-  } catch (error) {
-    safeConsole.error("❌ Error connecting wallet:", error);
-    window._updateDebug?.(`Connection error: ${error.message}`);
-    return false;
+    try {
+      const signer = await provider.getSigner();
+      safeConsole.log("Signer retrieved successfully");
+      return signer;
+    } catch (error) {
+      safeConsole.error("❌ Error getting signer:", error);
+      window._updateDebug?.(`Signer error: ${error.message}`);
+      return null;
+    }
   }
-}
 
-// Export for debug access
-if (typeof window !== 'undefined') {
-  window.providerDebug = {
-    refreshProvider,
-    getProvider,
-    initializeProvider,
-    connectWallet
-  };
-}
+  // Request wallet connection
+  export async function connectWallet() {
+    safeConsole.log("Connecting wallet");
+    window._updateDebug?.("Connecting wallet");
+    
+    if (typeof window === 'undefined' || !window.ethereum) {
+      safeConsole.error("❌ MetaMask not installed");
+      window._updateDebug?.("MetaMask not installed");
+      return false;
+    }
+    
+    try {
+      await refreshProvider();
+      
+      // Request accounts
+      safeConsole.log("Requesting accounts");
+      window._updateDebug?.("Requesting accounts...");
+      
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      safeConsole.log("Accounts received:", accounts);
+      window._updateDebug?.(`Accounts received: ${accounts.length}`);
+      
+      if (accounts.length > 0) {
+        // Update Redux store
+        safeDispatch({ type: 'web3/setAccount', payload: accounts[0] });
+        
+        // Get and set network ID
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        safeDispatch({ type: 'web3/setNetwork', payload: parseInt(chainId, 16) });
+        
+        // Make sure event listeners are set up
+        if (!initialized) {
+          setupEventListeners();
+          initialized = true;
+        }
+        
+        safeConsole.log("Wallet connected successfully");
+        window._updateDebug?.("Wallet connected!");
+        return true;
+      }
+      
+      safeConsole.warn("No accounts returned after connection request");
+      window._updateDebug?.("No accounts returned");
+      return false;
+    } catch (error) {
+      safeConsole.error("❌ Error connecting wallet:", error);
+      window._updateDebug?.(`Connection error: ${error.message}`);
+      return false;
+    }
+  }
+
+  // Export for debug access
+  if (typeof window !== 'undefined') {
+    window.providerDebug = {
+      refreshProvider,
+      getProvider,
+      initializeProvider,
+      connectWallet
+    };
+  }

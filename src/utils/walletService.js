@@ -1,6 +1,6 @@
 // utils/walletService.js
 import { BrowserProvider } from "ethers";
-import store from '../store/store'; // Adjust path as needed
+import store from '../store/store';
 import { setAccount, setNetwork, resetWeb3 } from '../store/web3Slice';
 
 class WalletService {
@@ -120,14 +120,14 @@ class WalletService {
   }
 }
 
-// Create a singleton instance
-const walletService = new WalletService();
+  // Create a singleton instance
+  const walletService = new WalletService();
 
-// Export methods
-export const initializeWallet = () => walletService.initialize();
-export const connectWallet = () => walletService.connect();
-export const getWalletSigner = () => walletService.getSigner();
-export const getWalletProvider = () => walletService.getProvider();
+  // Export methods
+  export const initializeWallet = () => walletService.initialize();
+  export const connectWallet = () => walletService.connect();
+  export const getWalletSigner = () => walletService.getSigner();
+  export const getWalletProvider = () => walletService.getProvider();
 
 export default walletService;
 

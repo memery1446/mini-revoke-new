@@ -8,7 +8,7 @@ describe("TestToken", function () {
         [owner, addr1, addr2] = await ethers.getSigners();
 
         TestToken = await ethers.getContractFactory("TestToken");
-        testToken = await TestToken.deploy("Test Token", "TTK", 18); // ✅ Correct deployment
+        testToken = await TestToken.deploy("Test Token", "TTK", 18); 
     });
 
     it("Should deploy with correct initial values", async function () {

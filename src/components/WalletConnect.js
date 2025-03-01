@@ -60,7 +60,7 @@ const WalletConnect = () => {
     try {
       window._updateDebug?.("Attempting to connect wallet...");
       
-      // Use the connectWallet function from providerService
+      // ConnectWallet function from providerService
       const success = await connectWallet();
       
       window._updateDebug?.(`Wallet connection ${success ? "successful" : "failed"}`);
@@ -131,3 +131,4 @@ const WalletConnect = () => {
 };
 
 export default WalletConnect;
+
