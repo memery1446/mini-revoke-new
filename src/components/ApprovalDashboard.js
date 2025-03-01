@@ -11,12 +11,19 @@ import { Contract, ZeroAddress } from 'ethers';
 const ERC20_ABI = ["function approve(address spender, uint256 amount) public returns (bool)"];
 const NFT_ABI = [
   "function approve(address to, uint256 tokenId) public",
-  "function setApprovalForAll(address operator, bool approved) external"
+  "function setApprovalForAll(address operator, bool approved) external",
+  "function getApproved(uint256 tokenId) external view returns (address)",
+  "function isApprovedForAll(address owner, address operator) external view returns (bool)"
+];
+const ERC1155_ABI = [
+  "function setApprovalForAll(address operator, bool approved) external",
+  "function isApprovedForAll(address account, address operator) external view returns (bool)"
 ];
 
-// NFT Contract Address
+// Contract addresses
 const NFT_CONTRACT = "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354";
 const NFT_SPENDER = "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608";
+const ERC1155_CONTRACT = "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A";
 
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
@@ -188,15 +195,7 @@ const ApprovalDashboard = () => {
         console.log("👤 Spender:", selectedApproval.spender);
         console.log("🔢 Token ID:", selectedApproval.tokenId);
         
-        // Use more complete ABI for NFT
-        const NFT_FULL_ABI = [
-          "function approve(address to, uint256 tokenId) public",
-          "function setApprovalForAll(address operator, bool approved) external",
-          "function getApproved(uint256 tokenId) external view returns (address)",
-          "function isApprovedForAll(address owner, address operator) external view returns (bool)"
-        ];
-        
-        const contract = new Contract(selectedApproval.contract, NFT_FULL_ABI, signer);
+        const contract = new Contract(selectedApproval.contract, NFT_ABI, signer);
         
         // Check current approval status before revoking
         try {
@@ -252,6 +251,56 @@ const ApprovalDashboard = () => {
           }
         } catch (err) {
           console.warn("⚠️ Error verifying revocation:", err);
+        }
+      }
+      else if (selectedApproval.type === 'ERC-1155') {
+        console.log("🎮 Processing ERC-1155 revocation");
+        console.log("📄 Contract:", selectedApproval.contract);
+        console.log("👤 Spender:", selectedApproval.spender);
+        
+        const contract = new Contract(selectedApproval.contract, ERC1155_ABI, signer);
+        
+        // Check current approval status before revoking
+        try {
+          const isApproved = await contract.isApprovedForAll(userAddress, selectedApproval.spender);
+          console.log("🔍 Current ERC-1155 'approved for all' status:", isApproved);
+          
+          if (!isApproved) {
+            console.log("⚠️ Already not approved, no need to revoke");
+            setMessage({type: 'info', text: 'This approval is already revoked'});
+            setProcessing(false);
+            return;
+          }
+        } catch (err) {
+          console.warn("⚠️ Error checking current ERC-1155 approval status:", err);
+        }
+        
+        setMessage({type: 'info', text: 'Please confirm ERC-1155 revocation in your wallet...'});
+        
+        // For ERC-1155, we use setApprovalForAll with false to revoke
+        console.log("🔄 Revoking ERC-1155 approval for spender:", selectedApproval.spender);
+        const tx = await contract.setApprovalForAll(selectedApproval.spender, false);
+        
+        console.log("📝 Transaction sent:", tx);
+        console.log("📝 Transaction hash:", tx.hash);
+        
+        setMessage({type: 'info', text: `Waiting for confirmation... (TX: ${tx.hash.substring(0, 10)}...)`});
+        const receipt = await tx.wait();
+        console.log("✅ Transaction confirmed! Receipt:", receipt);
+        
+        // Verify the approval was actually revoked
+        try {
+          const isApprovedAfter = await contract.isApprovedForAll(userAddress, selectedApproval.spender);
+          console.log("🔍 AFTER REVOCATION - ERC-1155 approval status:", isApprovedAfter);
+          
+          if (isApprovedAfter) {
+            console.error("❌ ERC-1155 REVOCATION FAILED! Still approved!");
+            setMessage({type: 'danger', text: 'Revocation failed - approval is still active'});
+            setProcessing(false);
+            return;
+          }
+        } catch (err) {
+          console.warn("⚠️ Error verifying ERC-1155 revocation:", err);
         }
       }
       
@@ -320,7 +369,7 @@ const ApprovalDashboard = () => {
                 onClick={handleRevoke}
                 disabled={processing}
               >
-                Revoke
+                {processing ? 'Processing...' : 'Revoke'}
               </button>
               <button 
                 className="btn btn-sm btn-outline-secondary"
@@ -333,28 +382,47 @@ const ApprovalDashboard = () => {
           </div>
         )}
         
-        {/* Add manual NFT approval buttons */}
+        {/* Add manual ERC-1155 approval button */}
         <div className="mb-4">
           <div className="card bg-light">
             <div className="card-body">
-              <h6 className="card-title">Manual NFT Approvals (NFTs #2, #3, #4)</h6>
-              <div className="btn-group">
-                {[2, 3, 4].map(tokenId => (
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <h6 className="card-title">Manual NFT Approvals (NFTs #2, #3, #4)</h6>
+                  <div className="btn-group">
+                    {[2, 3, 4].map(tokenId => (
+                      <button 
+                        key={tokenId}
+                        className="btn btn-outline-primary me-2"
+                        onClick={() => handleSelect({
+                          id: `manual-erc721-${NFT_CONTRACT}-${NFT_SPENDER}-${tokenId}`,
+                          type: 'ERC-721',
+                          contract: NFT_CONTRACT,
+                          spender: NFT_SPENDER,
+                          tokenId: tokenId.toString(),
+                          isApproved: true
+                        })}
+                      >
+                        NFT #{tokenId}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <h6 className="card-title">Manual ERC-1155 Approval</h6>
                   <button 
-                    key={tokenId}
-                    className="btn btn-outline-primary me-2"
+                    className="btn btn-outline-warning"
                     onClick={() => handleSelect({
-                      id: `manual-erc721-${NFT_CONTRACT}-${NFT_SPENDER}-${tokenId}`,
-                      type: 'ERC-721',
-                      contract: NFT_CONTRACT,
+                      id: `manual-erc1155-${ERC1155_CONTRACT}-${NFT_SPENDER}`,
+                      type: 'ERC-1155',
+                      contract: ERC1155_CONTRACT,
                       spender: NFT_SPENDER,
-                      tokenId: tokenId.toString(),
                       isApproved: true
                     })}
                   >
-                    Select NFT #{tokenId}
+                    Select ERC-1155 Approval
                   </button>
-                ))}
+                </div>
               </div>
             </div>
           </div>
@@ -399,6 +467,9 @@ const ApprovalDashboard = () => {
                       {approval.type === 'ERC-20' && <span>Amount: Unlimited</span>}
                       {approval.type === 'ERC-721' && (
                         <span>{approval.tokenId === 'all' ? 'All tokens' : `Token #${approval.tokenId}`}</span>
+                      )}
+                      {approval.type === 'ERC-1155' && (
+                        <span>All tokens (collection-wide)</span>
                       )}
                     </td>
                     <td>
