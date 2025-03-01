@@ -290,7 +290,12 @@ const handleSelectApproval = (approval) => {
   const selectedERC20Count = selectedApprovals.filter(a => a.type === 'ERC-20').length;
   const selectedNFTCount = selectedApprovals.filter(a => a.type === 'ERC-721').length;
   
-const refreshBatchRevoke = async (existingApprovals) => { // Pass approvals as a parameter
+const refreshBatchRevoke = async (existingApprovals = []) => {  // Default to empty array
+  if (!Array.isArray(existingApprovals)) {
+    console.error("❌ existingApprovals is not an array:", existingApprovals);
+    existingApprovals = [];
+  }
+
   if (isRevoking) return;
   
   setIsRevoking(true);
@@ -306,19 +311,16 @@ const refreshBatchRevoke = async (existingApprovals) => { // Pass approvals as a
       ? await getERC20Approvals([], address) || []
       : [];
     
-    const nftApprovals = FEATURES.batchRevoke.nftEnabled 
-      ? await getERC721Approvals(address) || []
-      : [];
+const nftApprovals = FEATURES.batchRevoke.nftEnabled 
+  ? approvals.filter(a => a.type === 'ERC-721')  // Remove `a.tokenId !== 'all'`
+  : [];
 
-console.log("🎨 Fetched ERC-721 Approvals:", nftApprovals);
 
-    // Preserve existing approvals while avoiding duplicates
+    console.log("🎨 Fetched ERC-721 Approvals:", nftApprovals);
+
+    // Ensure `existingApprovals` is an array before filtering
     const mergedApprovals = [
-      ...existingApprovals.filter(
-        (a) => 
-          !erc20Approvals.some(e => e.contract === a.contract && e.spender === a.spender) &&
-          !nftApprovals.some(n => n.contract === a.contract && n.spender === a.spender && n.tokenId === a.tokenId)
-      ),
+      ...((Array.isArray(existingApprovals) ? existingApprovals : [])),  // Ensure it's an array
       ...erc20Approvals,
       ...nftApprovals
     ];
@@ -332,6 +334,7 @@ console.log("🎨 Fetched ERC-721 Approvals:", nftApprovals);
     setIsRevoking(false);
   }
 };
+
 
 
 

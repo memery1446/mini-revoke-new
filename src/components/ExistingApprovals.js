@@ -26,39 +26,47 @@ const ExistingApprovals = ({ onToggleSelect }) => {
     };
   }, []);
   
-  const fetchApprovals = useCallback(async () => {
-    if (!account || revoking) return;
-    try {
-      setLoading(true);
-      setError(null);
-      console.log("📋 Fetching approvals for account:", account);
-      
-      const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
-      console.log("📋 Token contracts:", tokenContracts);
-      
-      const erc20Fetched = await getERC20Approvals(tokenContracts, account) || [];
-      console.log("🟢 Fetched ERC-20 approvals:", erc20Fetched);
-      
-      const erc721Fetched = await getERC721Approvals(account) || [];
-      console.log("🟢 Fetched ERC-721 approvals:", erc721Fetched);
-      
-      const erc1155Fetched = await getERC1155Approvals(account) || [];
-      console.log("🟢 Fetched ERC-1155 approvals:", erc1155Fetched);
-      
-      if (!isMounted.current) return;
-      
-      const allApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched];
-      console.log("🟢 All approvals fetched:", allApprovals);
-      
-      dispatch(setApprovals(allApprovals));
-    } catch (err) {
-      console.error("❌ Error fetching approvals:", err);
-      if (isMounted.current) setError(err.message);
-    } finally {
-      if (isMounted.current) setLoading(false);
-      console.log("🔄 Loading state completed. Current loading state:", loading);
+const fetchApprovals = useCallback(async () => {
+  if (!account || revoking) return;
+  try {
+    setLoading(true);
+    setError(null);
+    console.log("📋 Fetching approvals for account:", account);
+    
+    const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+    
+    const erc20Fetched = await getERC20Approvals(tokenContracts, account) || [];
+    console.log("🟢 Fetched ERC-20 approvals:", erc20Fetched);
+    
+    const erc721Fetched = await getERC721Approvals(account);
+    console.log("🟢 Fetched ERC-721 approvals:", erc721Fetched);
+
+    const erc1155Fetched = await getERC1155Approvals(account) || [];
+    console.log("🟢 Fetched ERC-1155 approvals:", erc1155Fetched);
+    
+    if (!Array.isArray(erc721Fetched)) {
+      console.error("❌ `erc721Fetched` is not an array. Defaulting to empty array.");
     }
-  }, [account, dispatch, revoking]);
+
+    if (!isMounted.current) return;
+    
+    const allApprovals = [
+      ...erc20Fetched,
+      ...(Array.isArray(erc721Fetched) ? erc721Fetched : []),  // Ensure it's an array
+      ...erc1155Fetched
+    ];
+    
+    console.log("🟢 All approvals fetched:", allApprovals);
+    dispatch(setApprovals(allApprovals));
+  } catch (err) {
+    console.error("❌ Error fetching approvals:", err);
+    if (isMounted.current) setError(err.message);
+  } finally {
+    if (isMounted.current) setLoading(false);
+    console.log("🔄 Loading state completed. Current loading state:", loading);
+  }
+}, [account, dispatch, revoking]);
+
   
   useEffect(() => {
     if (account) {
