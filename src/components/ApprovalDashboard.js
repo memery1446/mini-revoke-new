@@ -473,51 +473,7 @@ const handleRevokeERC1155 = async () => {
           </div>
         )}
         
-        {/* Add manual selection buttons */}
-        <div className="mb-4">
-          <div className="card bg-light">
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-6">
-                  <h6 className="card-title">Manual NFT Approvals</h6>
-                  <div className="btn-group">
-                    {[2, 3, 4].map(tokenId => (
-                      <button 
-                        key={tokenId}
-                        className="btn btn-outline-primary me-2"
-                        onClick={() => handleSelect({
-                          id: `manual-erc721-${NFT_CONTRACT}-${NFT_SPENDER}-${tokenId}`,
-                          type: 'ERC-721',
-                          contract: NFT_CONTRACT,
-                          spender: NFT_SPENDER,
-                          tokenId: tokenId.toString(),
-                          isApproved: true
-                        })}
-                      >
-                        NFT #{tokenId}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <h6 className="card-title">Manual ERC-1155 Approval</h6>
-                  <button 
-                    className="btn btn-outline-warning mb-2"
-                    onClick={() => handleSelect({
-                      id: `manual-erc1155-${ERC1155_CONTRACT}-${ERC1155_SPENDER}`,
-                      type: 'ERC-1155',
-                      contract: ERC1155_CONTRACT,
-                      spender: ERC1155_SPENDER,
-                      isApproved: true
-                    })}
-                  >
-                    Select ERC-1155 Approval
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+
         
         {/* Approvals table */}
         <div className="table-responsive">
