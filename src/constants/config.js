@@ -4,7 +4,7 @@ export const FEATURES = {
   batchRevoke: {
     enabled: true, // Master toggle for batch revocation feature
     erc20Enabled: true, // Toggle for ERC-20 batch revocation
-    nftEnabled: false, // Toggle for NFT batch revocation (disabled by default)
+    nftEnabled: true, // Toggle for NFT batch revocation (disabled by default)
     erc1155Enabled: false, // Toggle for ERC-1155 batch revocation (disabled by default)
     maxBatchSize: 5, // Maximum number of approvals that can be revoked in one batch
     showGasEstimates: true, // Whether to show gas estimates before confirming

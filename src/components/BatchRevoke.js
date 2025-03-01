@@ -317,7 +317,7 @@ console.log("📜 Fetched ERC-20 Approvals:", erc20Approvals);
 
 console.log("📢 Calling getERC721Approvals...");
 const nftApprovals = FEATURES.batchRevoke.nftEnabled 
-  ? await getERC721Approvals(address) || []
+  ? await getERC721Approvals(userAddress) || []
   : [];
 console.log("🎨 Fetched ERC-721 Approvals:", nftApprovals);
 
