@@ -4,14 +4,12 @@ import { useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import { Provider } from "react-redux" // Keep this import
 import store from "./store/index" // Keep import for Redux store
-
 import WalletConnect from "./components/WalletConnect.js"
 import NetworkSelector from "./components/NetworkSelector.js"
-
 import ApprovalDashboard from "./components/ApprovalDashboard.js" // Import the consolidated component
+import BatchRevoke from "./components/BatchRevoke.js" 
 import "bootstrap/dist/css/bootstrap.min.css"
 import { BootstrapWrapper } from "./utils/provider"
-
 import { initializeProvider } from "./utils/providerService"
 
 console.log("🔴 App.js loaded - " + new Date().toISOString())
@@ -74,6 +72,7 @@ const AppContent = () => {
           <div className="row mt-4">
             <div className="col-lg-12">
               {/* Replace the previous components with the consolidated ApprovalDashboard */}
+              <BatchRevoke />
               <ApprovalDashboard />
             </div>
           </div>
