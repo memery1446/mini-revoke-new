@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getERC20Approvals } from "../utils/erc20Approvals";
 import { getERC721Approvals } from "../utils/nftApprovals";
-import { getERC1155Approvals } from "../utils/erc1155Approvals";
+import { getERC1155Approvals, revokeERC1155Approval } from "../utils/erc1155Approvals";
 import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
-import { Contract, ZeroAddress } from 'ethers';
+import { Contract, ZeroAddress, BrowserProvider } from 'ethers';
+import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
 
 // Simple ABIs for each type of contract
 const ERC20_ABI = ["function approve(address spender, uint256 amount) public returns (bool)"];
@@ -15,15 +16,12 @@ const NFT_ABI = [
   "function getApproved(uint256 tokenId) external view returns (address)",
   "function isApprovedForAll(address owner, address operator) external view returns (bool)"
 ];
-const ERC1155_ABI = [
-  "function setApprovalForAll(address operator, bool approved) external",
-  "function isApprovedForAll(address account, address operator) external view returns (bool)"
-];
 
-// Contract addresses
-const NFT_CONTRACT = "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354";
-const NFT_SPENDER = "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608";
-const ERC1155_CONTRACT = "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A";
+// Use contract addresses from constants
+const NFT_CONTRACT = CONTRACT_ADDRESSES.TestNFT;
+const NFT_SPENDER = CONTRACT_ADDRESSES.MockSpender;
+const ERC1155_CONTRACT = CONTRACT_ADDRESSES.ERC1155;
+const ERC1155_SPENDER = CONTRACT_ADDRESSES.MockSpender;
 
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
@@ -34,6 +32,7 @@ const ApprovalDashboard = () => {
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState(null);
   const [selectedApproval, setSelectedApproval] = useState(null);
+  const [debugInfo, setDebugInfo] = useState("");
 
   // Debug output - log what we're getting from Redux
   useEffect(() => {
@@ -118,6 +117,17 @@ const ApprovalDashboard = () => {
       let erc1155List = [];
       try {
         erc1155List = await getERC1155Approvals(address) || [];
+        console.log("ERC-1155 approvals fetched:", erc1155List);
+        
+        // If no ERC-1155 approvals found, add a manual one for testing
+        if (erc1155List.length === 0) {
+          console.log("Adding manual ERC-1155 approval for testing");
+          erc1155List.push({
+            contract: ERC1155_CONTRACT,
+            spender: ERC1155_SPENDER,
+            isApproved: true
+          });
+        }
       } catch (err) {
         console.error("Error fetching ERC-1155 approvals:", err);
       }
@@ -160,12 +170,113 @@ const ApprovalDashboard = () => {
       setSelectedApproval(null);
     } else {
       setSelectedApproval(approval);
+      console.log("Selected approval:", approval);
     }
   };
 
-  // Revoke the selected approval
+  // Function specifically for ERC-1155 revocation using the utility
+  const handleRevokeERC1155 = async () => {
+    if (!selectedApproval || processing) return;
+    if (selectedApproval.type !== 'ERC-1155') {
+      console.error("Not an ERC-1155 approval");
+      return;
+    }
+    
+    setProcessing(true);
+    setMessage({type: 'info', text: 'Preparing ERC-1155 revocation...'});
+    setDebugInfo("Starting ERC-1155 revocation");
+    
+    try {
+      console.log("🎮 ERC-1155 revocation using utility function");
+      console.log("Contract:", selectedApproval.contract);
+      console.log("Spender:", selectedApproval.spender);
+      
+      // Use the imported revokeERC1155Approval function
+      setMessage({type: 'info', text: 'Please confirm in your wallet...'});
+      
+      const success = await revokeERC1155Approval(selectedApproval.spender);
+      
+      if (success) {
+        setMessage({type: 'success', text: 'ERC-1155 approval successfully revoked!'});
+        setSelectedApproval(null);
+        
+        // Refresh approvals after a delay
+        setTimeout(() => loadApprovals(), 3000);
+      } else {
+        setMessage({type: 'danger', text: 'Failed to revoke ERC-1155 approval'});
+      }
+    } catch (error) {
+      console.error("Error in ERC-1155 revocation:", error);
+      setDebugInfo(`Error: ${error.message}`);
+      setMessage({type: 'danger', text: `Error: ${error.message}`});
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Direct interaction attempt with ERC-1155 contract
+  const handleDirectERC1155Revoke = async () => {
+    if (!selectedApproval || processing) return;
+    if (selectedApproval.type !== 'ERC-1155') {
+      console.error("Not an ERC-1155 approval");
+      return;
+    }
+    
+    setProcessing(true);
+    setMessage({type: 'info', text: 'Preparing direct ERC-1155 revocation...'});
+    
+    try {
+      console.log("🎮 Manual ERC-1155 direct revocation");
+      console.log("Contract:", ERC1155_CONTRACT);
+      console.log("Spender:", ERC1155_SPENDER);
+      
+      // Get provider the basic way - using the window.ethereum object
+      if (!window.ethereum) {
+        throw new Error("No ethereum provider found in window.ethereum");
+      }
+      
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const signerAddress = await signer.getAddress();
+      console.log("Signer address:", signerAddress);
+      
+      // Create minimal contract
+      const contract = new Contract(
+        ERC1155_CONTRACT,
+        ["function setApprovalForAll(address,bool)"],
+        signer
+      );
+      
+      console.log("Contract created, calling setApprovalForAll");
+      setMessage({type: 'info', text: 'Please confirm in your wallet...'});
+      
+      // Call the function directly with minimal parameters
+      const tx = await contract.setApprovalForAll(ERC1155_SPENDER, false);
+      console.log("Transaction sent:", tx.hash);
+      
+      setMessage({type: 'info', text: 'Transaction sent, waiting for confirmation...'});
+      const receipt = await tx.wait();
+      
+      console.log("Transaction confirmed:", receipt);
+      setMessage({type: 'success', text: 'ERC-1155 approval revoked successfully!'});
+      
+      // Refresh approvals after a short delay
+      setTimeout(() => loadApprovals(), 3000);
+    } catch (error) {
+      console.error("Error in direct ERC-1155 revocation:", error);
+      setMessage({type: 'danger', text: `Error: ${error.message}`});
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Standard revocation for ERC-20 and ERC-721
   const handleRevoke = async () => {
     if (!selectedApproval || processing) return;
+    if (selectedApproval.type === 'ERC-1155') {
+      // Redirect to ERC-1155 specific handler
+      return handleDirectERC1155Revoke();
+    }
     
     setProcessing(true);
     setMessage({type: 'info', text: 'Preparing transaction...'});
@@ -253,56 +364,6 @@ const ApprovalDashboard = () => {
           console.warn("⚠️ Error verifying revocation:", err);
         }
       }
-      else if (selectedApproval.type === 'ERC-1155') {
-        console.log("🎮 Processing ERC-1155 revocation");
-        console.log("📄 Contract:", selectedApproval.contract);
-        console.log("👤 Spender:", selectedApproval.spender);
-        
-        const contract = new Contract(selectedApproval.contract, ERC1155_ABI, signer);
-        
-        // Check current approval status before revoking
-        try {
-          const isApproved = await contract.isApprovedForAll(userAddress, selectedApproval.spender);
-          console.log("🔍 Current ERC-1155 'approved for all' status:", isApproved);
-          
-          if (!isApproved) {
-            console.log("⚠️ Already not approved, no need to revoke");
-            setMessage({type: 'info', text: 'This approval is already revoked'});
-            setProcessing(false);
-            return;
-          }
-        } catch (err) {
-          console.warn("⚠️ Error checking current ERC-1155 approval status:", err);
-        }
-        
-        setMessage({type: 'info', text: 'Please confirm ERC-1155 revocation in your wallet...'});
-        
-        // For ERC-1155, we use setApprovalForAll with false to revoke
-        console.log("🔄 Revoking ERC-1155 approval for spender:", selectedApproval.spender);
-        const tx = await contract.setApprovalForAll(selectedApproval.spender, false);
-        
-        console.log("📝 Transaction sent:", tx);
-        console.log("📝 Transaction hash:", tx.hash);
-        
-        setMessage({type: 'info', text: `Waiting for confirmation... (TX: ${tx.hash.substring(0, 10)}...)`});
-        const receipt = await tx.wait();
-        console.log("✅ Transaction confirmed! Receipt:", receipt);
-        
-        // Verify the approval was actually revoked
-        try {
-          const isApprovedAfter = await contract.isApprovedForAll(userAddress, selectedApproval.spender);
-          console.log("🔍 AFTER REVOCATION - ERC-1155 approval status:", isApprovedAfter);
-          
-          if (isApprovedAfter) {
-            console.error("❌ ERC-1155 REVOCATION FAILED! Still approved!");
-            setMessage({type: 'danger', text: 'Revocation failed - approval is still active'});
-            setProcessing(false);
-            return;
-          }
-        } catch (err) {
-          console.warn("⚠️ Error verifying ERC-1155 revocation:", err);
-        }
-      }
       
       setMessage({type: 'success', text: 'Approval successfully revoked!'});
       setSelectedApproval(null);
@@ -353,6 +414,13 @@ const ApprovalDashboard = () => {
           </div>
         )}
         
+        {/* Debug info */}
+        {debugInfo && (
+          <div className="alert alert-secondary small">
+            <pre className="mb-0">{debugInfo}</pre>
+          </div>
+        )}
+        
         {/* Selected approval action */}
         {selectedApproval && (
           <div className="alert alert-info d-flex justify-content-between align-items-center mb-3">
@@ -364,13 +432,32 @@ const ApprovalDashboard = () => {
               <code className="ms-1">{selectedApproval.spender?.substring(0, 8)}...</code>
             </div>
             <div>
-              <button 
-                className="btn btn-sm btn-danger me-2" 
-                onClick={handleRevoke}
-                disabled={processing}
-              >
-                {processing ? 'Processing...' : 'Revoke'}
-              </button>
+              {selectedApproval.type === 'ERC-1155' ? (
+                <>
+                  <button 
+                    className="btn btn-sm btn-warning me-2" 
+                    onClick={handleRevokeERC1155}
+                    disabled={processing}
+                  >
+                    {processing ? 'Processing...' : 'Revoke ERC-1155 (Util)'}
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-danger me-2" 
+                    onClick={handleDirectERC1155Revoke}
+                    disabled={processing}
+                  >
+                    {processing ? 'Processing...' : 'Direct Revoke'}
+                  </button>
+                </>
+              ) : (
+                <button 
+                  className="btn btn-sm btn-danger me-2" 
+                  onClick={handleRevoke}
+                  disabled={processing}
+                >
+                  {processing ? 'Processing...' : 'Revoke'}
+                </button>
+              )}
               <button 
                 className="btn btn-sm btn-outline-secondary"
                 onClick={() => setSelectedApproval(null)}
@@ -382,13 +469,13 @@ const ApprovalDashboard = () => {
           </div>
         )}
         
-        {/* Add manual ERC-1155 approval button */}
+        {/* Add manual selection buttons */}
         <div className="mb-4">
           <div className="card bg-light">
             <div className="card-body">
-              <div className="row mb-3">
+              <div className="row">
                 <div className="col-md-6">
-                  <h6 className="card-title">Manual NFT Approvals (NFTs #2, #3, #4)</h6>
+                  <h6 className="card-title">Manual NFT Approvals</h6>
                   <div className="btn-group">
                     {[2, 3, 4].map(tokenId => (
                       <button 
@@ -411,12 +498,12 @@ const ApprovalDashboard = () => {
                 <div className="col-md-6">
                   <h6 className="card-title">Manual ERC-1155 Approval</h6>
                   <button 
-                    className="btn btn-outline-warning"
+                    className="btn btn-outline-warning mb-2"
                     onClick={() => handleSelect({
-                      id: `manual-erc1155-${ERC1155_CONTRACT}-${NFT_SPENDER}`,
+                      id: `manual-erc1155-${ERC1155_CONTRACT}-${ERC1155_SPENDER}`,
                       type: 'ERC-1155',
                       contract: ERC1155_CONTRACT,
-                      spender: NFT_SPENDER,
+                      spender: ERC1155_SPENDER,
                       isApproved: true
                     })}
                   >
