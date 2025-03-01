@@ -259,6 +259,41 @@ const handleSelectApproval = (approval) => {
             );
           }
           
+
+const refreshBatchRevoke = async () => {
+  if (isRevoking) return;
+  
+  setIsRevoking(true);
+  
+  try {
+    const provider = await getProvider();
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+
+    console.log("🔄 Refreshing approvals for:", address);
+
+    // Fetch ERC-20 and ERC-721 approvals again
+    const erc20Approvals = FEATURES.batchRevoke.erc20Enabled 
+      ? await getERC20Approvals([], address) || []
+      : [];
+    
+    const nftApprovals = FEATURES.batchRevoke.nftEnabled 
+      ? await getERC721Approvals(address) || []
+      : [];
+
+    // Update Redux store
+    dispatch(setApprovals([...erc20Approvals, ...nftApprovals]));
+
+    console.log("✅ Approvals refreshed!");
+  } catch (error) {
+    console.error("❌ Error refreshing approvals:", error);
+  } finally {
+    setIsRevoking(false);
+  }
+};
+
+
+          
           // Keep other approvals
           return true;
         });
@@ -288,18 +323,25 @@ const handleSelectApproval = (approval) => {
   
   return (
     <div className="card shadow-sm mb-4">
-      <div className="card-header bg-light d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">
-          <span className="me-2">🔥</span>
-          Batch Revoke Approvals
-          {FEATURES.batchRevoke.nftEnabled && 
-            <span className="badge bg-info ms-2 text-dark">BETA</span>
-          }
-        </h5>
-        <span className="badge bg-primary">
-          {selectedApprovals.length} selected
-        </span>
-      </div>
+<div className="card-header bg-light d-flex justify-content-between align-items-center">
+  <h5 className="mb-0">
+    <span className="me-2">🔥</span>
+    Batch Revoke Approvals
+    {FEATURES.batchRevoke.nftEnabled && 
+      <span className="badge bg-info ms-2 text-dark">BETA</span>
+    }
+  </h5>
+  <div>
+    <button 
+      className="btn btn-outline-primary me-2" 
+      onClick={refreshBatchRevoke}
+      disabled={isRevoking}
+    >
+      {isRevoking ? 'Refreshing...' : 'Refresh'}
+    </button>
+  </div>
+</div>
+
       
       <div className="card-body">
         {/* Safety warning for batch size */}

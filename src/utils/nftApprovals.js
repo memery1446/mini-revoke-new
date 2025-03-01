@@ -1,7 +1,7 @@
 import { Contract, ZeroAddress } from "ethers";
 import { getProvider } from "./provider";
-import { CONTRACT_ADDRESSES } from "../constants/abis";
-import { NFT_ABI } from "../constants/abis";
+import { CONTRACT_ADDRESSES, NFT_ABI } from "../constants/abis";
+
 
 /**
  * Fetch ERC-721 approvals for a given user.
