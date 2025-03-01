@@ -94,21 +94,21 @@ const ApprovalDashboard = () => {
       try {
         erc721List = await getERC721Approvals(address) || [];
         
-        // If our NFT approvals are missing, try to add them manually
-        const hasTestNft = erc721List.some(a => a.contract === NFT_CONTRACT);
-        if (!hasTestNft) {
-          console.log("Adding manual NFT approvals check");
+        // // If our NFT approvals are missing, try to add them manually
+        // const hasTestNft = erc721List.some(a => a.contract === NFT_CONTRACT);
+        // if (!hasTestNft) {
+        //   console.log("Adding manual NFT approvals check");
           
-          // Create basic manual approval objects for NFTs 2, 3, and 4
-          for (let tokenId of [2, 3, 4]) {
-            erc721List.push({
-              contract: NFT_CONTRACT,
-              spender: NFT_SPENDER,
-              tokenId: String(tokenId),
-              isApproved: true
-            });
-          }
-        }
+        //   // Create basic manual approval objects for NFTs 2, 3, and 4
+        //   for (let tokenId of [2, 3, 4]) {
+        //     erc721List.push({
+        //       contract: NFT_CONTRACT,
+        //       spender: NFT_SPENDER,
+        //       tokenId: String(tokenId),
+        //       isApproved: true
+        //     });
+        //   }
+        // }
       } catch (err) {
         console.error("Error fetching ERC-721 approvals:", err);
       }
