@@ -6,8 +6,9 @@ import { Provider } from "react-redux" // Keep this import
 import store from "./store/index" // Keep import for Redux store
 import WalletConnect from "./components/WalletConnect.js"
 import NetworkSelector from "./components/NetworkSelector.js"
-import ApprovalDashboard from "./components/ApprovalDashboard.js" // Import the consolidated component
+import ApprovalDashboard from "./components/ApprovalDashboard.js"
 import BatchRevoke from "./components/BatchRevoke.js" 
+import { FEATURES } from './constants/config' // Import feature toggles
 import "bootstrap/dist/css/bootstrap.min.css"
 import { BootstrapWrapper } from "./utils/provider"
 import { initializeProvider } from "./utils/providerService"
@@ -59,7 +60,6 @@ const AppContent = () => {
           </div>
           <div className="col-md-6">
             <NetworkSelector />
-           
           </div>
         </div>
 
@@ -71,9 +71,35 @@ const AppContent = () => {
         ) : (
           <div className="row mt-4">
             <div className="col-lg-12">
-              {/* Replace the previous components with the consolidated ApprovalDashboard */}
-              <BatchRevoke />
+              {/* Only render BatchRevoke if feature is enabled */}
+              {FEATURES.batchRevoke.enabled && <BatchRevoke />}
+              
+              {/* Always show single revocation UI */}
               <ApprovalDashboard />
+              
+              {/* Environment indicator for testing */}
+              {process.env.NODE_ENV !== 'production' && (
+                <div className="alert alert-warning mt-4">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong>Testing Environment</strong> - Feature Toggles Active
+                    </div>
+                    <div>
+                      <small>
+                        Batch Revoke: {FEATURES.batchRevoke.enabled ? '✅' : '❌'} | 
+                        ERC-20: {FEATURES.batchRevoke.erc20Enabled ? '✅' : '❌'} | 
+                        NFT: {FEATURES.batchRevoke.nftEnabled ? '✅' : '❌'} |
+                        Batch Size: {FEATURES.batchRevoke.maxBatchSize}
+                      </small>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      Use console to toggle features: <code>window.toggleFeature('batchRevoke.nftEnabled', true)</code>
+                    </small>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -124,6 +150,13 @@ const App = () => {
 
       console.log("🛠️ Debug tools setup complete. Try window.debugApp.logState() in console")
     }
+
+    // Display feature configuration in console for debugging
+    console.log("%c Feature Configuration:", "background: #007bff; color: white; padding: 4px; border-radius: 4px;")
+    console.log("Batch Revoke Enabled:", FEATURES.batchRevoke.enabled)
+    console.log("ERC-20 Batch Revoke:", FEATURES.batchRevoke.erc20Enabled)
+    console.log("NFT Batch Revoke:", FEATURES.batchRevoke.nftEnabled)
+    console.log("Max Batch Size:", FEATURES.batchRevoke.maxBatchSize)
 
     // Dispatch a test action from the App component
     store.dispatch({ type: "APP_LOADED", payload: "App has loaded" })
