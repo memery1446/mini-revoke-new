@@ -6,160 +6,191 @@ import { getERC1155Approvals } from "../utils/erc1155Approvals";
 import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
 import { Contract, ZeroAddress } from 'ethers';
-import { NFT_ABI, CONTRACT_ADDRESSES } from "../constants/abis"; 
+
+// Simple ABIs for each type of contract
+const ERC20_ABI = ["function approve(address spender, uint256 amount) public returns (bool)"];
+const NFT_ABI = [
+  "function approve(address to, uint256 tokenId) public",
+  "function setApprovalForAll(address operator, bool approved) external"
+];
 
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
   const wallet = useSelector((state) => state.web3.account);
-  const approvals = useSelector((state) => state.web3.approvals);
+  const approvals = useSelector((state) => state.web3.approvals || []);
   const [isLoading, setIsLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
+  const [message, setMessage] = useState(null);
   const [selectedApproval, setSelectedApproval] = useState(null);
-  
+
+  // Load approvals when wallet connects
   useEffect(() => {
     if (wallet) {
-      fetchApprovals();
+      loadApprovals();
     }
   }, [wallet]);
 
-  const fetchApprovals = async () => {
-    setIsLoading(true);
-    setStatusMessage('Fetching approvals...');
-    console.log("🔄 Starting approval fetch process...");
+  // Clear message after 5 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
+  // Load all approvals
+  const loadApprovals = async () => {
+    if (!wallet || isLoading) return;
+    
+    setIsLoading(true);
+    setMessage({type: 'info', text: 'Loading approvals...'});
+    setSelectedApproval(null);
+    
     try {
       const provider = await getProvider();
       const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
-      console.log("🔍 Wallet Address:", userAddress);
-
-      const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
-
-      const erc20Approvals = await getERC20Approvals(tokenContracts, userAddress) || [];
-      const erc721Approvals = await getERC721Approvals(userAddress) || [];
-      const erc1155Approvals = await getERC1155Approvals(userAddress) || [];
-
-      const newApprovals = [
-        ...erc20Approvals.map(a => ({ ...a, type: 'ERC-20' })),
-        ...erc721Approvals.map(a => ({ ...a, type: 'ERC-721' })),
-        ...erc1155Approvals.map(a => ({ ...a, type: 'ERC-1155' })),
+      const address = await signer.getAddress();
+      
+      console.log("Fetching approvals for:", address);
+      
+      // Get all types of approvals
+      const tokenContracts = ["0x483FA7f61170c19276B3DbB399e735355Ae7676a", "0xE7B9Ede68593354aff96690600D008A40519D3CF"];
+      const erc20List = await getERC20Approvals(tokenContracts, address) || [];
+      const erc721List = await getERC721Approvals(address) || [];
+      const erc1155List = await getERC1155Approvals(address) || [];
+      
+      // Combine and tag them with types
+      const allApprovals = [
+        ...erc20List.map(a => ({...a, type: 'ERC-20', id: `erc20-${a.contract}-${a.spender}`})),
+        ...erc721List.map(a => ({...a, type: 'ERC-721', id: `erc721-${a.contract}-${a.spender}-${a.tokenId || 'all'}`})),
+        ...erc1155List.map(a => ({...a, type: 'ERC-1155', id: `erc1155-${a.contract}-${a.spender}`}))
       ];
-
-      console.log("🟢 Final approvals before dispatch:", newApprovals);
-      dispatch(setApprovals(newApprovals));
-      setStatusMessage('');
+      
+      console.log("Found approvals:", allApprovals);
+      dispatch(setApprovals(allApprovals));
+      
+      setMessage({type: 'success', text: `Found ${allApprovals.length} approvals`});
     } catch (error) {
-      console.error("❌ Error fetching approvals:", error);
-      dispatch(setApprovals([]));
-      setStatusMessage(`Error: ${error.message}`);
+      console.error("Error loading approvals:", error);
+      setMessage({type: 'danger', text: `Error: ${error.message}`});
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle single selection (radio button style)
-  const handleSelectApproval = (approval) => {
-    setSelectedApproval(approval);
-    console.log("Selected approval:", approval);
+  // Handle selection of an approval
+  const handleSelect = (approval) => {
+    // If already selected, deselect it
+    if (selectedApproval && selectedApproval.id === approval.id) {
+      setSelectedApproval(null);
+    } else {
+      setSelectedApproval(approval);
+    }
   };
 
-  // Handle revocation of the selected approval
-  const handleRevokeSelected = async () => {
+  // Revoke the selected approval
+  const handleRevoke = async () => {
     if (!selectedApproval || processing) return;
     
     setProcessing(true);
-    setStatusMessage(`Revoking approval...`);
+    setMessage({type: 'info', text: 'Preparing transaction...'});
     
     try {
       const provider = await getProvider();
       const signer = await provider.getSigner();
       
-      if (selectedApproval.type === 'ERC-721') {
-        const nftContract = new Contract(selectedApproval.contract, NFT_ABI, signer);
+      // Different revocation logic based on token type
+      if (selectedApproval.type === 'ERC-20') {
+        const contract = new Contract(selectedApproval.contract, ERC20_ABI, signer);
+        setMessage({type: 'info', text: 'Please confirm in your wallet...'});
+        const tx = await contract.approve(selectedApproval.spender, 0);
+        setMessage({type: 'info', text: 'Waiting for confirmation...'});
+        await tx.wait();
+      } 
+      else if (selectedApproval.type === 'ERC-721') {
+        const contract = new Contract(selectedApproval.contract, NFT_ABI, signer);
+        setMessage({type: 'info', text: 'Please confirm in your wallet...'});
         
+        let tx;
         if (selectedApproval.tokenId === 'all') {
-          // If it's an "approve for all" type approval
-          console.log(`🔄 Revoking approval for all tokens to spender: ${selectedApproval.spender}`);
-          const tx = await nftContract.setApprovalForAll(selectedApproval.spender, false);
-          
-          setStatusMessage(`Transaction submitted. Waiting for confirmation...`);
-          console.log(`📤 Transaction sent: ${tx.hash}`);
-          
-          await tx.wait();
+          tx = await contract.setApprovalForAll(selectedApproval.spender, false);
         } else {
-          // If it's a specific token approval
-          console.log(`🔄 Revoking approval for token ID ${selectedApproval.tokenId}`);
-          const tx = await nftContract.approve(ZeroAddress, selectedApproval.tokenId);
-          
-          setStatusMessage(`Transaction submitted. Waiting for confirmation...`);
-          console.log(`📤 Transaction sent: ${tx.hash}`);
-          
-          await tx.wait();
+          tx = await contract.approve(ZeroAddress, selectedApproval.tokenId);
         }
         
-        console.log(`✅ Transaction confirmed!`);
-        setStatusMessage(`Successfully revoked approval!`);
-        setSelectedApproval(null); // Clear selection
-        
-        // Refresh approvals after successful revocation
-        setTimeout(() => {
-          fetchApprovals();
-          setStatusMessage('');
-        }, 2000);
+        setMessage({type: 'info', text: 'Waiting for confirmation...'});
+        await tx.wait();
       }
-      // We can add handlers for ERC-20 and ERC-1155 here later
+      
+      setMessage({type: 'success', text: 'Approval successfully revoked!'});
+      setSelectedApproval(null);
+      
+      // Refresh approvals after a short delay
+      setTimeout(() => loadApprovals(), 2000);
       
     } catch (error) {
-      console.error("❌ Error revoking approval:", error);
-      setStatusMessage(`Error: ${error.message || "Transaction failed"}`);
+      console.error("Error revoking approval:", error);
+      setMessage({type: 'danger', text: `Error: ${error.message}`});
     } finally {
       setProcessing(false);
     }
   };
 
+  // Render an empty state if no wallet connected
+  if (!wallet) {
+    return (
+      <div className="card text-center p-5">
+        <h4>Connect your wallet to view approvals</h4>
+      </div>
+    );
+  }
+
   return (
-    <div className="card shadow-sm mb-4">
-      <div className="card-header bg-light d-flex justify-content-between align-items-center">
-        <h2 className="card-title">Approval Dashboard</h2>
+    <div className="card">
+      <div className="card-header d-flex justify-content-between align-items-center">
+        <h5 className="mb-0">Token Approvals</h5>
         <button 
-          className="btn btn-secondary" 
-          onClick={fetchApprovals}
+          className="btn btn-outline-primary" 
+          onClick={loadApprovals}
           disabled={isLoading || processing}
         >
-          {isLoading ? 'Loading...' : '🔄 Refresh Approvals'}
+          {isLoading ? 'Loading...' : 'Refresh'}
         </button>
       </div>
+      
       <div className="card-body">
         {/* Status messages */}
-        {(isLoading || processing) && (
-          <div className="alert alert-info">
-            <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-              <span className="visually-hidden">Processing...</span>
-            </div>
-            <span>{statusMessage || 'Processing...'}</span>
+        {message && (
+          <div className={`alert alert-${message.type} alert-dismissible fade show`}>
+            {message.text}
+            <button type="button" className="btn-close" onClick={() => setMessage(null)}></button>
           </div>
         )}
         
-        {!isLoading && !processing && statusMessage && (
-          <div className="alert alert-success">{statusMessage}</div>
-        )}
-        
-        {/* Show selected approval and action button */}
-        {selectedApproval && !processing && (
-          <div className="alert alert-primary mb-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <strong>Selected:</strong> {selectedApproval.type} 
-                {selectedApproval.tokenId && ` (Token ID: ${selectedApproval.tokenId})`} 
-                to {selectedApproval.spenderName || selectedApproval.spender}
-              </div>
+        {/* Selected approval action */}
+        {selectedApproval && (
+          <div className="alert alert-info d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span>Selected: </span>
+              <strong>{selectedApproval.type}</strong>
+              {selectedApproval.tokenId && <span> Token #{selectedApproval.tokenId}</span>}
+              <span> to </span>
+              <code className="ms-1">{selectedApproval.spender?.substring(0, 8)}...</code>
+            </div>
+            <div>
               <button 
-                className="btn btn-danger"
-                onClick={handleRevokeSelected}
+                className="btn btn-sm btn-danger me-2" 
+                onClick={handleRevoke}
                 disabled={processing}
               >
-                Revoke Selected
+                Revoke
+              </button>
+              <button 
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setSelectedApproval(null)}
+                disabled={processing}
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -167,59 +198,68 @@ const ApprovalDashboard = () => {
         
         {/* Approvals table */}
         <div className="table-responsive">
-          <table className="table table-striped table-hover">
+          <table className="table table-hover">
             <thead className="table-light">
               <tr>
-                <th>Select</th>
-                <th>Contract</th>
                 <th>Type</th>
+                <th>Contract</th>
                 <th>Spender</th>
                 <th>Details</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {approvals && approvals.length > 0 ? (
-                approvals.map((approval) => (
+              {approvals.length > 0 ? (
+                approvals.map(approval => (
                   <tr 
-                    key={approval.id || `${approval.contract}-${approval.spender}-${approval.tokenId || 'all'}`}
-                    className={selectedApproval && selectedApproval.id === approval.id ? 'table-primary' : ''}
-                    onClick={() => handleSelectApproval(approval)}
-                    style={{ cursor: 'pointer' }}
+                    key={approval.id} 
+                    className={selectedApproval?.id === approval.id ? 'table-primary' : ''}
                   >
                     <td>
-                      <div className="form-check">
-                        <input 
-                          type="radio" 
-                          className="form-check-input" 
-                          name="approvalRadio"
-                          checked={selectedApproval && selectedApproval.id === approval.id} 
-                          onChange={() => handleSelectApproval(approval)}
-                          disabled={processing}
-                        />
-                      </div>
+                      <span className={`badge bg-${approval.type === 'ERC-20' 
+                        ? 'success' 
+                        : approval.type === 'ERC-721' 
+                          ? 'primary' 
+                          : 'warning'}`}
+                      >
+                        {approval.type}
+                      </span>
                     </td>
-                    <td>{approval.tokenSymbol || (approval.contract && `${approval.contract.substring(0, 6)}...${approval.contract.substring(approval.contract.length - 4)}`)}</td>
-                    <td>{approval.type}</td>
-                    <td>{approval.spenderName || (approval.spender && `${approval.spender.substring(0, 6)}...${approval.spender.substring(approval.spender.length - 4)}`)}</td>
                     <td>
-                      {approval.type === 'ERC-20' && (
-                        <span>Amount: {approval.amount}</span>
-                      )}
+                      <code>{approval.tokenSymbol || approval.contract?.substring(0, 8)}...</code>
+                    </td>
+                    <td>
+                      <code>{approval.spender?.substring(0, 8)}...</code>
+                    </td>
+                    <td>
+                      {approval.type === 'ERC-20' && <span>Amount: Unlimited</span>}
                       {approval.type === 'ERC-721' && (
-                        <span>
-                          {approval.tokenId === 'all' 
-                            ? 'Approved for all tokens' 
-                            : `Token ID: ${approval.tokenId}`}
-                        </span>
+                        <span>{approval.tokenId === 'all' ? 'All tokens' : `Token #${approval.tokenId}`}</span>
                       )}
-                      {approval.type === 'ERC-1155' && (
-                        <span>Token IDs: {approval.tokenIds ? approval.tokenIds.join(', ') : 'all'}</span>
-                      )}
+                    </td>
+                    <td>
+                      <button 
+                        className={`btn btn-sm ${selectedApproval?.id === approval.id 
+                          ? 'btn-outline-secondary' 
+                          : 'btn-outline-primary'}`}
+                        onClick={() => handleSelect(approval)}
+                        disabled={processing || isLoading}
+                      >
+                        {selectedApproval?.id === approval.id ? 'Deselect' : 'Select'}
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="5" className="text-center py-4">No approvals found.</td></tr>
+                <tr>
+                  <td colSpan="5" className="text-center py-4">
+                    {isLoading ? (
+                      <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                    ) : (
+                      'No approvals found'
+                    )}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -230,4 +270,3 @@ const ApprovalDashboard = () => {
 };
 
 export default ApprovalDashboard;
-
