@@ -17,6 +17,12 @@ const BatchRevoke = () => {
 
   const dispatch = useDispatch();
   const approvals = useSelector((state) => state.web3.approvals);
+
+// 🔥 Debugging Hook: Log approvals whenever they change
+useEffect(() => {
+  console.log("🔄 Approvals updated, triggering re-render:", approvals);
+}, [approvals]);  
+
   const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [isRevoking, setIsRevoking] = useState(false);
   const [results, setResults] = useState(null);
@@ -302,18 +308,29 @@ const refreshBatchRevoke = async (existingApprovals) => {
 
     console.log("🔄 Refreshing approvals for:", address);
 
-    // Fetch only ERC-20 and ERC-721 approvals
+    // Fetch ERC-20 and ERC-721 approvals
     const erc20Approvals = FEATURES.batchRevoke.erc20Enabled 
       ? await getERC20Approvals([], address) || []
       : [];
     
-    const nftApprovals = FEATURES.batchRevoke.nftEnabled 
-      ? await getERC721Approvals(address) || []
-      : [];
+const nftApprovals = FEATURES.batchRevoke.nftEnabled 
+  ? approvals.filter(a => a.type === 'ERC-721')  // Ensure ALL ERC-721 are included
+  : [];
 
+
+    // 🔥 Log fetched data to verify
+    console.log("📜 Fetched ERC-20 Approvals:", erc20Approvals);
     console.log("🎨 Fetched ERC-721 Approvals:", nftApprovals);
 
-    // 🔥 Preserve existing approvals & prevent duplicates
+    if (erc20Approvals.length === 0) {
+      console.warn("⚠️ No ERC-20 approvals found. Is getERC20Approvals working?");
+    }
+
+    if (nftApprovals.length === 0) {
+      console.warn("⚠️ No ERC-721 approvals found. Is getERC721Approvals working?");
+    }
+
+    // Preserve existing approvals & prevent duplicates
     const preservedApprovals = existingApprovals.filter((approval) => 
       !erc20Approvals.some(e => e.contract === approval.contract && e.spender === approval.spender) &&
       !nftApprovals.some(n => n.contract === approval.contract && n.spender === approval.spender && n.tokenId === approval.tokenId)
@@ -332,6 +349,7 @@ const refreshBatchRevoke = async (existingApprovals) => {
     setIsRevoking(false);
   }
 };
+
 
 
 
