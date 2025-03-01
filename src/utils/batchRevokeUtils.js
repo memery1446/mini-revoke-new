@@ -1,7 +1,9 @@
 // batchRevokeUtils.js
 import { Contract, getAddress } from "ethers";
-import { TOKEN_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
+import { TOKEN_ABI, NFT_ABI, ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
 import { FEATURES } from "../constants/config";
+import { getProvider } from "../utils/provider";
+
 
 /**
  * Safely normalizes an Ethereum address with error handling.
@@ -390,4 +392,32 @@ export async function batchRevokeNFTApprovals(nftApprovals, signer) {
   console.log(`🎉 NFT batch revocation process complete! Success: ${results.successful.length}, Failed: ${results.failed.length}`);
   return results;
 }
+
+
+
+export async function batchRevokeERC1155Approvals(spenderAddresses, signer) {
+    if (!signer) throw new Error("No signer provided for batch ERC-1155 revocation");
+
+    console.log("🚨 Batch revoking ERC-1155 approvals for:", spenderAddresses);
+
+    const erc1155Contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, signer);
+
+    for (let spender of spenderAddresses) {
+        try {
+            console.log(`🔹 Revoking approval for spender: ${spender}`);
+            const tx = await erc1155Contract.setApprovalForAll(spender, false);
+            await tx.wait();
+            console.log(`✅ Successfully revoked approval for spender: ${spender}`);
+        } catch (error) {
+            console.error(`❌ Failed to revoke approval for spender: ${spender}`, error);
+        }
+    }
+}
+
+
+
+
+
+
+
 

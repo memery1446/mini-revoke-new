@@ -6,16 +6,17 @@ import { getERC1155Approvals, revokeERC1155Approval } from "../utils/erc1155Appr
 import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
 import { Contract, ZeroAddress, BrowserProvider } from 'ethers';
-import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
+import { ERC20_ABI, NFT_ABI, ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
 
-// Simple ABIs for each type of contract
-const ERC20_ABI = ["function approve(address spender, uint256 amount) public returns (bool)"];
-const NFT_ABI = [
-  "function approve(address to, uint256 tokenId) public",
-  "function setApprovalForAll(address operator, bool approved) external",
-  "function getApproved(uint256 tokenId) external view returns (address)",
-  "function isApprovedForAll(address owner, address operator) external view returns (bool)"
-];
+
+// // Simple ABIs for each type of contract
+// const ERC20_ABI = ["function approve(address spender, uint256 amount) public returns (bool)"];
+// const NFT_ABI = [
+//   "function approve(address to, uint256 tokenId) public",
+//   "function setApprovalForAll(address operator, bool approved) external",
+//   "function getApproved(uint256 tokenId) external view returns (address)",
+//   "function isApprovedForAll(address owner, address operator) external view returns (bool)"
+// ];
 
 // Use contract addresses from constants
 const NFT_CONTRACT = CONTRACT_ADDRESSES.TestNFT;
@@ -134,23 +135,34 @@ const ApprovalDashboard = () => {
       }
       
       // Combine and tag them with types and IDs
-      const allApprovals = [
-        ...erc20List.map(a => ({
-          ...a, 
-          type: 'ERC-20', 
-          id: `erc20-${a.contract}-${a.spender}`
-        })),
-        ...erc721List.map(a => ({
-          ...a, 
-          type: 'ERC-721', 
-          id: `erc721-${a.contract}-${a.spender}-${a.tokenId || 'all'}`
-        })),
-        ...erc1155List.map(a => ({
-          ...a, 
-          type: 'ERC-1155', 
-          id: `erc1155-${a.contract}-${a.spender}`
-        }))
-      ];
+const allApprovals = [
+  // ✅ Preserve old approvals, but remove outdated ERC-1155 entries
+  ...reduxApprovals.filter(a => a.type !== "ERC-1155"),
+
+  // ✅ Keep ERC-20 approvals unchanged
+  ...erc20List.map(a => ({
+    ...a, 
+    type: 'ERC-20', 
+    id: `erc20-${a.contract}-${a.spender}`
+  })),
+
+  // ✅ Keep ERC-721 approvals unchanged
+  ...erc721List.map(a => ({
+    ...a, 
+    type: 'ERC-721', 
+    id: `erc721-${a.contract}-${a.spender}-${a.tokenId || 'all'}`
+  })),
+
+  // ✅ Ensure ERC-1155 approvals include contract & token details
+  ...erc1155List.map(a => ({
+    ...a, 
+    type: "ERC-1155",
+    id: `erc1155-${a.contract}-${a.spender}`,
+    tokenId: a.tokenId || "all",  // Default to "all" if no tokenId is provided
+    collectionName: a.collectionName || "Unknown Collection",  // Preserve additional metadata
+  }))
+];
+
       
       console.log("Found approvals:", allApprovals);
       dispatch(setApprovals(allApprovals));
@@ -178,45 +190,37 @@ const ApprovalDashboard = () => {
   // Function specifically for ERC-1155 revocation using the utility
 const handleRevokeERC1155 = async () => {
   if (!selectedApproval || processing) return;
-  if (selectedApproval.type !== 'ERC-1155') {
-    console.error("Not an ERC-1155 approval");
-    return;
-  }
 
   setProcessing(true);
-  setMessage({type: 'info', text: 'Preparing ERC-1155 revocation...'});
-  setDebugInfo("Starting ERC-1155 revocation");
+  setMessage({ type: "info", text: "Preparing ERC-1155 revocation..." });
 
   try {
-    console.log("🎮 ERC-1155 revocation using utility function");
-    console.log("Contract:", selectedApproval.contract);
-    console.log("Spender:", selectedApproval.spender);
+    console.log("🚀 Revoking ERC-1155 approval for:", selectedApproval.spender);
 
-    setMessage({type: 'info', text: 'Please confirm in your wallet...'});
-    const success = await revokeERC1155Approval(selectedApproval.spender);
-    
-    if (success) {
-      setMessage({type: 'success', text: 'ERC-1155 approval successfully revoked!'});
-      
-      // Update local approvals immediately
-      setLocalApprovals(prev =>
-        prev.filter(app => app.spender !== selectedApproval.spender)
-      );
-      setSelectedApproval(null);
+    const provider = await getProvider();
+    const signer = await provider.getSigner();
+    const erc1155Contract = new Contract(
+      selectedApproval.contract,
+      ["function setApprovalForAll(address operator, bool approved) external"],
+      signer
+    );
 
-      // Optional: You can still call loadApprovals() if you expect more changes
-      // setTimeout(() => loadApprovals(), 3000);
-    } else {
-      setMessage({type: 'danger', text: 'Failed to revoke ERC-1155 approval'});
-    }
+    const tx = await erc1155Contract.setApprovalForAll(selectedApproval.spender, false);
+    await tx.wait();
+
+    console.log("✅ ERC-1155 approval revoked:", tx.hash);
+    setMessage({ type: "success", text: "ERC-1155 approval revoked successfully!" });
+
+    // Refresh approvals after revocation
+    setTimeout(loadApprovals, 3000);
   } catch (error) {
-    console.error("Error in ERC-1155 revocation:", error);
-    setDebugInfo(`Error: ${error.message}`);
-    setMessage({type: 'danger', text: `Error: ${error.message}`});
+    console.error("❌ Error revoking ERC-1155 approval:", error);
+    setMessage({ type: "danger", text: `Error: ${error.message}` });
   } finally {
     setProcessing(false);
   }
 };
+
 
   // Direct interaction attempt with ERC-1155 contract
   const handleDirectERC1155Revoke = async () => {
