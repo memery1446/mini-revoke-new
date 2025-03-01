@@ -176,44 +176,47 @@ const ApprovalDashboard = () => {
   };
 
   // Function specifically for ERC-1155 revocation using the utility
-  const handleRevokeERC1155 = async () => {
-    if (!selectedApproval || processing) return;
-    if (selectedApproval.type !== 'ERC-1155') {
-      console.error("Not an ERC-1155 approval");
-      return;
-    }
+const handleRevokeERC1155 = async () => {
+  if (!selectedApproval || processing) return;
+  if (selectedApproval.type !== 'ERC-1155') {
+    console.error("Not an ERC-1155 approval");
+    return;
+  }
+
+  setProcessing(true);
+  setMessage({type: 'info', text: 'Preparing ERC-1155 revocation...'});
+  setDebugInfo("Starting ERC-1155 revocation");
+
+  try {
+    console.log("🎮 ERC-1155 revocation using utility function");
+    console.log("Contract:", selectedApproval.contract);
+    console.log("Spender:", selectedApproval.spender);
+
+    setMessage({type: 'info', text: 'Please confirm in your wallet...'});
+    const success = await revokeERC1155Approval(selectedApproval.spender);
     
-    setProcessing(true);
-    setMessage({type: 'info', text: 'Preparing ERC-1155 revocation...'});
-    setDebugInfo("Starting ERC-1155 revocation");
-    
-    try {
-      console.log("🎮 ERC-1155 revocation using utility function");
-      console.log("Contract:", selectedApproval.contract);
-      console.log("Spender:", selectedApproval.spender);
+    if (success) {
+      setMessage({type: 'success', text: 'ERC-1155 approval successfully revoked!'});
       
-      // Use the imported revokeERC1155Approval function
-      setMessage({type: 'info', text: 'Please confirm in your wallet...'});
-      
-      const success = await revokeERC1155Approval(selectedApproval.spender);
-      
-      if (success) {
-        setMessage({type: 'success', text: 'ERC-1155 approval successfully revoked!'});
-        setSelectedApproval(null);
-        
-        // Refresh approvals after a delay
-        setTimeout(() => loadApprovals(), 3000);
-      } else {
-        setMessage({type: 'danger', text: 'Failed to revoke ERC-1155 approval'});
-      }
-    } catch (error) {
-      console.error("Error in ERC-1155 revocation:", error);
-      setDebugInfo(`Error: ${error.message}`);
-      setMessage({type: 'danger', text: `Error: ${error.message}`});
-    } finally {
-      setProcessing(false);
+      // Update local approvals immediately
+      setLocalApprovals(prev =>
+        prev.filter(app => app.spender !== selectedApproval.spender)
+      );
+      setSelectedApproval(null);
+
+      // Optional: You can still call loadApprovals() if you expect more changes
+      // setTimeout(() => loadApprovals(), 3000);
+    } else {
+      setMessage({type: 'danger', text: 'Failed to revoke ERC-1155 approval'});
     }
-  };
+  } catch (error) {
+    console.error("Error in ERC-1155 revocation:", error);
+    setDebugInfo(`Error: ${error.message}`);
+    setMessage({type: 'danger', text: `Error: ${error.message}`});
+  } finally {
+    setProcessing(false);
+  }
+};
 
   // Direct interaction attempt with ERC-1155 contract
   const handleDirectERC1155Revoke = async () => {
