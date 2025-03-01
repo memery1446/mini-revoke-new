@@ -164,40 +164,109 @@ const ApprovalDashboard = () => {
     setMessage({type: 'info', text: 'Preparing transaction...'});
     
     try {
+      console.log("🚨 REVOKE PROCESS STARTING FOR:", selectedApproval);
+      
       const provider = await getProvider();
       const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
+      console.log("🔑 Signer address:", userAddress);
       
       // Different revocation logic based on token type
       if (selectedApproval.type === 'ERC-20') {
+        console.log("💰 Processing ERC-20 revocation");
         const contract = new Contract(selectedApproval.contract, ERC20_ABI, signer);
         setMessage({type: 'info', text: 'Please confirm in your wallet...'});
         const tx = await contract.approve(selectedApproval.spender, 0);
+        console.log("📝 Transaction sent:", tx.hash);
         setMessage({type: 'info', text: 'Waiting for confirmation...'});
-        await tx.wait();
+        const receipt = await tx.wait();
+        console.log("✅ Transaction confirmed! Receipt:", receipt);
       } 
       else if (selectedApproval.type === 'ERC-721') {
-        const contract = new Contract(selectedApproval.contract, NFT_ABI, signer);
+        console.log("🖼️ Processing ERC-721 revocation");
+        console.log("📄 Contract:", selectedApproval.contract);
+        console.log("👤 Spender:", selectedApproval.spender);
+        console.log("🔢 Token ID:", selectedApproval.tokenId);
+        
+        // Use more complete ABI for NFT
+        const NFT_FULL_ABI = [
+          "function approve(address to, uint256 tokenId) public",
+          "function setApprovalForAll(address operator, bool approved) external",
+          "function getApproved(uint256 tokenId) external view returns (address)",
+          "function isApprovedForAll(address owner, address operator) external view returns (bool)"
+        ];
+        
+        const contract = new Contract(selectedApproval.contract, NFT_FULL_ABI, signer);
+        
+        // Check current approval status before revoking
+        try {
+          if (selectedApproval.tokenId === 'all') {
+            const isApproved = await contract.isApprovedForAll(userAddress, selectedApproval.spender);
+            console.log("🔍 Current 'approved for all' status:", isApproved);
+          } else {
+            const approvedAddress = await contract.getApproved(selectedApproval.tokenId);
+            console.log("🔍 Current approved address:", approvedAddress);
+          }
+        } catch (err) {
+          console.warn("⚠️ Error checking current approval status:", err);
+        }
+        
         setMessage({type: 'info', text: 'Please confirm in your wallet...'});
         
         let tx;
         if (selectedApproval.tokenId === 'all') {
+          console.log("🔄 Revoking approval for ALL tokens");
           tx = await contract.setApprovalForAll(selectedApproval.spender, false);
         } else {
-          tx = await contract.approve(ZeroAddress, selectedApproval.tokenId);
+          console.log("🔄 Revoking approval for token ID:", selectedApproval.tokenId);
+          // Convert tokenId to number if needed
+          const tokenId = parseInt(selectedApproval.tokenId, 10);
+          console.log("🔢 Parsed token ID:", tokenId);
+          
+          // IMPORTANT: Use zero address to revoke approval
+          tx = await contract.approve(ZeroAddress, tokenId);
+          console.log("📝 Using Zero Address:", ZeroAddress);
         }
         
-        setMessage({type: 'info', text: 'Waiting for confirmation...'});
-        await tx.wait();
+        console.log("📝 Transaction sent:", tx);
+        console.log("📝 Transaction hash:", tx.hash);
+        
+        setMessage({type: 'info', text: `Waiting for confirmation... (TX: ${tx.hash.substring(0, 10)}...)`});
+        const receipt = await tx.wait();
+        console.log("✅ Transaction confirmed! Receipt:", receipt);
+        
+        // Verify the approval was actually revoked
+        try {
+          if (selectedApproval.tokenId === 'all') {
+            const isApprovedAfter = await contract.isApprovedForAll(userAddress, selectedApproval.spender);
+            console.log("🔍 AFTER REVOCATION - 'approved for all' status:", isApprovedAfter);
+            if (isApprovedAfter) {
+              console.error("❌ REVOCATION FAILED! Still approved for all tokens!");
+            }
+          } else {
+            const approvedAddressAfter = await contract.getApproved(selectedApproval.tokenId);
+            console.log("🔍 AFTER REVOCATION - approved address:", approvedAddressAfter);
+            if (approvedAddressAfter !== ZeroAddress) {
+              console.error("❌ REVOCATION FAILED! Still approved to:", approvedAddressAfter);
+            }
+          }
+        } catch (err) {
+          console.warn("⚠️ Error verifying revocation:", err);
+        }
       }
       
       setMessage({type: 'success', text: 'Approval successfully revoked!'});
       setSelectedApproval(null);
       
-      // Refresh approvals after a short delay
-      setTimeout(() => loadApprovals(), 2000);
+      // Refresh approvals after a longer delay to ensure blockchain has updated
+      console.log("🔄 Scheduling refresh of approvals in 3 seconds...");
+      setTimeout(() => {
+        console.log("🔄 Executing refresh of approvals now!");
+        loadApprovals();
+      }, 3000);
       
     } catch (error) {
-      console.error("Error revoking approval:", error);
+      console.error("❌ Error revoking approval:", error);
       setMessage({type: 'danger', text: `Error: ${error.message}`});
     } finally {
       setProcessing(false);
