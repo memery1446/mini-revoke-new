@@ -119,16 +119,16 @@ const ApprovalDashboard = () => {
         erc1155List = await getERC1155Approvals(address) || [];
         console.log("ERC-1155 approvals fetched:", erc1155List);
         
-        // If no ERC-1155 approvals found, add a manual one for testing
-        const showTestERC1155 = false; // false after revokation
-        if (erc1155List.length === 0) {
-          console.log("Adding manual ERC-1155 approval for testing");
-          erc1155List.push({
-            contract: ERC1155_CONTRACT,
-            spender: ERC1155_SPENDER,
-            isApproved: true
-          });
-        }
+        // // If no ERC-1155 approvals found, add a manual one for testing
+        // const showTestERC1155 = false; // false after revokation
+        // if (erc1155List.length === 0) {
+        //   console.log("Adding manual ERC-1155 approval for testing");
+        //   erc1155List.push({
+        //     contract: ERC1155_CONTRACT,
+        //     spender: ERC1155_SPENDER,
+        //     isApproved: true
+        //   });
+        // }
       } catch (err) {
         console.error("Error fetching ERC-1155 approvals:", err);
       }
