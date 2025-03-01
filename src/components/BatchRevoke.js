@@ -35,53 +35,52 @@ const BatchRevoke = () => {
     ? approvals.filter(a => a.type === 'ERC-721' && a.tokenId !== 'all')
     : [];
 
-  const handleSelectApproval = (approval) => {
-    console.log("🔍 Toggling selection for:", approval);
+// Replace the current handleSelectApproval function with this one:
+const handleSelectApproval = (approval) => {
+  console.log("🔍 Toggling selection for:", approval);
+  
+  setSelectedApprovals((prev) => {
+    // Different selection logic based on approval type
+    let isSelected;
     
-    setSelectedApprovals((prev) => {
-      // Different uniqueness check based on approval type
-      let isSelected;
-      
-      if (approval.type === 'ERC-20') {
-        isSelected = prev.some((a) => 
-          a.contract === approval.contract && a.spender === approval.spender
+    if (approval.type === 'ERC-20') {
+      // For ERC-20, check contract and spender only
+      isSelected = prev.some((a) => 
+        a.contract === approval.contract && a.spender === approval.spender
+      );
+    } else if (approval.type === 'ERC-721') {
+      // For NFTs, also check tokenId to handle individual token approvals
+      isSelected = prev.some((a) => 
+        a.contract === approval.contract && 
+        a.spender === approval.spender && 
+        a.tokenId === approval.tokenId
+      );
+    } else {
+      // For other types
+      isSelected = prev.some((a) => 
+        a.contract === approval.contract && a.spender === approval.spender
+      );
+    }
+    
+    if (isSelected) {
+      // Remove if already selected - with proper type handling
+      if (approval.type === 'ERC-721') {
+        return prev.filter((a) => 
+          !(a.contract === approval.contract && 
+            a.spender === approval.spender && 
+            a.tokenId === approval.tokenId)
         );
       } else {
-        // For NFTs, include tokenId in uniqueness check
-        isSelected = prev.some((a) => 
-          a.contract === approval.contract && 
-          a.spender === approval.spender && 
-          a.tokenId === approval.tokenId
+        return prev.filter((a) => 
+          !(a.contract === approval.contract && a.spender === approval.spender)
         );
       }
-      
-      if (isSelected) {
-        // Remove if already selected
-        if (approval.type === 'ERC-20') {
-          return prev.filter((a) => 
-            !(a.contract === approval.contract && a.spender === approval.spender)
-          );
-        } else {
-          return prev.filter((a) => 
-            !(a.contract === approval.contract && 
-              a.spender === approval.spender && 
-              a.tokenId === approval.tokenId)
-          );
-        }
-      } else {
-        // Add if not selected - but check batch size limit first
-        const newSelections = [...prev, approval];
-        if (newSelections.length > maxBatchSize) {
-          // Just warn visually rather than an alert for better UX
-          return prev;
-        }
-        return newSelections;
-      }
-    });
-    
-    // Clear any existing results when selection changes
-    setResults(null);
-  };
+    } else {
+      // Add if not selected
+      return [...prev, approval];
+    }
+  });
+};
 
   // Estimate gas for better UX and safety
   const estimateGas = async () => {

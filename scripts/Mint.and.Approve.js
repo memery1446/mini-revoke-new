@@ -143,12 +143,12 @@ async function main() {
     await tx3.wait();
     console.log(`✅ Approved TestNFT (token ID ${tokenId}) for MockSpender - tx: ${tx3.hash}`);
     
-    // Mint ERC-1155
-    const erc1155Id = 3; // Using a new token ID
-    const amount = 10; // Minting 10 tokens
-    const mintTx1155 = await testERC1155.mint(deployer.address, erc1155Id, amount, gasOverrides);
-    await mintTx1155.wait();
-    console.log(`✅ Minted ${amount} ERC1155 tokens with ID ${erc1155Id} - tx: ${mintTx1155.hash}`);
+    // // Mint ERC-1155
+    // const erc1155Id = 3; // Using a new token ID
+    // const amount = 10; // Minting 10 tokens
+    // const mintTx1155 = await testERC1155.mint(deployer.address, erc1155Id, amount, gasOverrides);
+    // await mintTx1155.wait();
+    // console.log(`✅ Minted ${amount} ERC1155 tokens with ID ${erc1155Id} - tx: ${mintTx1155.hash}`);
 
     // // Approve ERC-1155
     // const tx4 = await testERC1155.setApprovalForAll(addresses.MockSpender, true, gasOverrides);
