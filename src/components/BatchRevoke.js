@@ -5,6 +5,9 @@ import { batchRevokeERC20Approvals, batchRevokeNFTApprovals } from '../utils/bat
 import { getProvider } from '../utils/provider';
 import { setApprovals } from "../store/web3Slice";
 import { FEATURES } from '../constants/config';
+import { getERC20Approvals } from '../utils/erc20Approvals';  // Add this
+import { getERC721Approvals } from '../utils/nftApprovals';   // Add this
+
 
 const BatchRevoke = () => {
   // Don't render anything if feature is disabled
@@ -319,7 +322,7 @@ const refreshBatchRevoke = async () => {
   }
 };
 
-  
+
   return (
     <div className="card shadow-sm mb-4">
 <div className="card-header bg-light d-flex justify-content-between align-items-center">
