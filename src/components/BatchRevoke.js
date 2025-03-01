@@ -35,7 +35,7 @@ const BatchRevoke = () => {
     : [];
   
   const nftApprovals = FEATURES.batchRevoke.nftEnabled 
-    ? approvals.filter(a => a.type === 'ERC-721' && a.tokenId !== 'all')
+    ? approvals.filter(a => a.type === 'ERC-721')
     : [];
 
 // Replace the current handleSelectApproval function with this one:
@@ -290,7 +290,7 @@ const handleSelectApproval = (approval) => {
   const selectedERC20Count = selectedApprovals.filter(a => a.type === 'ERC-20').length;
   const selectedNFTCount = selectedApprovals.filter(a => a.type === 'ERC-721').length;
   
-const refreshBatchRevoke = async () => {
+const refreshBatchRevoke = async (existingApprovals) => { // Pass approvals as a parameter
   if (isRevoking) return;
   
   setIsRevoking(true);
@@ -310,9 +310,9 @@ const refreshBatchRevoke = async () => {
       ? await getERC721Approvals(address) || []
       : [];
 
-    // Preserve existing approvals (avoiding duplicates)
-    const existingApprovals = useSelector((state) => state.web3.approvals);
+console.log("🎨 Fetched ERC-721 Approvals:", nftApprovals);
 
+    // Preserve existing approvals while avoiding duplicates
     const mergedApprovals = [
       ...existingApprovals.filter(
         (a) => 
@@ -332,6 +332,7 @@ const refreshBatchRevoke = async () => {
     setIsRevoking(false);
   }
 };
+
 
 
 
