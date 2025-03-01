@@ -294,7 +294,7 @@ const refreshBatchRevoke = async () => {
   if (isRevoking) return;
   
   setIsRevoking(true);
-  
+
   try {
     const provider = await getProvider();
     const signer = await provider.getSigner();
@@ -321,6 +321,7 @@ const refreshBatchRevoke = async () => {
     setIsRevoking(false);
   }
 };
+
 
 
   return (
