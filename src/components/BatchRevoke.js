@@ -302,7 +302,6 @@ const refreshBatchRevoke = async () => {
 
     console.log("🔄 Refreshing approvals for:", address);
 
-    // Fetch ERC-20 and ERC-721 approvals again
     const erc20Approvals = FEATURES.batchRevoke.erc20Enabled 
       ? await getERC20Approvals([], address) || []
       : [];
@@ -311,8 +310,20 @@ const refreshBatchRevoke = async () => {
       ? await getERC721Approvals(address) || []
       : [];
 
-    // Update Redux store
-    dispatch(setApprovals([...erc20Approvals, ...nftApprovals]));
+    // Preserve existing approvals (avoiding duplicates)
+    const existingApprovals = useSelector((state) => state.web3.approvals);
+
+    const mergedApprovals = [
+      ...existingApprovals.filter(
+        (a) => 
+          !erc20Approvals.some(e => e.contract === a.contract && e.spender === a.spender) &&
+          !nftApprovals.some(n => n.contract === a.contract && n.spender === a.spender && n.tokenId === a.tokenId)
+      ),
+      ...erc20Approvals,
+      ...nftApprovals
+    ];
+
+    dispatch(setApprovals(mergedApprovals));
 
     console.log("✅ Approvals refreshed!");
   } catch (error) {
@@ -321,6 +332,7 @@ const refreshBatchRevoke = async () => {
     setIsRevoking(false);
   }
 };
+
 
 
 
