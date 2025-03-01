@@ -290,12 +290,7 @@ const handleSelectApproval = (approval) => {
   const selectedERC20Count = selectedApprovals.filter(a => a.type === 'ERC-20').length;
   const selectedNFTCount = selectedApprovals.filter(a => a.type === 'ERC-721').length;
   
-const refreshBatchRevoke = async (existingApprovals = []) => {  // Default to empty array
-  if (!Array.isArray(existingApprovals)) {
-    console.error("❌ existingApprovals is not an array:", existingApprovals);
-    existingApprovals = [];
-  }
-
+const refreshBatchRevoke = async (existingApprovals) => {
   if (isRevoking) return;
   
   setIsRevoking(true);
@@ -307,25 +302,28 @@ const refreshBatchRevoke = async (existingApprovals = []) => {  // Default to em
 
     console.log("🔄 Refreshing approvals for:", address);
 
+    // Fetch only ERC-20 and ERC-721 approvals
     const erc20Approvals = FEATURES.batchRevoke.erc20Enabled 
       ? await getERC20Approvals([], address) || []
       : [];
     
-const nftApprovals = FEATURES.batchRevoke.nftEnabled 
-  ? approvals.filter(a => a.type === 'ERC-721')  // Remove `a.tokenId !== 'all'`
-  : [];
-
+    const nftApprovals = FEATURES.batchRevoke.nftEnabled 
+      ? await getERC721Approvals(address) || []
+      : [];
 
     console.log("🎨 Fetched ERC-721 Approvals:", nftApprovals);
 
-    // Ensure `existingApprovals` is an array before filtering
-    const mergedApprovals = [
-      ...((Array.isArray(existingApprovals) ? existingApprovals : [])),  // Ensure it's an array
-      ...erc20Approvals,
-      ...nftApprovals
-    ];
+    // 🔥 Preserve existing approvals & prevent duplicates
+    const preservedApprovals = existingApprovals.filter((approval) => 
+      !erc20Approvals.some(e => e.contract === approval.contract && e.spender === approval.spender) &&
+      !nftApprovals.some(n => n.contract === approval.contract && n.spender === approval.spender && n.tokenId === approval.tokenId)
+    );
 
-    dispatch(setApprovals(mergedApprovals));
+    const updatedApprovals = [...preservedApprovals, ...erc20Approvals, ...nftApprovals];
+
+    console.log("✅ Merging new approvals with existing:", updatedApprovals);
+
+    dispatch(setApprovals(updatedApprovals));
 
     console.log("✅ Approvals refreshed!");
   } catch (error) {
@@ -334,6 +332,7 @@ const nftApprovals = FEATURES.batchRevoke.nftEnabled
     setIsRevoking(false);
   }
 };
+
 
 
 
@@ -351,13 +350,13 @@ const nftApprovals = FEATURES.batchRevoke.nftEnabled
     }
   </h5>
   <div>
-    <button 
-      className="btn btn-outline-primary me-2" 
-      onClick={refreshBatchRevoke}
-      disabled={isRevoking}
-    >
-      {isRevoking ? 'Refreshing...' : 'Refresh'}
-    </button>
+<button 
+  className="btn btn-outline-primary me-2" 
+  onClick={() => refreshBatchRevoke(approvals)} // ✅ Pass existing approvals
+  disabled={isRevoking}
+>
+  {isRevoking ? 'Refreshing...' : 'Refresh'}
+</button>
   </div>
 </div>
 
