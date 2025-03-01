@@ -309,18 +309,26 @@ const refreshBatchRevoke = async (existingApprovals) => {
     console.log("🔄 Refreshing approvals for:", address);
 
     // Fetch ERC-20 and ERC-721 approvals
-    const erc20Approvals = FEATURES.batchRevoke.erc20Enabled 
-      ? await getERC20Approvals([], address) || []
-      : [];
-    
-const nftApprovals = FEATURES.batchRevoke.nftEnabled 
-  ? approvals.filter(a => a.type === 'ERC-721')  // Ensure ALL ERC-721 are included
+console.log("📢 Calling getERC20Approvals...");
+const erc20Approvals = FEATURES.batchRevoke.erc20Enabled 
+  ? await getERC20Approvals([], address) || []
   : [];
+console.log("📜 Fetched ERC-20 Approvals:", erc20Approvals);
+
+console.log("📢 Calling getERC721Approvals...");
+const nftApprovals = FEATURES.batchRevoke.nftEnabled 
+  ? await getERC721Approvals(address) || []
+  : [];
+console.log("🎨 Fetched ERC-721 Approvals:", nftApprovals);
 
 
     // 🔥 Log fetched data to verify
     console.log("📜 Fetched ERC-20 Approvals:", erc20Approvals);
     console.log("🎨 Fetched ERC-721 Approvals:", nftApprovals);
+console.log("🔍 FEATURE FLAGS:");
+console.log("  ➤ Batch Revoke Enabled:", FEATURES.batchRevoke.enabled);
+console.log("  ➤ ERC-20 Batch Enabled:", FEATURES.batchRevoke.erc20Enabled);
+console.log("  ➤ ERC-721 Batch Enabled:", FEATURES.batchRevoke.nftEnabled);
 
     if (erc20Approvals.length === 0) {
       console.warn("⚠️ No ERC-20 approvals found. Is getERC20Approvals working?");
