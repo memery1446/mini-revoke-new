@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
 import { JsonRpcProvider, BrowserProvider, Contract, getAddress } from "ethers";
 import { getProvider } from "../utils/provider"; // Use shared provider logic
+import { CONTRACT_ADDRESSES } from "../constants/abis";
 
 const ERC1155Approvals = ({ contractAddress, owner }) => {
     const [approvals, setApprovals] = useState([]);
@@ -74,6 +75,61 @@ const ERC1155Approvals = ({ contractAddress, owner }) => {
             fetchApprovals();
         }
     }, [contractAddress, owner]);
+
+// Add this function to your component
+const handleDirectERC1155Revoke = async () => {
+  if (!selectedApproval || processing) return;
+  
+  setProcessing(true);
+  setMessage({type: 'info', text: 'Preparing ERC-1155 revocation...'});
+  
+  try {
+    console.log("🎮 ERC-1155 direct revocation");
+    console.log("Contract:", CONTRACT_ADDRESSES.ERC1155);
+    console.log("Spender:", CONTRACT_ADDRESSES.MockSpender);
+    
+    // Get provider directly from window.ethereum
+    if (!window.ethereum) {
+      throw new Error("No ethereum provider found");
+    }
+    
+    const provider = new BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    console.log("Signer address:", await signer.getAddress());
+    
+    // Create minimal contract
+    const contract = new Contract(
+      CONTRACT_ADDRESSES.ERC1155,
+      ["function setApprovalForAll(address,bool)"],
+      signer
+    );
+    
+    console.log("Contract created, calling setApprovalForAll");
+    setMessage({type: 'info', text: 'Please confirm in your wallet...'});
+    
+    // Call setApprovalForAll
+    const tx = await contract.setApprovalForAll(CONTRACT_ADDRESSES.MockSpender, false);
+    console.log("Transaction sent:", tx.hash);
+    
+    setMessage({type: 'info', text: 'Transaction sent, waiting for confirmation...'});
+    await tx.wait();
+    
+    console.log("Transaction confirmed!");
+    setMessage({type: 'success', text: 'ERC-1155 approval revoked!'});
+    
+    // Force a refresh of the approvals list
+    setTimeout(() => {
+      dispatch({type: 'web3/setApprovals', payload: []});  // Clear approvals first
+      setTimeout(loadApprovals, 500);  // Then reload
+    }, 1000);
+    
+  } catch (error) {
+    console.error("Error in ERC-1155 revocation:", error);
+    setMessage({type: 'danger', text: `Error: ${error.message}`});
+  } finally {
+    setProcessing(false);
+  }
+};
 
     const revokeApproval = async (spender) => {
         try {
@@ -175,15 +231,23 @@ console.log("🟢 UI Approvals Before Rendering:", approvals.length, approvals);
                     )}
                 </td>
                 <td>
-                    {approval.isApproved && !approval.error && (
-                        <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => revokeApproval(approval.spender)}
-                            disabled={revoking[approval.spender]}
-                        >
-                            {revoking[approval.spender] ? "Revoking..." : "🚫 Revoke"}
-                        </button>
-                    )}
+{selectedApproval?.type === 'ERC-1155' ? (
+  <button 
+    className="btn btn-sm btn-danger me-2"
+    onClick={handleDirectERC1155Revoke}
+    disabled={processing}
+  >
+    {processing ? 'Processing...' : 'Revoke ERC-1155'}
+  </button>
+) : (
+  <button 
+    className="btn btn-sm btn-danger me-2" 
+    onClick={handleRevoke}
+    disabled={processing}
+  >
+    Revoke
+  </button>
+)}
                 </td>
             </tr>
         ))
