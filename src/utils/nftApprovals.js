@@ -8,7 +8,7 @@ import { CONTRACT_ADDRESSES, NFT_ABI } from "../constants/abis";
  * @param {string} userAddress - Wallet address of the owner.
  * @returns {Promise<Array>} - Returns array of approvals.
  */
-export async function getERC721Approvals(account) {
+export async function getERC721Approvals(userAddress) {
     try {
         if (!userAddress) {
             console.warn("⚠️ No user address provided for ERC-721 approvals");

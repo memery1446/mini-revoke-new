@@ -6,7 +6,7 @@ const provider = new JsonRpcProvider(process.env.REACT_APP_ALCHEMY_SEPOLIA_URL);
 // Define spenderAddresses
 const spenderAddresses = [CONTRACT_ADDRESSES.MockSpender];
 
-export async function getERC20Approvals(tokenContracts, account) {
+export async function getERC20Approvals(tokenContracts, ownerAddress) {
   console.log("🔍 Starting ERC-20 approval check for:", ownerAddress);
   console.log("🔍 Checking token contracts:", tokenContracts);
   
