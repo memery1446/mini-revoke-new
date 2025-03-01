@@ -112,6 +112,7 @@ const ApprovalDashboard = () => {
         // }
       } catch (err) {
         console.error("Error fetching ERC-721 approvals:", err);
+      
       }
       
       // Get ERC-1155 approvals
