@@ -413,7 +413,21 @@ const ApprovalDashboard = () => {
         </button>
       </div>
       
-
+      <div className="card-body">
+        {/* Status messages */}
+        {message && (
+          <div className={`alert alert-${message.type} alert-dismissible fade show`}>
+            {message.text}
+            <button type="button" className="btn-close" onClick={() => setMessage(null)}></button>
+          </div>
+        )}
+        
+        {/* Debug info */}
+        {debugInfo && (
+          <div className="alert alert-secondary small">
+            <pre className="mb-0">{debugInfo}</pre>
+          </div>
+        )}
         
         {/* Selected approval action */}
         {selectedApproval && (
