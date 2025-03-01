@@ -258,8 +258,35 @@ const handleSelectApproval = (approval) => {
                         String(result.tokenId) === approval.tokenId
             );
           }
-          
+        
 
+          // Keep other approvals
+          return true;
+        });
+        
+        // Update Redux
+        dispatch(setApprovals(updatedApprovals));
+      }, 2000);
+      
+      // Clear selections on success
+      setSelectedApprovals([]);
+      
+    } catch (error) {
+      console.error("❌ Batch revocation error:", error);
+      setResults({
+        success: false,
+        message: error.message || "Failed to revoke approvals"
+      });
+    } finally {
+      setIsRevoking(false);
+    }
+  };
+
+  // Calculate counts
+  const isAnySelected = selectedApprovals.length > 0;
+  const selectedERC20Count = selectedApprovals.filter(a => a.type === 'ERC-20').length;
+  const selectedNFTCount = selectedApprovals.filter(a => a.type === 'ERC-721').length;
+  
 const refreshBatchRevoke = async () => {
   if (isRevoking) return;
   
@@ -292,34 +319,6 @@ const refreshBatchRevoke = async () => {
   }
 };
 
-
-          
-          // Keep other approvals
-          return true;
-        });
-        
-        // Update Redux
-        dispatch(setApprovals(updatedApprovals));
-      }, 2000);
-      
-      // Clear selections on success
-      setSelectedApprovals([]);
-      
-    } catch (error) {
-      console.error("❌ Batch revocation error:", error);
-      setResults({
-        success: false,
-        message: error.message || "Failed to revoke approvals"
-      });
-    } finally {
-      setIsRevoking(false);
-    }
-  };
-
-  // Calculate counts
-  const isAnySelected = selectedApprovals.length > 0;
-  const selectedERC20Count = selectedApprovals.filter(a => a.type === 'ERC-20').length;
-  const selectedNFTCount = selectedApprovals.filter(a => a.type === 'ERC-721').length;
   
   return (
     <div className="card shadow-sm mb-4">
