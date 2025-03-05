@@ -113,9 +113,6 @@ const BatchRevoke = () => {
     <div className="card shadow-sm mb-4">
       <div className="card-header bg-light d-flex justify-content-between align-items-center">
         <h5 className="mb-0">🔥 Batch Revoke Approvals</h5>
-        <button className="btn btn-outline-primary" onClick={refreshApprovals} disabled={isRevoking}>
-          {isRevoking ? 'Refreshing...' : 'Refresh'}
-        </button>
       </div>
       <div className="card-body">
         <button className="btn btn-danger" onClick={executeBatchRevoke} disabled={selectedApprovals.length === 0 || isRevoking}>
