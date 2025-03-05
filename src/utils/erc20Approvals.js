@@ -32,7 +32,7 @@ export async function getERC20Approvals(tokenContracts, ownerAddress) {
             amount: allowance.toString(),
           };
           
-          
+
           approvals.push(approval);
           console.log(`✅ Found ERC-20 approval:`, approval);
         }
@@ -41,8 +41,9 @@ export async function getERC20Approvals(tokenContracts, ownerAddress) {
       console.error(`❌ Error checking ERC-20 token ${tokenAddress}:`, error);
     }
   }
+console.log("✅ Completed ERC-20 check. Found approvals:", approvals);
 
-  console.log(`✅ Completed ERC-20 check. Found ${approvals.length} approvals:`, approvals);
+ // console.log(`✅ Completed ERC-20 check. Found ${approvals.length} approvals:`, approvals);
   return approvals;
 }
 

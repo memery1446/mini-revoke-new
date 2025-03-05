@@ -38,7 +38,12 @@ const ApprovalDashboard = () => {
 
       let erc20List = [], erc721List = [], erc1155List = [];
 
-      try { erc20List = await getERC20Approvals([], address) || []; }
+try { 
+  erc20List = await getERC20Approvals(
+    [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2], 
+    address
+  ) || []; 
+}
       catch (err) { console.error("❌ ERC-20 Fetch Error:", err); }
 
       try { erc721List = await getERC721Approvals(address) || []; }
@@ -52,6 +57,7 @@ const ApprovalDashboard = () => {
         ...erc721List.map(a => ({ ...a, type: 'ERC-721' })),
         ...erc1155List.map(a => ({ ...a, type: "ERC-1155" }))
       ];
+console.log("🔹 ERC-20 Approvals Fetched:", erc20List);
 
       console.log("🔹 Final approval list before dispatch:", allApprovals);
       dispatch(setApprovals(allApprovals));
@@ -124,72 +130,76 @@ if (result.success) {
   };
 
   return (
-    <div className="card shadow-lg">
-      <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">Token Approvals</h5>
-        <button className="btn btn-light" onClick={loadApprovals} disabled={isLoading}>
-          {isLoading ? 'Loading...' : 'Refresh'}
-        </button>
-      </div>
-      <div className="card-body">
-        {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
+<div className="card shadow-lg">
+  <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <h5 className="mb-0">Token Approvals</h5>
+    <button className="btn btn-light" onClick={loadApprovals} disabled={isLoading}>
+      {isLoading ? 'Loading...' : 'Refresh'}
+    </button>
+  </div>
+  <div className="card-body">
+    {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
 
-        <table className="table table-hover">
-          <thead className="table-dark">
-            <tr>
-              <th>Select</th>
-              <th>Type</th>
-              <th>Contract</th>
-              <th>Spender</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {approvals.length > 0 ? (
-              approvals.map((a, idx) => (
-                <tr key={idx}>
-                  <td>
-<input
-  type="checkbox"
-  checked={selectedApprovals.some(sel =>
-    sel.contract === a.contract &&
-    sel.spender === a.spender &&
-    (a.tokenId ? sel.tokenId === a.tokenId : true) // ✅ Fix: Track tokenId correctly
-  )}
-  onChange={() => handleSelect(a)}
-/>
-                  </td>
-                  <td>
-                    <span className={`badge bg-${a.type === 'ERC-20' ? 'success' : a.type === 'ERC-721' ? 'primary' : 'warning'}`}>
-                      {a.type}
-                    </span>
-                  </td>
-                  <td><code>{a.contract.substring(0, 8)}...</code></td>
-                  <td><code>{a.spender.substring(0, 8)}...</code></td>
-                  <td>
-                    {a.type === "ERC-20" && "Unlimited Allowance"}
-                    {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId}`)}
-                    {a.type === "ERC-1155" && `Collection-wide Approval`}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="text-center text-muted">No active approvals</td>
+    <table className="table table-hover">
+      <thead className="table-dark">
+        <tr>
+          <th>Select</th>
+          <th>Type</th>
+          <th>Contract</th>
+          <th>Spender</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {approvals.length > 0 ? (
+          approvals.map((a, idx) => {
+            console.log(`🖥️ Rendering approval #${idx}:`, a); // ✅ Log approvals being rendered
+            return (
+              <tr key={idx}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedApprovals.some(sel =>
+                      sel.contract === a.contract &&
+                      sel.spender === a.spender &&
+                      (a.tokenId ? sel.tokenId === a.tokenId : true) // ✅ Ensure tokenId is tracked
+                    )}
+                    onChange={() => handleSelect(a)}
+                  />
+                </td>
+                <td>
+                  <span className={`badge bg-${a.type === 'ERC-20' ? 'success' : a.type === 'ERC-721' ? 'primary' : 'warning'}`}>
+                    {a.type}
+                  </span>
+                </td>
+                <td><code>{a.contract.substring(0, 8)}...</code></td>
+                <td><code>{a.spender.substring(0, 8)}...</code></td>
+                <td>
+                  {a.type === "ERC-20" && `Unlimited Allowance (${a.amount})`}
+                  {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId}`)}
+                  {a.type === "ERC-1155" && "Collection-wide Approval"}
+                </td>
               </tr>
-            )}
-          </tbody>
-        </table>
+            );
+          })
+        ) : (
+          <tr>
+            <td colSpan="5" className="text-center text-muted">No active approvals</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
 
-        <button
-          className="btn btn-danger w-100 mt-3"
-          onClick={handleRevoke}
-          disabled={processing || selectedApprovals.length === 0}
-        >
-          {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
-        </button>
-      </div>
-    </div>
+    <button
+      className="btn btn-danger w-100 mt-3"
+      onClick={handleRevoke}
+      disabled={processing || selectedApprovals.length === 0}
+    >
+      {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
+    </button>
+  </div>
+</div>
+
   );
 };
 
