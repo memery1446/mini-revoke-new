@@ -53,22 +53,23 @@ export async function revokeERC1155Approval(spenderAddress) {
  * @param {Array<string>} spenderAddresses - Array of spender addresses to revoke approval for.
  * @returns {Promise<boolean>} - `true` if all approvals revoked, `false` otherwise.
  */
-export async function revokeMultipleERC1155Approvals(spenderAddresses) {
+export async function revokeMultipleERC1155Approvals(approvals) {
     try {
-        console.log("🚨 Revoking multiple ERC-1155 approvals:", spenderAddresses);
+        console.log("🚨 Revoking multiple ERC-1155 approvals:", approvals);
         const provider = await getProvider();
         const signer = await provider.getSigner();
-        const contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ["function setApprovalForAll(address,bool)"], signer);
 
-        for (let spender of spenderAddresses) {
+        for (let { contract, spender } of approvals) {
             if (!isAddress(spender)) {
                 console.error(`❌ Invalid spender address: ${spender}`);
                 continue;
             }
 
-            const tx = await contract.setApprovalForAll(spender, false);
+            console.log(`🔄 Revoking approval for contract: ${contract}, spender: ${spender}`);
+            const erc1155Contract = new Contract(contract, ["function setApprovalForAll(address,bool)"], signer);
+            const tx = await erc1155Contract.setApprovalForAll(spender, false);
             await tx.wait();
-            console.log(`✅ Revoked ERC-1155 approval for: ${spender}`);
+            console.log(`✅ Approval revoked for: ${spender} on contract ${contract}`);
         }
 
         return true;
@@ -77,4 +78,5 @@ export async function revokeMultipleERC1155Approvals(spenderAddresses) {
         return false;
     }
 }
+
 

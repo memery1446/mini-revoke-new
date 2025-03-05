@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Contract } from "ethers";
@@ -19,103 +19,103 @@ const ExistingApprovals = ({ onToggleSelect }) => {
   const [revoking, setRevoking] = useState(null);
   
   const isMounted = useRef(true);
-  
+
   useEffect(() => {
     return () => {
       isMounted.current = false;
     };
   }, []);
-  
-const fetchApprovals = useCallback(async () => {
-  if (!account || revoking) return;
-  try {
-    setLoading(true);
-    setError(null);
-    console.log("📋 Fetching approvals for account:", account);
 
-    const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
+  const fetchApprovals = useCallback(async () => {
+    if (!account || revoking) return;
+    try {
+      setLoading(true);
+      setError(null);
+      console.log("📋 Fetching approvals for account:", account);
 
-    const erc20Fetched = await getERC20Approvals(tokenContracts, account) || [];
-    const erc721Fetched = await getERC721Approvals(account) || [];
-    const erc1155Fetched = await getERC1155Approvals(account) || [];
+      const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
 
-    if (!Array.isArray(erc721Fetched)) erc721Fetched = [];
-
-    // 🔹 Remove duplicates before updating Redux
-    const fetchedApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched];
-
-    // 🔍 Compare against existing approvals in Redux
-    const uniqueApprovals = fetchedApprovals.filter(
-      (newApproval) => !approvals.some(
-        (existing) => 
-          existing.contract === newApproval.contract &&
-          existing.spender === newApproval.spender &&
-          existing.tokenId === newApproval.tokenId
-      )
-    );
-
-    console.log("🟢 Approvals after removing duplicates:", uniqueApprovals);
-    dispatch(setApprovals(uniqueApprovals)); // ✅ Replaces approvals without duplicates
-  } catch (err) {
-    console.error("❌ Error fetching approvals:", err);
-    if (isMounted.current) setError(err.message);
-  } finally {
-    if (isMounted.current) setLoading(false);
-  }
-}, [account, dispatch, revoking, approvals]); // ✅ Added `approvals` as a dependency
+      const erc20Fetched = await getERC20Approvals(tokenContracts, account) || [];
+      const erc721Fetched = await getERC721Approvals(account) || [];
+console.log("🛠️ Checking ERC-1155 fetch inside fetchApprovals()...");
+const erc1155Fetched = await getERC1155Approvals(account) || [];
+console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
 
 
-  
-useEffect(() => {
-  console.log("🟡 useEffect triggered: Checking if fetchApprovals() runs multiple times");
+      if (!Array.isArray(erc721Fetched)) erc721Fetched = [];
 
-  if (account) {
-    console.log("🔄 Wallet account is defined, calling fetchApprovals()...");
-    fetchApprovals();
-  } else {
-    console.warn("⚠️ Account is not defined. Cannot fetch approvals.");
-  }
-}, [account, fetchApprovals]);
-  
-const revokeApproval = async (approval) => {
-  if (revoking === approval.id) {
-    console.warn(`⚠️ Revocation already in progress for approval ID: ${approval.id}`);
-    return;
-  }
-  try {
-    setRevoking(approval.id);
-    console.log("🚨 Revoking approval:", approval);
+      // 🔹 Remove duplicates before updating Redux
+      const fetchedApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched];
 
-    const signer = await getSigner();
-    if (!signer) throw new Error("❌ Signer not available");
-    console.log("🪙 Signer retrieved successfully:", signer);
+      // 🔍 Compare against existing approvals in Redux (fixing ERC-1155 filtering)
+      const uniqueApprovals = fetchedApprovals.filter(
+        (newApproval) => !approvals.some(
+          (existing) => 
+            existing.contract === newApproval.contract &&
+            existing.spender === newApproval.spender &&
+            (existing.tokenId ? existing.tokenId === newApproval.tokenId : true) // ✅ Fix for ERC-1155
+        )
+      );
 
-    let contract, tx;
+      console.log("🟢 Approvals after removing duplicates:", uniqueApprovals);
+      dispatch(setApprovals(uniqueApprovals)); // ✅ Replaces approvals without duplicates
+    } catch (err) {
+      console.error("❌ Error fetching approvals:", err);
+      if (isMounted.current) setError(err.message);
+    } finally {
+      if (isMounted.current) setLoading(false);
+    }
+  }, [account, dispatch, revoking, approvals]); // ✅ Added `approvals` as a dependency
 
-    if (approval.type === "ERC-20") {
-      contract = new Contract(approval.contract, ["function approve(address,uint256)"], signer);
-      tx = await contract.approve(approval.spender, 0);
+  useEffect(() => {
+    console.log("🟡 useEffect triggered: Checking if fetchApprovals() runs multiple times");
+
+    if (account) {
+      console.log("🔄 Wallet account is defined, calling fetchApprovals()...");
+      fetchApprovals();
     } else {
-      contract = new Contract(approval.contract, ["function setApprovalForAll(address,bool)"], signer);
-      tx = await contract.setApprovalForAll(approval.spender, false);
+      console.warn("⚠️ Account is not defined. Cannot fetch approvals.");
     }
+  }, [account, fetchApprovals]);
 
-    console.log("📤 Transaction sent, awaiting confirmation...");
-    await tx.wait();
-    console.log("✅ Approval revoked successfully!");
-
-    if (isMounted.current) {
-      dispatch(removeApproval(approval));
-      console.log(`🗑️ Approval removed from state:`, approval);
-      setTimeout(fetchApprovals, 2000); // Refresh approvals after 2 seconds
+  const revokeApproval = async (approval) => {
+    if (revoking === approval.id) {
+      console.warn(`⚠️ Revocation already in progress for approval ID: ${approval.id}`);
+      return;
     }
-  } catch (err) {
-    console.error("❌ Error revoking approval:", err);
-    if (isMounted.current) setRevoking(null);
-  }
-};
+    try {
+      setRevoking(approval.id);
+      console.log("🚨 Revoking approval:", approval);
 
-  
+      const signer = await getSigner();
+      if (!signer) throw new Error("❌ Signer not available");
+      console.log("🪙 Signer retrieved successfully:", signer);
+
+      let contract, tx;
+
+      if (approval.type === "ERC-20") {
+        contract = new Contract(approval.contract, ["function approve(address,uint256)"], signer);
+        tx = await contract.approve(approval.spender, 0);
+      } else if (approval.type === "ERC-721" || approval.type === "ERC-1155") { // ✅ Explicitly handle ERC-1155
+        contract = new Contract(approval.contract, ["function setApprovalForAll(address,bool)"], signer);
+        tx = await contract.setApprovalForAll(approval.spender, false);
+      }
+
+      console.log("📤 Transaction sent, awaiting confirmation...");
+      await tx.wait();
+      console.log("✅ Approval revoked successfully!");
+
+      if (isMounted.current) {
+        dispatch(removeApproval(approval));
+        console.log(`🗑️ Approval removed from state:`, approval);
+        setTimeout(fetchApprovals, 2000); // Refresh approvals after 2 seconds
+      }
+    } catch (err) {
+      console.error("❌ Error revoking approval:", err);
+      if (isMounted.current) setRevoking(null);
+    }
+  };
+
   return (
     <div className="card shadow-sm mb-4">
       <div className="card-header bg-light d-flex justify-content-between align-items-center">
