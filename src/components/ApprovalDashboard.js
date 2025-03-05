@@ -6,6 +6,7 @@ import { getERC1155Approvals, revokeMultipleERC1155Approvals } from "../utils/er
 import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
 import { revokeERC20Approvals, revokeERC721Approvals } from "../utils/batchRevokeUtils";
+import { CONTRACT_ADDRESSES } from "../constants/abis"; 
 
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
