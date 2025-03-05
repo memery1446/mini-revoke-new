@@ -92,7 +92,18 @@ const handleSelect = (approval) => {
 
 
   const handleRevoke = async () => {
-    if (!selectedApprovals.length || processing) return;
+if (!selectedApprovals.length || processing) return;
+
+// ✅ Ensure we are only revoking one type at a time
+const approvalTypes = [...new Set(selectedApprovals.map(a => a.type))];
+if (approvalTypes.length > 1) {
+  setMessage({ type: 'danger', text: "Error: Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately." });
+  return;
+}
+
+// ✅ Clear previous selections before revoking
+setSelectedApprovals([]);
+
     setProcessing(true);
     setMessage({ type: 'info', text: 'Processing revocation...' });
 
