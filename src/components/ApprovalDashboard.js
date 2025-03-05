@@ -10,26 +10,22 @@ import { revokeERC20Approvals, revokeERC721Approvals } from "../utils/batchRevok
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
   const wallet = useSelector((state) => state.web3.account);
-  const approvals = useSelector((state) => state.web3.approvals); // ✅ Use Redux approvals directly
+  const approvals = useSelector((state) => state.web3.approvals); 
   const [isLoading, setIsLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState(null);
-  const [selectedApprovals, setSelectedApprovals] = useState([]); // ✅ Supports multiple selection
+  const [selectedApprovals, setSelectedApprovals] = useState([]);
 
   useEffect(() => {
-    if (wallet) loadApprovals();
+    if (wallet) {
+      console.log("🔄 Wallet detected, loading approvals...");
+      loadApprovals();
+    }
   }, [wallet]);
 
   useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
-
-  useEffect(() => {
-    console.log("🔄 ApprovalDashboard re-rendering, approvals:", approvals);
-  }, [approvals]); // ✅ Force re-render when approvals update
+    console.log("🔄 ApprovalDashboard re-rendering with approvals:", approvals);
+  }, [approvals]);
 
   const loadApprovals = async () => {
     if (!wallet || isLoading) return;
@@ -60,7 +56,8 @@ const ApprovalDashboard = () => {
         ...erc1155List.map(a => ({ ...a, type: "ERC-1155" }))
       ];
 
-      dispatch(setApprovals(allApprovals)); // ✅ Ensure Redux is updated
+      console.log("🔹 Final approval list before dispatch:", allApprovals);
+      dispatch(setApprovals(allApprovals)); 
       setMessage({ type: 'success', text: `Found ${allApprovals.length} approvals` });
     } catch (error) {
       console.error("❌ Load Error:", error);
@@ -70,62 +67,25 @@ const ApprovalDashboard = () => {
     }
   };
 
-  const handleSelectApproval = (approval) => {
-    setSelectedApprovals((prev) => {
-      const exists = prev.some(a => a.id === approval.id);
-      return exists ? prev.filter(a => a.id !== approval.id) : [...prev, approval];
-    });
-  };
-
-  const handleRevoke = async () => {
-    if (!selectedApprovals.length || processing) return;
-    setProcessing(true);
-    setMessage({ type: 'info', text: 'Processing revocation...' });
-
-    try {
-      const provider = await getProvider();
-      const signer = await provider.getSigner();
-
-      let result;
-      const approvalsToRevoke = selectedApprovals;
-
-      if (approvalsToRevoke.every(a => a.type === 'ERC-20')) {
-        result = await revokeERC20Approvals(approvalsToRevoke, signer);
-      } else if (approvalsToRevoke.every(a => a.type === 'ERC-721')) {
-        result = await revokeERC721Approvals(approvalsToRevoke, signer);
-      } else if (approvalsToRevoke.every(a => a.type === 'ERC-1155')) {
-        result = await revokeMultipleERC1155Approvals(
-          approvalsToRevoke.map(a => ({ contract: a.contract, spender: a.spender }))
-        );
-      } else {
-        throw new Error("Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately.");
-      }
-
-      if (result.success) {
-        dispatch(setApprovals(approvals.filter(a => !approvalsToRevoke.includes(a))));
-        setMessage({ type: 'success', text: `Revoked ${result.count} approval(s)!` });
-        setTimeout(loadApprovals, 3000);
-      } else {
-        setMessage({ type: 'danger', text: `Error: ${result.error}` });
-      }
-    } catch (error) {
-      console.error("❌ Revocation Error:", error);
-      setMessage({ type: 'danger', text: `Error: ${error.message}` });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
   return (
     <div className="card">
       <div className="card-header">
         <h5>Token Approvals</h5>
-        <button className="btn btn-danger" onClick={handleRevoke} disabled={processing || selectedApprovals.length === 0}>
-          {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
+        <button className="btn btn-danger" onClick={loadApprovals} disabled={isLoading}>
+          {isLoading ? 'Loading...' : 'Refresh Approvals'}
         </button>
+      </div>
+      <div className="card-body">
+        {message && <p className={`alert alert-${message.type}`}>{message.text}</p>}
+        <ul>
+          {approvals.length > 0 ? approvals.map((a, idx) => (
+            <li key={idx}>{a.type} - {a.contract} → {a.spender}</li>
+          )) : <p>No approvals found.</p>}
+        </ul>
       </div>
     </div>
   );
 };
 
 export default ApprovalDashboard;
+

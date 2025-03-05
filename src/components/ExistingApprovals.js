@@ -6,8 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { getERC20Approvals } from "../utils/erc20Approvals";
 import { getERC721Approvals } from "../utils/nftApprovals";
 import { getERC1155Approvals } from "../utils/erc1155Approvals";
-import { CONTRACT_ADDRESSES } from "../constants/abis";
-import { setApprovals, removeApproval } from "../store/web3Slice";
+import { setApprovals } from "../store/web3Slice";
 import { getProvider, getSigner } from "../utils/providerService";
 
 const ExistingApprovals = ({ onToggleSelect }) => {
@@ -16,151 +15,61 @@ const ExistingApprovals = ({ onToggleSelect }) => {
   const approvals = useSelector((state) => state.web3.approvals) || [];
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [revoking, setRevoking] = useState(null);
-
-  const isMounted = useRef(true);
-
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
 
   const fetchApprovals = useCallback(async () => {
-    if (!account || revoking) return;
+    if (!account) return;
     try {
       setLoading(true);
       setError(null);
       console.log("📋 Fetching approvals for account:", account);
 
-      const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
-
-      const erc20Fetched = await getERC20Approvals(tokenContracts, account) || [];
+      const erc20Fetched = await getERC20Approvals([], account) || [];
       const erc721Fetched = await getERC721Approvals(account) || [];
-      console.log("🛠️ Checking ERC-1155 fetch inside fetchApprovals()...");
       const erc1155Fetched = await getERC1155Approvals(account) || [];
-      console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
 
-      if (!Array.isArray(erc721Fetched)) erc721Fetched = [];
-
-      // 🔹 Log approvals before Redux update
       console.log("🟢 Approvals BEFORE Redux update:", [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched]);
 
-      // 🔍 Compare against existing approvals in Redux (fixing ERC-1155 filtering)
-      const uniqueApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched].filter(
-        (newApproval) => !approvals.some(
-          (existing) => 
-            existing.contract === newApproval.contract &&
-            existing.spender === newApproval.spender &&
-            (existing.tokenId ? existing.tokenId === newApproval.tokenId : true) // ✅ Fix for ERC-1155
-        )
-      );
+      // Temporarily remove filtering
+      const uniqueApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched];
 
-      console.log("🟢 Approvals AFTER Filtering:", uniqueApprovals);
-      dispatch(setApprovals(uniqueApprovals)); // ✅ Replaces approvals without duplicates
+      console.log("🟢 Approvals AFTER Processing:", uniqueApprovals);
+      dispatch(setApprovals(uniqueApprovals));
     } catch (err) {
       console.error("❌ Error fetching approvals:", err);
-      if (isMounted.current) setError(err.message);
+      setError(err.message);
     } finally {
-      if (isMounted.current) setLoading(false);
+      setLoading(false);
     }
-  }, [account, dispatch, revoking, approvals]); // ✅ Added `approvals` as a dependency
+  }, [account, dispatch]);
 
   useEffect(() => {
-    console.log("🟡 useEffect triggered: Checking if fetchApprovals() runs multiple times");
-
-    if (account) {
-      console.log("🔄 Wallet account is defined, calling fetchApprovals()...");
-      fetchApprovals();
-    } else {
-      console.warn("⚠️ Account is not defined. Cannot fetch approvals.");
-    }
+    console.log("🔄 useEffect triggered for fetching approvals...");
+    if (account) fetchApprovals();
   }, [account, fetchApprovals]);
 
   useEffect(() => {
-    console.log("🔄 Component re-rendering with approvals:", approvals);
+    console.log("🔄 ExistingApprovals component re-rendering, approvals:", approvals);
   }, [approvals]);
-
-  const revokeApproval = async (approval) => {
-    if (revoking === approval.id) {
-      console.warn(`⚠️ Revocation already in progress for approval ID: ${approval.id}`);
-      return;
-    }
-    try {
-      setRevoking(approval.id);
-      console.log("🚨 Revoking approval:", approval);
-
-      const signer = await getSigner();
-      if (!signer) throw new Error("❌ Signer not available");
-      console.log("🪙 Signer retrieved successfully:", signer);
-
-      let contract, tx;
-
-      if (approval.type === "ERC-20") {
-        contract = new Contract(approval.contract, ["function approve(address,uint256)"], signer);
-        tx = await contract.approve(approval.spender, 0);
-      } else if (approval.type === "ERC-721" || approval.type === "ERC-1155") { // ✅ Explicitly handle ERC-1155
-        contract = new Contract(approval.contract, ["function setApprovalForAll(address,bool)"], signer);
-        tx = await contract.setApprovalForAll(approval.spender, false);
-      }
-
-      console.log("📤 Transaction sent, awaiting confirmation...");
-      await tx.wait();
-      console.log("✅ Approval revoked successfully!");
-
-      if (isMounted.current) {
-        dispatch(removeApproval(approval));
-        console.log(`🗑️ Approval removed from state:`, approval);
-        setTimeout(fetchApprovals, 2000); // Refresh approvals after 2 seconds
-      }
-    } catch (err) {
-      console.error("❌ Error revoking approval:", err);
-      if (isMounted.current) setRevoking(null);
-    }
-  };
 
   return (
     <div className="card shadow-sm mb-4">
       <div className="card-header bg-light d-flex justify-content-between align-items-center">
         <h3 className="mb-0">Existing Approvals</h3>
-        <button className="btn btn-secondary" onClick={fetchApprovals} disabled={loading || revoking}>
+        <button className="btn btn-secondary" onClick={fetchApprovals} disabled={loading}>
           {loading ? "Loading..." : "🔄 Refresh Approvals"}
         </button>
       </div>
       <div className="card-body">
-        {loading ? (
-          <p>Loading approvals...</p>
-        ) : error ? (
-          <p className="text-danger">{error}</p>
-        ) : approvals.length === 0 ? (
-          <p className="text-warning">❌ No active approvals found (but Redux has them!)</p>
+        {loading ? <p>Loading approvals...</p> : error ? <p className="text-danger">{error}</p> : approvals.length === 0 ? (
+          <p className="text-warning">No active approvals found.</p>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Select</th>
-                <th>Contract</th>
-                <th>Spender</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {approvals.map((approval, index) => (
-                <tr key={index}>
-                  <td>
-                    <input type="checkbox" onChange={() => onToggleSelect?.(approval)} />
-                  </td>
-                  <td>{approval.contract || "❌ Missing Contract"}</td>
-                  <td>{approval.spender || "❌ Missing Spender"}</td>
-                  <td>
-                    <button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)} disabled={revoking === approval.id}>
-                      {revoking === approval.id ? "Processing..." : "🚨 Revoke"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ul>
+            {approvals.map((approval, index) => (
+              <li key={index}>
+                {approval.type} - {approval.contract} → {approval.spender}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
