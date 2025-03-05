@@ -115,9 +115,7 @@ const BatchRevoke = () => {
         <h5 className="mb-0">🔥 Batch Revoke Approvals</h5>
       </div>
       <div className="card-body">
-        <button className="btn btn-danger" onClick={executeBatchRevoke} disabled={selectedApprovals.length === 0 || isRevoking}>
-          {isRevoking ? 'Revoking...' : `🔥 Revoke Selected (${selectedApprovals.length})`}
-        </button>
+
       </div>
     </div>
   );
