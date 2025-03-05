@@ -95,11 +95,12 @@ const ApprovalDashboard = () => {
         throw new Error("Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately.");
       }
 
-      if (result.success) {
-        dispatch(setApprovals(approvals.filter(a => !selectedApprovals.includes(a))));
-        setMessage({ type: 'success', text: `Revoked ${result.count} approval(s)!` });
-        setSelectedApprovals([]);
-        setTimeout(loadApprovals, 2000);
+if (result.success) {
+  dispatch(setApprovals(approvals.filter(a => !selectedApprovals.includes(a))));
+  setMessage({ type: 'success', text: `Revoked ${result.count} approval(s)!` });
+  setSelectedApprovals([]);
+  setTimeout(loadApprovals, 2000);
+
       } else {
         setMessage({ type: 'danger', text: `Error: ${result.error}` });
       }
