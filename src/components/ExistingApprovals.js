@@ -17,7 +17,7 @@ const ExistingApprovals = ({ onToggleSelect }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [revoking, setRevoking] = useState(null);
-  
+
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -37,18 +37,17 @@ const ExistingApprovals = ({ onToggleSelect }) => {
 
       const erc20Fetched = await getERC20Approvals(tokenContracts, account) || [];
       const erc721Fetched = await getERC721Approvals(account) || [];
-console.log("🛠️ Checking ERC-1155 fetch inside fetchApprovals()...");
-const erc1155Fetched = await getERC1155Approvals(account) || [];
-console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
-
+      console.log("🛠️ Checking ERC-1155 fetch inside fetchApprovals()...");
+      const erc1155Fetched = await getERC1155Approvals(account) || [];
+      console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
 
       if (!Array.isArray(erc721Fetched)) erc721Fetched = [];
 
-      // 🔹 Remove duplicates before updating Redux
-      const fetchedApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched];
+      // 🔹 Log approvals before Redux update
+      console.log("🟢 Approvals BEFORE Redux update:", [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched]);
 
       // 🔍 Compare against existing approvals in Redux (fixing ERC-1155 filtering)
-      const uniqueApprovals = fetchedApprovals.filter(
+      const uniqueApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched].filter(
         (newApproval) => !approvals.some(
           (existing) => 
             existing.contract === newApproval.contract &&
@@ -57,7 +56,7 @@ console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
         )
       );
 
-      console.log("🟢 Approvals after removing duplicates:", uniqueApprovals);
+      console.log("🟢 Approvals AFTER Filtering:", uniqueApprovals);
       dispatch(setApprovals(uniqueApprovals)); // ✅ Replaces approvals without duplicates
     } catch (err) {
       console.error("❌ Error fetching approvals:", err);
@@ -77,6 +76,10 @@ console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
       console.warn("⚠️ Account is not defined. Cannot fetch approvals.");
     }
   }, [account, fetchApprovals]);
+
+  useEffect(() => {
+    console.log("🔄 Component re-rendering with approvals:", approvals);
+  }, [approvals]);
 
   const revokeApproval = async (approval) => {
     if (revoking === approval.id) {
@@ -130,7 +133,7 @@ console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
         ) : error ? (
           <p className="text-danger">{error}</p>
         ) : approvals.length === 0 ? (
-          <p>No active approvals found.</p>
+          <p className="text-warning">❌ No active approvals found (but Redux has them!)</p>
         ) : (
           <table className="table">
             <thead>
@@ -142,13 +145,13 @@ console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
               </tr>
             </thead>
             <tbody>
-              {approvals.map((approval) => (
-                <tr key={approval.id}>
+              {approvals.map((approval, index) => (
+                <tr key={index}>
                   <td>
                     <input type="checkbox" onChange={() => onToggleSelect?.(approval)} />
                   </td>
-                  <td>{approval.contract}</td>
-                  <td>{approval.spender}</td>
+                  <td>{approval.contract || "❌ Missing Contract"}</td>
+                  <td>{approval.spender || "❌ Missing Spender"}</td>
                   <td>
                     <button className="btn btn-danger btn-sm" onClick={() => revokeApproval(approval)} disabled={revoking === approval.id}>
                       {revoking === approval.id ? "Processing..." : "🚨 Revoke"}
@@ -165,4 +168,5 @@ console.log("✅ ERC-1155 Approvals Fetched:", erc1155Fetched);
 };
 
 export default ExistingApprovals;
+
 
