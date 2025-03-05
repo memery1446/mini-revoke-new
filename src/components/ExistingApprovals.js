@@ -32,38 +32,38 @@ const fetchApprovals = useCallback(async () => {
     setLoading(true);
     setError(null);
     console.log("📋 Fetching approvals for account:", account);
-    
+
     const tokenContracts = [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2];
-    
+
     const erc20Fetched = await getERC20Approvals(tokenContracts, account) || [];
-    console.log("🟢 Fetched ERC-20 approvals:", erc20Fetched);
-    
     const erc721Fetched = await getERC721Approvals(account) || [];
-    console.log("🟢 Fetched ERC-721 approvals:", erc721Fetched);
-
     const erc1155Fetched = await getERC1155Approvals(account) || [];
-    console.log("🟢 Fetched ERC-1155 approvals:", erc1155Fetched);
-    
-if (!Array.isArray(erc721Fetched)) erc721Fetched = [];
 
-    if (!isMounted.current) return;
-    
-    const allApprovals = [
-      ...erc20Fetched,
-      ...(Array.isArray(erc721Fetched) ? erc721Fetched : []),  // Ensure it's an array
-      ...erc1155Fetched
-    ];
-    
-    console.log("🟢 All approvals fetched:", allApprovals);
-    dispatch(setApprovals(allApprovals));
+    if (!Array.isArray(erc721Fetched)) erc721Fetched = [];
+
+    // 🔹 Remove duplicates before updating Redux
+    const fetchedApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched];
+
+    // 🔍 Compare against existing approvals in Redux
+    const uniqueApprovals = fetchedApprovals.filter(
+      (newApproval) => !approvals.some(
+        (existing) => 
+          existing.contract === newApproval.contract &&
+          existing.spender === newApproval.spender &&
+          existing.tokenId === newApproval.tokenId
+      )
+    );
+
+    console.log("🟢 Approvals after removing duplicates:", uniqueApprovals);
+    dispatch(setApprovals(uniqueApprovals)); // ✅ Replaces approvals without duplicates
   } catch (err) {
     console.error("❌ Error fetching approvals:", err);
     if (isMounted.current) setError(err.message);
   } finally {
     if (isMounted.current) setLoading(false);
-    console.log("🔄 Loading state completed. Current loading state:", loading);
   }
-}, [account, dispatch, revoking]);
+}, [account, dispatch, revoking, approvals]); // ✅ Added `approvals` as a dependency
+
 
   
 useEffect(() => {
