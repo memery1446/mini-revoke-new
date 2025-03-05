@@ -24,8 +24,9 @@ const ApprovalDashboard = () => {
   }, [wallet]);
 
   useEffect(() => {
-    console.log("🔄 ApprovalDashboard re-rendering with approvals:", approvals);
-  }, [approvals]);
+  console.log("📋 Full Approvals Data in UI:", approvals);
+}, [approvals]);
+
 
   const loadApprovals = async () => {
     if (!wallet || isLoading) return;
@@ -77,11 +78,14 @@ const ApprovalDashboard = () => {
       </div>
       <div className="card-body">
         {message && <p className={`alert alert-${message.type}`}>{message.text}</p>}
-        <ul>
-          {approvals.length > 0 ? approvals.map((a, idx) => (
-            <li key={idx}>{a.type} - {a.contract} → {a.spender}</li>
-          )) : <p>No approvals found.</p>}
-        </ul>
+<ul>
+  {approvals.length > 0 ? approvals.map((a, idx) => (
+    <li key={idx}>
+      {a.type} - {a.contract} → {a.spender}
+      {a.type === "ERC-1155" && a.tokenId ? ` (Token ID: ${a.tokenId})` : ""}
+    </li>
+  )) : <p>No approvals found.</p>}
+</ul>
       </div>
     </div>
   );
