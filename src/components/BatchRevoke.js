@@ -1,7 +1,7 @@
 // BatchRevoke.js
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { batchRevokeERC20Approvals, batchRevokeNFTApprovals } from '../utils/batchRevokeUtils';
+import { revokeERC20Approvals, revokeERC721Approvals, revokeERC1155Approvals } from "../utils/batchRevokeUtils";
 import { getProvider } from '../utils/provider';
 import { setApprovals } from "../store/web3Slice";
 import { FEATURES } from '../constants/config';

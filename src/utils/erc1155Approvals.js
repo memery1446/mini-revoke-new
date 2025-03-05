@@ -1,99 +1,64 @@
-import { isAddress, Contract } from "ethers"; // ✅ Updated import
+import { isAddress, Contract, getAddress } from "ethers"; 
 import { getProvider } from "../utils/provider";
-import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis"; // Importing ABIs and addresses
+import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
 
 /**
- * Fetch ERC-1155 approvals for a given owner address.
- * @param {string} ownerAddress - The address of the token owner.
- * @returns {Promise<Array>} - A promise that resolves to an array of approvals.
+ * 🔍 Fetch ERC-1155 approvals for a given owner.
+ * @param {string} ownerAddress - The wallet address of the token owner.
+ * @returns {Promise<Array>} - Resolves to an array of approvals.
  */
-const getERC1155Approvals = async (ownerAddress) => {
+export async function getERC1155Approvals(ownerAddress) {
     try {
-        console.log("🔍 Fetching ERC-1155 approvals for owner:", ownerAddress);
-        console.log("ERC1155 Contract Address:", CONTRACT_ADDRESSES.ERC1155);
-
+        console.log("🔍 Fetching ERC-1155 approvals for:", ownerAddress);
         const provider = await getProvider();
-        const erc1155Contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, provider);
+        const contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, provider);
 
-        const spender = CONTRACT_ADDRESSES.MockSpender;
-        console.log("Checking approval for spender:", spender);
+        const spender = getAddress(CONTRACT_ADDRESSES.MockSpender);
+        const isApproved = await contract.isApprovedForAll(ownerAddress, spender);
 
-        const isApproved = await erc1155Contract.isApprovedForAll(ownerAddress, spender);
-        console.log(`✅ Approval status for ${spender}:`, isApproved);
-
-        const result = isApproved ? [{ spender, isApproved, contract: CONTRACT_ADDRESSES.ERC1155 }] : [];
-        console.log("🔍 ERC-1155 Approvals Fetched:", result);
-
-        return result;
+        const approvals = isApproved ? [{ contract: CONTRACT_ADDRESSES.ERC1155, spender, isApproved }] : [];
+        console.log("✅ Fetched ERC-1155 approvals:", approvals);
+        return approvals;
     } catch (error) {
         console.error("❌ Error fetching ERC-1155 approvals:", error);
         return [];
     }
-};
+}
 
 /**
- * Revoke approval for a specific ERC-1155 spender address.
- * @param {string} spenderAddress - The address of the spender to revoke approval for.
- * @returns {Promise<boolean>} - A promise that resolves to true if revoked successfully, or false.
+ * 🚨 Revoke a **single** ERC-1155 approval.
+ * @param {string} spenderAddress - The spender to revoke approval for.
+ * @returns {Promise<boolean>} - `true` if successful, `false` otherwise.
  */
-async function revokeERC1155Approval(spenderAddress) {
+export async function revokeERC1155Approval(spenderAddress) {
     try {
-        console.log("🚨 Revoking approval for ERC-1155 spender:", spenderAddress);
-
-        const provider = await getProvider(); // ✅ Fix: Ensure async provider fetching
+        console.log("🚨 Revoking ERC-1155 approval for:", spenderAddress);
+        const provider = await getProvider();
         const signer = await provider.getSigner();
-        
-        // Updated ABI to include both functions
-        const erc1155Contract = new Contract(
-            CONTRACT_ADDRESSES.ERC1155, 
-            [
-                "function setApprovalForAll(address operator, bool approved) external",
-                "function isApprovedForAll(address account, address operator) external view returns (bool)"
-            ], 
-            signer
-        );
+        const contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ["function setApprovalForAll(address,bool)"], signer);
 
-        const tx = await erc1155Contract.setApprovalForAll(spenderAddress, false);
-        await tx.wait(); // Wait for transaction confirmation
+        const tx = await contract.setApprovalForAll(spenderAddress, false);
+        await tx.wait();
 
-        // Verify the approval was actually revoked
-        const owner = await signer.getAddress();
-        const isStillApproved = await erc1155Contract.isApprovedForAll(owner, spenderAddress);
-        
-        if (isStillApproved) {
-            console.warn("⚠️ Revocation transaction completed but approval still active!");
-            return false;
-        }
-
-        console.log("✅ Approval revoked successfully.");
+        console.log("✅ ERC-1155 approval revoked.");
         return true;
     } catch (error) {
         console.error("❌ Error revoking ERC-1155 approval:", error);
-        return false; // Return false in case of an error
+        return false;
     }
 }
 
 /**
- * Batch revoke approvals for multiple ERC-1155 spender addresses.
- * @param {Array<string>} spenderAddresses - The array of addresses to revoke approval for.
- * @returns {Promise<boolean>} - A promise that resolves to true if all approvals are revoked successfully, or false.
+ * 🔄 Batch revoke **multiple** ERC-1155 approvals.
+ * @param {Array<string>} spenderAddresses - Array of spender addresses to revoke approval for.
+ * @returns {Promise<boolean>} - `true` if all approvals revoked, `false` otherwise.
  */
-async function batchRevokeERC1155Approvals(spenderAddresses) {
+export async function revokeMultipleERC1155Approvals(spenderAddresses) {
     try {
-        console.log("🚨 Revoking approvals for multiple ERC-1155 spenders:", spenderAddresses);
-
+        console.log("🚨 Revoking multiple ERC-1155 approvals:", spenderAddresses);
         const provider = await getProvider();
         const signer = await provider.getSigner();
-        
-        // Updated ABI to include both functions
-        const erc1155Contract = new Contract(
-            CONTRACT_ADDRESSES.ERC1155, 
-            [
-                "function setApprovalForAll(address operator, bool approved) external",
-                "function isApprovedForAll(address account, address operator) external view returns (bool)"
-            ], 
-            signer
-        );
+        const contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ["function setApprovalForAll(address,bool)"], signer);
 
         for (let spender of spenderAddresses) {
             if (!isAddress(spender)) {
@@ -101,27 +66,15 @@ async function batchRevokeERC1155Approvals(spenderAddresses) {
                 continue;
             }
 
-            const tx = await erc1155Contract.setApprovalForAll(spender, false);
+            const tx = await contract.setApprovalForAll(spender, false);
             await tx.wait();
-            
-            // Verify the approval was actually revoked
-            const owner = await signer.getAddress();
-            const isStillApproved = await erc1155Contract.isApprovedForAll(owner, spender);
-            
-            if (isStillApproved) {
-                console.warn(`⚠️ Revocation transaction completed but approval for ${spender} still active!`);
-            } else {
-                console.log(`✅ Approval revoked for spender: ${spender}`);
-            }
+            console.log(`✅ Revoked ERC-1155 approval for: ${spender}`);
         }
 
-        console.log("🎉 Batch approval revocations successful.");
         return true;
     } catch (error) {
-        console.error("❌ Error in batch revoking ERC-1155 approvals:", error);
+        console.error("❌ Error in batch ERC-1155 revocation:", error);
         return false;
     }
 }
 
-// Ensure all functions are exported properly
-export { getERC1155Approvals, revokeERC1155Approval, batchRevokeERC1155Approvals };

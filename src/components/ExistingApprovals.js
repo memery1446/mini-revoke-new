@@ -38,15 +38,13 @@ const fetchApprovals = useCallback(async () => {
     const erc20Fetched = await getERC20Approvals(tokenContracts, account) || [];
     console.log("🟢 Fetched ERC-20 approvals:", erc20Fetched);
     
-    const erc721Fetched = await getERC721Approvals(account);
+    const erc721Fetched = await getERC721Approvals(account) || [];
     console.log("🟢 Fetched ERC-721 approvals:", erc721Fetched);
 
     const erc1155Fetched = await getERC1155Approvals(account) || [];
     console.log("🟢 Fetched ERC-1155 approvals:", erc1155Fetched);
     
-    if (!Array.isArray(erc721Fetched)) {
-      console.error("❌ `erc721Fetched` is not an array. Defaulting to empty array.");
-    }
+if (!Array.isArray(erc721Fetched)) erc721Fetched = [];
 
     if (!isMounted.current) return;
     
@@ -68,49 +66,55 @@ const fetchApprovals = useCallback(async () => {
 }, [account, dispatch, revoking]);
 
   
-  useEffect(() => {
-    if (account) {
-      console.log("🔄 Wallet account is defined, fetching approvals...");
-      fetchApprovals();
-    } else {
-      console.warn("⚠️ Account is not defined. Cannot fetch approvals.");
-    }
-  }, [account, fetchApprovals]);
-  
-  const revokeApproval = async (approval) => {
-    if (revoking === approval.id) {
-      console.warn(`⚠️ Revocation already in progress for approval ID: ${approval.id}`);
-      return;
-    }
-    try {
-      setRevoking(approval.id);
-      console.log("🚨 Revoking approval:", approval);
-      
-      const signer = await getSigner();
-      if (!signer) throw new Error("❌ Signer not available");
-      console.log("🪙 Signer retrieved successfully:", signer);
-      
-      const contract = new Contract(
-        approval.contract,
-        ["function setApprovalForAll(address operator, bool approved) external"],
-        signer
-      );
-      
-      const tx = await contract.setApprovalForAll(approval.spender, false);
-      console.log("Transaction sent, awaiting confirmation...");
-      await tx.wait();
-      console.log("✅ Approval revoked successfully!");
+useEffect(() => {
+  console.log("🟡 useEffect triggered: Checking if fetchApprovals() runs multiple times");
 
-      if (isMounted.current) {
-        dispatch(removeApproval(approval));
-        console.log(`🗑️ Approval removed from state:`, approval);
-        setTimeout(fetchApprovals, 2000); // Refresh approvals after 2 seconds
-      }
-    } catch (err) {
-      console.error("❌ Error revoking approval:", err);
-      if (isMounted.current) setRevoking(null);
+  if (account) {
+    console.log("🔄 Wallet account is defined, calling fetchApprovals()...");
+    fetchApprovals();
+  } else {
+    console.warn("⚠️ Account is not defined. Cannot fetch approvals.");
+  }
+}, [account, fetchApprovals]);
+  
+const revokeApproval = async (approval) => {
+  if (revoking === approval.id) {
+    console.warn(`⚠️ Revocation already in progress for approval ID: ${approval.id}`);
+    return;
+  }
+  try {
+    setRevoking(approval.id);
+    console.log("🚨 Revoking approval:", approval);
+
+    const signer = await getSigner();
+    if (!signer) throw new Error("❌ Signer not available");
+    console.log("🪙 Signer retrieved successfully:", signer);
+
+    let contract, tx;
+
+    if (approval.type === "ERC-20") {
+      contract = new Contract(approval.contract, ["function approve(address,uint256)"], signer);
+      tx = await contract.approve(approval.spender, 0);
+    } else {
+      contract = new Contract(approval.contract, ["function setApprovalForAll(address,bool)"], signer);
+      tx = await contract.setApprovalForAll(approval.spender, false);
     }
-  };
+
+    console.log("📤 Transaction sent, awaiting confirmation...");
+    await tx.wait();
+    console.log("✅ Approval revoked successfully!");
+
+    if (isMounted.current) {
+      dispatch(removeApproval(approval));
+      console.log(`🗑️ Approval removed from state:`, approval);
+      setTimeout(fetchApprovals, 2000); // Refresh approvals after 2 seconds
+    }
+  } catch (err) {
+    console.error("❌ Error revoking approval:", err);
+    if (isMounted.current) setRevoking(null);
+  }
+};
+
   
   return (
     <div className="card shadow-sm mb-4">
