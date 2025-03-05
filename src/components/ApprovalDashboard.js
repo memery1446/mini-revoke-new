@@ -22,7 +22,7 @@ const ApprovalDashboard = () => {
   }, [wallet]);
 
   useEffect(() => {
-    console.log("📋 Approvals in UI:", JSON.stringify(approvals, null, 2));
+    console.log("📋 Updated Approvals in UI:", JSON.stringify(approvals, null, 2));
   }, [approvals]);
 
   const loadApprovals = async () => {
@@ -114,12 +114,18 @@ const handleSelect = (approval) => {
       }
 
 if (result.success) {
-  dispatch(setApprovals(approvals.filter(a => !selectedApprovals.includes(a))));
+  console.log("🗑️ Removing revoked approvals from Redux...");
+  dispatch(setApprovals(approvals.filter(a => 
+    !(selectedApprovals.some(sel => 
+      sel.contract === a.contract && sel.spender === a.spender
+    ))
+  )));
+
   setMessage({ type: 'success', text: `Revoked ${result.count} approval(s)!` });
   setSelectedApprovals([]);
   setTimeout(loadApprovals, 2000);
-
-      } else {
+}
+ else {
         setMessage({ type: 'danger', text: `Error: ${result.error}` });
       }
     } catch (error) {
