@@ -35,6 +35,7 @@ const ApprovalDashboard = () => {
   const [selectedApproval, setSelectedApproval] = useState(null);
   const [debugInfo, setDebugInfo] = useState("");
 
+
   // Debug output - log what we're getting from Redux
   useEffect(() => {
     console.log("Redux approvals:", reduxApprovals);

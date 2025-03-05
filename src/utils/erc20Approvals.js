@@ -32,6 +32,7 @@ export async function getERC20Approvals(tokenContracts, ownerAddress) {
             amount: allowance.toString(),
           };
           
+          
           approvals.push(approval);
           console.log(`✅ Found ERC-20 approval:`, approval);
         }
