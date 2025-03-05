@@ -23,9 +23,10 @@ const ApprovalDashboard = () => {
     }
   }, [wallet]);
 
-  useEffect(() => {
-  console.log("📋 Full Approvals Data in UI:", approvals);
+useEffect(() => {
+  console.log("📋 Full Approvals Data in UI:", JSON.stringify(approvals, null, 2));
 }, [approvals]);
+
 
 
   const loadApprovals = async () => {
@@ -58,7 +59,11 @@ const ApprovalDashboard = () => {
       ];
 
       console.log("🔹 Final approval list before dispatch:", allApprovals);
-      dispatch(setApprovals(allApprovals)); 
+dispatch(setApprovals([])); // Force Redux to clear first
+setTimeout(() => {
+  dispatch(setApprovals(allApprovals)); // Then restore approvals
+}, 100);
+
       setMessage({ type: 'success', text: `Found ${allApprovals.length} approvals` });
     } catch (error) {
       console.error("❌ Load Error:", error);
@@ -79,12 +84,17 @@ const ApprovalDashboard = () => {
       <div className="card-body">
         {message && <p className={`alert alert-${message.type}`}>{message.text}</p>}
 <ul>
-  {approvals.length > 0 ? approvals.map((a, idx) => (
-    <li key={idx}>
-      {a.type} - {a.contract} → {a.spender}
-      {a.type === "ERC-1155" && a.tokenId ? ` (Token ID: ${a.tokenId})` : ""}
-    </li>
-  )) : <p>No approvals found.</p>}
+<ul>
+  {approvals && approvals.length > 0 ? approvals.map((a, idx) => {
+    console.log(`🔹 Rendering approval #${idx}:`, a); // ✅ Log each approval
+
+    return (
+      <li key={idx}>
+        {a.type} - {a.contract} → {a.spender}
+        {a.type === "ERC-1155" && a.tokenId ? ` (Token ID: ${a.tokenId})` : ""}
+      </li>
+    );
+  }) : <p>No approvals found.</p>}
 </ul>
       </div>
     </div>
