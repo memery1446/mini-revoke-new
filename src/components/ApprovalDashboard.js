@@ -65,13 +65,24 @@ const ApprovalDashboard = () => {
     }
   };
 
-  const handleSelect = (approval) => {
-    setSelectedApprovals(prev =>
-      prev.some(a => a.contract === approval.contract && a.spender === approval.spender)
-        ? prev.filter(a => !(a.contract === approval.contract && a.spender === approval.spender))
-        : [...prev, approval]
+const handleSelect = (approval) => {
+  setSelectedApprovals(prev => {
+    const exists = prev.some(a =>
+      a.contract === approval.contract &&
+      a.spender === approval.spender &&
+      (a.tokenId ? a.tokenId === approval.tokenId : true) // ✅ Fix: Match tokenId
     );
-  };
+
+    return exists
+      ? prev.filter(a =>
+          !(a.contract === approval.contract &&
+            a.spender === approval.spender &&
+            (a.tokenId ? a.tokenId === approval.tokenId : true)) // ✅ Unselect exact approval
+        )
+      : [...prev, approval];
+  });
+};
+
 
   const handleRevoke = async () => {
     if (!selectedApprovals.length || processing) return;
@@ -138,11 +149,15 @@ if (result.success) {
               approvals.map((a, idx) => (
                 <tr key={idx}>
                   <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedApprovals.some(sel => sel.contract === a.contract && sel.spender === a.spender)}
-                      onChange={() => handleSelect(a)}
-                    />
+<input
+  type="checkbox"
+  checked={selectedApprovals.some(sel =>
+    sel.contract === a.contract &&
+    sel.spender === a.spender &&
+    (a.tokenId ? sel.tokenId === a.tokenId : true) // ✅ Fix: Track tokenId correctly
+  )}
+  onChange={() => handleSelect(a)}
+/>
                   </td>
                   <td>
                     <span className={`badge bg-${a.type === 'ERC-20' ? 'success' : a.type === 'ERC-721' ? 'primary' : 'warning'}`}>
