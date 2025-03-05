@@ -49,6 +49,8 @@ async function main() {
   await testNFT.safeMint(deployer.address);
   await testNFT.safeMint(deployer.address);
   console.log(`✅ Minted 3 NFTs`);
+const nftBalance = await testNFT.balanceOf(deployer.address);
+console.log(`🔍 Deployer owns ${nftBalance.toString()} NFTs`);
 
   // Mint ERC1155 tokens
   await testERC1155.mint(deployer.address, 1, 100);

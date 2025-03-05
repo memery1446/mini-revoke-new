@@ -60,25 +60,27 @@ async function approveERC721(nftAddress, deployer, tokenIds) {
   try {
     const contract = new ethers.Contract(nftAddress, NFT_ABI, deployer);
 
-    for (const tokenId of tokenIds) {
-      let owner;
-      try {
-        owner = await contract.ownerOf(tokenId);
-      } catch (err) {
-        console.log(`⚠️ Skipping Token ID ${tokenId}: Token does not exist or contract error.`);
-        continue; // Skip this token ID
-      }
+for (const tokenId of tokenIds) {
+  let owner;
+  try {
+    owner = await contract.ownerOf(tokenId);
+    console.log(`🔍 Token ID ${tokenId} is owned by: ${owner}`);
+  } catch (err) {
+    console.log(`⚠️ Skipping Token ID ${tokenId}: Token does not exist or contract error.`);
+    continue;
+  }
 
-      if (owner.toLowerCase() !== deployer.address.toLowerCase()) {
-        console.log(`⚠️ Skipping approval: Not the owner of ERC-721 Token ID ${tokenId}`);
-        continue; // Skip if not the owner
-      }
+  if (owner.toLowerCase() !== deployer.address.toLowerCase()) {
+    console.log(`⚠️ Skipping approval: Not the owner of ERC-721 Token ID ${tokenId}`);
+    continue;
+  }
 
-      console.log(`🖼️ Approving ERC-721 Token ID ${tokenId}...`);
-      const tx = await contract.approve(CONTRACT_ADDRESSES.MockSpender, tokenId);
-      await tx.wait();
-      console.log(`✅ Approved ERC-721 Token ID: ${tokenId}`);
-    }
+  console.log(`🖼️ Approving ERC-721 Token ID ${tokenId}...`);
+  const tx = await contract.approve(CONTRACT_ADDRESSES.MockSpender, tokenId);
+  await tx.wait();
+  console.log(`✅ Approved ERC-721 Token ID: ${tokenId}`);
+}
+
   } catch (error) {
     console.error(`❌ ERC-721 Approval Failed: ${error.message}`);
   }
