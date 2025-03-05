@@ -13,9 +13,18 @@ async function main() {
   console.log(`📌 Using signer: ${deployer.address}`);
 
   const MAX_UINT256 = ethers.MaxUint256;
-  const TOKEN_IDS = [1, 2]; // Token IDs for ERC-721 and ERC-1155
+  const TOKEN_IDS = [1, 2, 3]; // Ensure we approve multiple NFTs
 
   try {
+    // Mint NFTs before approving them
+    const testNFT = await ethers.getContractAt(NFT_ABI, CONTRACT_ADDRESSES.TestNFT, deployer);
+    console.log(`🔄 Minting 3 NFTs...`);
+    for (let i = 0; i < 3; i++) {
+      const tx = await testNFT.safeMint(deployer.address);
+      await tx.wait();
+      console.log(`✅ Minted NFT #${i + 1}`);
+    }
+
     // Approve ERC-20 Tokens
     await approveERC20(CONTRACT_ADDRESSES.TK1, deployer, MAX_UINT256);
     await approveERC20(CONTRACT_ADDRESSES.TK2, deployer, MAX_UINT256);
@@ -54,38 +63,35 @@ async function approveERC20(tokenAddress, deployer, amount) {
   }
 }
 
-
 // 🔹 Approve ERC-721 NFTs
 async function approveERC721(nftAddress, deployer, tokenIds) {
   try {
     const contract = new ethers.Contract(nftAddress, NFT_ABI, deployer);
 
-for (const tokenId of tokenIds) {
-  let owner;
-  try {
-    owner = await contract.ownerOf(tokenId);
-    console.log(`🔍 Token ID ${tokenId} is owned by: ${owner}`);
-  } catch (err) {
-    console.log(`⚠️ Skipping Token ID ${tokenId}: Token does not exist or contract error.`);
-    continue;
-  }
+    for (const tokenId of tokenIds) {
+      let owner;
+      try {
+        owner = await contract.ownerOf(tokenId);
+        console.log(`🔍 Token ID ${tokenId} is owned by: ${owner}`);
+      } catch (err) {
+        console.log(`⚠️ Skipping Token ID ${tokenId}: Token does not exist or contract error.`);
+        continue;
+      }
 
-  if (owner.toLowerCase() !== deployer.address.toLowerCase()) {
-    console.log(`⚠️ Skipping approval: Not the owner of ERC-721 Token ID ${tokenId}`);
-    continue;
-  }
+      if (owner.toLowerCase() !== deployer.address.toLowerCase()) {
+        console.log(`⚠️ Skipping approval: Not the owner of ERC-721 Token ID ${tokenId}`);
+        continue;
+      }
 
-  console.log(`🖼️ Approving ERC-721 Token ID ${tokenId}...`);
-  const tx = await contract.approve(CONTRACT_ADDRESSES.MockSpender, tokenId);
-  await tx.wait();
-  console.log(`✅ Approved ERC-721 Token ID: ${tokenId}`);
-}
-
+      console.log(`🖼️ Approving ERC-721 Token ID ${tokenId}...`);
+      const tx = await contract.approve(CONTRACT_ADDRESSES.MockSpender, tokenId);
+      await tx.wait();
+      console.log(`✅ Approved ERC-721 Token ID: ${tokenId}`);
+    }
   } catch (error) {
     console.error(`❌ ERC-721 Approval Failed: ${error.message}`);
   }
 }
-
 
 // 🔹 Approve ERC-1155 Collection
 async function approveERC1155(erc1155Address, deployer) {
@@ -105,4 +111,3 @@ main().catch((error) => {
   console.error("❌ Script failed:", error);
   process.exit(1);
 });
-
