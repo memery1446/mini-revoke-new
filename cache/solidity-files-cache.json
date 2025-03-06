@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/markemery/approval-manager/contracts/MockSpender.sol": {
-      "lastModificationDate": 1741263434546,
-      "contentHash": "91706d49b77faaf6c284260c28c74f72",
+      "lastModificationDate": 1741277176240,
+      "contentHash": "f0225558d4f40c58367fc66c61333f42",
       "sourceName": "contracts/MockSpender.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -41,8 +41,8 @@
       ]
     },
     "/Users/markemery/approval-manager/contracts/TestERC1155.sol": {
-      "lastModificationDate": 1741263434546,
-      "contentHash": "be6127aa911e4c9d955c11f25c999505",
+      "lastModificationDate": 1741268159504,
+      "contentHash": "d6c45adebc85b6c1065b0ff99fdfd6b4",
       "sourceName": "contracts/TestERC1155.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -1111,8 +1111,8 @@
       ]
     },
     "/Users/markemery/approval-manager/contracts/TestNFT.sol": {
-      "lastModificationDate": 1741263434546,
-      "contentHash": "9c7c9c1fa8788f46f9488a47885f26fe",
+      "lastModificationDate": 1741268169370,
+      "contentHash": "b11da2cf88b79f4abf181846cb43be69",
       "sourceName": "contracts/TestNFT.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -1229,8 +1229,8 @@
       ]
     },
     "/Users/markemery/approval-manager/contracts/TestToken.sol": {
-      "lastModificationDate": 1741263434546,
-      "contentHash": "85ec8c42bf3a5c29c29af6fbd9e675ac",
+      "lastModificationDate": 1741268180270,
+      "contentHash": "64d9f25e56f9532878d5c9e5c6f2a731",
       "sourceName": "contracts/TestToken.sol",
       "solcConfig": {
         "version": "0.8.20",
