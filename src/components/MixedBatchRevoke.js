@@ -5,13 +5,15 @@ import { useDispatch } from "react-redux";
 import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
 
-const MixedBatchRevoke = ({ selectedApprovals, onComplete }) => {
+const MixedBatchRevoke = ({ selectedApprovals = [], onComplete }) => {
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState(null);
   const dispatch = useDispatch();
 
   const handleMixedRevoke = async () => {
-    if (!selectedApprovals.length || processing) return;
+    if (!selectedApprovals || !selectedApprovals.length || processing) return;
     setProcessing(true);
+    setError(null);
 
     try {
       const provider = await getProvider();
@@ -30,20 +32,32 @@ const MixedBatchRevoke = ({ selectedApprovals, onComplete }) => {
       console.log("🎮 ERC-1155 Approvals to Revoke:", erc1155Approvals);
 
       if (erc20Approvals.length) {
-        const result = await revokeERC20Approvals(erc20Approvals, signer);
-        if (result.success) revokedApprovals.push(...erc20Approvals);
+        try {
+          const result = await revokeERC20Approvals(erc20Approvals, signer);
+          if (result && result.success) revokedApprovals.push(...erc20Approvals);
+        } catch (err) {
+          console.error("❌ ERC-20 Revoke Error:", err.message);
+        }
       }
 
       if (erc721Approvals.length) {
-        const result = await revokeERC721Approvals(erc721Approvals, signer);
-        if (result.success) revokedApprovals.push(...erc721Approvals);
+        try {
+          const result = await revokeERC721Approvals(erc721Approvals, signer);
+          if (result && result.success) revokedApprovals.push(...erc721Approvals);
+        } catch (err) {
+          console.error("❌ ERC-721 Revoke Error:", err.message);
+        }
       }
 
       if (erc1155Approvals.length) {
-        const result = await revokeMultipleERC1155Approvals(
-          erc1155Approvals.map(a => ({ contract: a.contract, spender: a.spender }))
-        );
-        if (result.success) revokedApprovals.push(...erc1155Approvals);
+        try {
+          const result = await revokeMultipleERC1155Approvals(
+            erc1155Approvals.map(a => ({ contract: a.contract, spender: a.spender }))
+          );
+          if (result && result.success) revokedApprovals.push(...erc1155Approvals);
+        } catch (err) {
+          console.error("❌ ERC-1155 Revoke Error:", err.message);
+        }
       }
 
       console.log("✅ Mixed Batch Revoke Completed! Revoked Approvals:", revokedApprovals);
@@ -58,18 +72,39 @@ const MixedBatchRevoke = ({ selectedApprovals, onComplete }) => {
       }
 
       // ✅ Refresh the dashboard
-      onComplete();
+      if (typeof onComplete === 'function') {
+        onComplete();
+      }
     } catch (error) {
-      console.error("❌ Mixed Batch Revoke Failed:", error.message);
+      console.error("❌ Mixed Batch Revoke Failed:", error);
+      setError(error.message || "Failed to revoke approvals");
     } finally {
       setProcessing(false);
     }
   };
 
   return (
-    <div className="alert alert-warning">
-      <p>⚠️ You are revoking approvals across multiple token types.</p>
-      <button className="btn btn-danger w-100" onClick={handleMixedRevoke} disabled={processing}>
+    <div className="border rounded p-3 mb-3">
+      <div className="alert alert-warning">
+        <p>⚠️ You are revoking approvals across multiple token types:</p>
+        <ul>
+          <li>ERC-20: {selectedApprovals.filter(a => a.type === "ERC-20").length}</li>
+          <li>ERC-721: {selectedApprovals.filter(a => a.type === "ERC-721").length}</li>
+          <li>ERC-1155: {selectedApprovals.filter(a => a.type === "ERC-1155").length}</li>
+        </ul>
+      </div>
+      
+      {error && (
+        <div className="alert alert-danger">
+          <p>Error: {error}</p>
+        </div>
+      )}
+      
+      <button 
+        className="btn btn-danger w-100" 
+        onClick={handleMixedRevoke} 
+        disabled={processing || !selectedApprovals.length}
+      >
         {processing ? "Processing..." : "Confirm Mixed Batch Revoke"}
       </button>
     </div>
@@ -77,5 +112,4 @@ const MixedBatchRevoke = ({ selectedApprovals, onComplete }) => {
 };
 
 export default MixedBatchRevoke;
-
 
