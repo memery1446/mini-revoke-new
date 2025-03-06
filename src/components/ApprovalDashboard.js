@@ -57,7 +57,7 @@ const ApprovalDashboard = () => {
         erc20List = await getERC20Approvals([CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2], address) || []; 
       } catch (err) { 
         console.error("❌ ERC-20 Fetch Error:", err); 
-        erc20List = []; // ✅ FIX: Ensure it's an array on error
+        erc20List = []; 
       }
 
       try { 
@@ -66,7 +66,7 @@ const ApprovalDashboard = () => {
         erc721List = await getERC721Approvals(address) || []; 
       } catch (err) { 
         console.error("❌ ERC-721 Fetch Error:", err); 
-        erc721List = []; // ✅ FIX: Ensure it's an array on error
+        erc721List = []; 
       }
 
       try { 
@@ -75,7 +75,7 @@ const ApprovalDashboard = () => {
         erc1155List = await getERC1155Approvals(address) || []; 
       } catch (err) { 
         console.error("❌ ERC-1155 Fetch Error:", err); 
-        erc1155List = []; // ✅ FIX: Ensure it's an array on error
+        erc1155List = []; 
       }
 
       setProgressValue(90);
