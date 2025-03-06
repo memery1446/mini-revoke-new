@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setAccount } from "../store/web3Slice";
 import { connectWallet } from "../utils/providerService";
@@ -8,57 +8,89 @@ const safeConsoleLog = window.console.log.bind(window.console);
 
 const WalletConnect = () => {
   const dispatch = useDispatch();
-  const account = useSelector((state) => state.web3.account);
+  const account = useSelector((state) => state.web3?.account);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState(null);
+  const debugRef = useRef(null);
 
-  // Log when component renders
+  // Log when component renders (safely)
   safeConsoleLog("🔵 WalletConnect component rendering");
   
+  // Create debug element
   useEffect(() => {
-    // Create a visible debug element
-    const debugElement = document.createElement('div');
-    debugElement.id = 'wallet-debug';
-    debugElement.style.position = 'fixed';
-    debugElement.style.top = '10px';
-    debugElement.style.left = '10px';
-    debugElement.style.backgroundColor = 'black';
-    debugElement.style.color = 'white';
-    debugElement.style.padding = '10px';
-    debugElement.style.zIndex = '9999';
-    debugElement.style.fontSize = '12px';
-    debugElement.style.maxWidth = '300px';
-    debugElement.style.maxHeight = '200px';
-    debugElement.style.overflow = 'auto';
-    document.body.appendChild(debugElement);
-    
-    function updateDebug(msg) {
-      const el = document.getElementById('wallet-debug');
-      if (el) {
-        el.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
-        el.scrollTop = el.scrollHeight;
-      }
-      safeConsoleLog(msg);
+    try {
+      // Create a visible debug element
+      const debugElement = document.createElement('div');
+      debugElement.id = 'wallet-debug';
+      debugElement.style.position = 'fixed';
+      debugElement.style.top = '10px';
+      debugElement.style.left = '10px';
+      debugElement.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+      debugElement.style.color = 'white';
+      debugElement.style.padding = '10px';
+      debugElement.style.zIndex = '9999';
+      debugElement.style.fontSize = '12px';
+      debugElement.style.maxWidth = '300px';
+      debugElement.style.maxHeight = '200px';
+      debugElement.style.overflow = 'auto';
+      debugElement.style.borderRadius = '5px';
+      document.body.appendChild(debugElement);
+      debugRef.current = debugElement;
+      
+      // Define update function
+      const updateDebug = (msg) => {
+        try {
+          const el = document.getElementById('wallet-debug');
+          if (el) {
+            const entry = document.createElement('div');
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${msg}`;
+            el.appendChild(entry);
+            el.scrollTop = el.scrollHeight;
+          }
+          safeConsoleLog(msg);
+        } catch (error) {
+          safeConsoleLog("Debug update error:", error);
+        }
+      };
+      
+      // Set safe global reference (using a getter to avoid direct assignment)
+      Object.defineProperty(window, '_updateDebug', {
+        get: () => updateDebug,
+        configurable: true
+      });
+      
+      updateDebug("WalletConnect mounted");
+    } catch (err) {
+      safeConsoleLog("Debug setup error:", err);
     }
     
-    updateDebug("WalletConnect mounted");
-    window._updateDebug = updateDebug; // Expose globally
-    
+    // Clean up on unmount
     return () => {
-      const el = document.getElementById('wallet-debug');
-      if (el) el.remove();
+      try {
+        if (debugRef.current && document.body.contains(debugRef.current)) {
+          document.body.removeChild(debugRef.current);
+        }
+        
+        // Clean up global reference safely
+        if (Object.getOwnPropertyDescriptor(window, '_updateDebug')) {
+          Object.defineProperty(window, '_updateDebug', {
+            value: null,
+            configurable: true
+          });
+        }
+      } catch (err) {
+        safeConsoleLog("Debug cleanup error:", err);
+      }
     };
   }, []);
 
   const handleConnect = async () => {
-    window._updateDebug?.("Connect button clicked");
-    safeConsoleLog("🔌 Connect button clicked");
-    
-    setConnecting(true);
-    setError(null);
-    
     try {
-      window._updateDebug?.("Attempting to connect wallet...");
+      window._updateDebug?.("Connect button clicked");
+      safeConsoleLog("🔌 Connect button clicked");
+      
+      setConnecting(true);
+      setError(null);
       
       // Use the connectWallet function from providerService
       const success = await connectWallet();
@@ -71,24 +103,33 @@ const WalletConnect = () => {
       }
     } catch (err) {
       safeConsoleLog("❌ Wallet connection error:", err);
-      window._updateDebug?.(`Error: ${err.message}`);
-      setError(err.message);
+      window._updateDebug?.(`Error: ${err.message || "Unknown connection error"}`);
+      setError(err.message || "Connection failed");
     } finally {
       setConnecting(false);
     }
   };
 
   const handleDisconnect = () => {
-    window._updateDebug?.("Disconnecting wallet");
-    dispatch(setAccount(null));
+    try {
+      window._updateDebug?.("Disconnecting wallet");
+      dispatch(setAccount(null));
+    } catch (err) {
+      safeConsoleLog("Disconnect error:", err);
+    }
   };
 
   // Log when account changes
   useEffect(() => {
-    window._updateDebug?.(`Account state: ${account || "not connected"}`);
-    safeConsoleLog("👛 Account state updated:", account);
+    try {
+      window._updateDebug?.(`Account state: ${account || "not connected"}`);
+      safeConsoleLog("👛 Account state updated:", account);
+    } catch (err) {
+      safeConsoleLog("Account update error:", err);
+    }
   }, [account]);
 
+  // Render safely
   return (
     <div className="card h-100">
       <div className="card-body">
@@ -131,3 +172,4 @@ const WalletConnect = () => {
 };
 
 export default WalletConnect;
+
