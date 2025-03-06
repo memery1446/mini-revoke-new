@@ -143,91 +143,90 @@ dispatch(setApprovals(prevApprovals =>
   };
 
 return (
-  <div className="card shadow-lg">
-    <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-      <h5 className="mb-0">Token Approvals</h5>
-      <button className="btn btn-light" onClick={loadApprovals} disabled={isLoading}>
-        {isLoading ? 'Loading...' : 'Refresh'}
-      </button>
-    </div>
+    <div className="card shadow-lg">
+      <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 className="mb-0">Token Approvals</h5>
+        <button className="btn btn-light" onClick={loadApprovals} disabled={isLoading}>
+          {isLoading ? 'Loading...' : 'Refresh'}
+        </button>
+      </div>
 
-    <div className="card-body">
-      {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
+      <div className="card-body">
+        {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
 
-       {showMixedBatchRevoke ? (
-        <MixedBatchRevoke 
-          selectedApprovals={selectedApprovals} 
-          onComplete={() => {
-            setShowMixedBatchRevoke(false);
-            setSelectedApprovals([]);  // ✅ Clear selections after revoking
-            loadApprovals();
-          }} 
-        />
-      ) : (
-        <> {/* ✅ Properly opening the JSX fragment */}
-          <table className="table table-hover">
-            <thead className="table-dark">
-              <tr>
-                <th>Select</th>
-                <th>Type</th>
-                <th>Contract</th>
-                <th>Spender</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              {approvals.length > 0 ? (
-                approvals.map((a, idx) => (
-                  <tr key={idx}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selectedApprovals.some(sel =>
-                          sel.contract === a.contract &&
-                          sel.spender === a.spender &&
-                          (a.tokenId ? sel.tokenId === a.tokenId : true)
-                        )}
-                        onChange={() => handleSelect(a)}
-                      />
-                    </td>
-                    <td>
-                      <span className={`badge bg-${a.type === 'ERC-20' ? 'success' : a.type === 'ERC-721' ? 'primary' : 'warning'}`}>
-                        {a.type}
-                      </span>
-                    </td>
-                    <td><code>{a.contract.substring(0, 8)}...</code></td>
-                    <td><code>{a.spender.substring(0, 8)}...</code></td>
-                    <td>
-                      {a.type === "ERC-20" && `Unlimited Allowance (${a.amount})`}
-                      {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId}`)}
-                      {a.type === "ERC-1155" && "Collection-wide Approval"}
-                    </td>
-                  </tr>
-                ))
-              ) : (
+        {showMixedBatchRevoke ? (
+          <MixedBatchRevoke 
+            selectedApprovals={selectedApprovals} 
+            onComplete={() => {
+              setShowMixedBatchRevoke(false);
+              setSelectedApprovals([]);  // ✅ Clear selections after revoking
+              loadApprovals();
+            }} 
+          />
+        ) : (
+          <>
+            <table className="table table-hover">
+              <thead className="table-dark">
                 <tr>
-                  <td colSpan="5" className="text-center text-muted">No active approvals found.</td>
+                  <th>Select</th>
+                  <th>Type</th>
+                  <th>Contract</th>
+                  <th>Spender</th>
+                  <th>Details</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {approvals.length > 0 ? (
+                  approvals.map((a, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selectedApprovals.some(sel =>
+                            sel.contract === a.contract &&
+                            sel.spender === a.spender &&
+                            (a.tokenId ? sel.tokenId === a.tokenId : true)
+                          )}
+                          onChange={() => handleSelect(a)}
+                        />
+                      </td>
+                      <td>
+                        <span className={`badge bg-${a.type === 'ERC-20' ? 'success' : a.type === 'ERC-721' ? 'primary' : 'warning'}`}>
+                          {a.type}
+                        </span>
+                      </td>
+                      <td><code>{a.contract.substring(0, 8)}...</code></td>
+                      <td><code>{a.spender.substring(0, 8)}...</code></td>
+                      <td>
+                        {a.type === "ERC-20" && `Unlimited Allowance (${a.amount})`}
+                        {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId}`)}
+                        {a.type === "ERC-1155" && "Collection-wide Approval"}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center text-muted">No active approvals found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
 
-          {/* REVOKE BUTTON - Always Visible */}
-          {!showMixedBatchRevoke && (
-            <button
-              className="btn btn-danger w-100 mt-3"
-              onClick={handleRevoke}
-              disabled={processing || selectedApprovals.length === 0}
-            >
-              {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
-            </button>
-          )}
-
-        </>  {/* ✅ Correctly closing the JSX fragment */}
-      )}
+            {/* REVOKE BUTTON - Always Visible */}
+            {!showMixedBatchRevoke && (
+              <button
+                className="btn btn-danger w-100 mt-3"
+                onClick={handleRevoke}
+                disabled={processing || selectedApprovals.length === 0}
+              >
+                {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default ApprovalDashboard;
