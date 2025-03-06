@@ -109,10 +109,7 @@ const BatchRevoke = () => {
     }
   };
 
-  return (
 
-  );
-};
 
 export default BatchRevoke;
 
