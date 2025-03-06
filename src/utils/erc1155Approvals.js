@@ -44,7 +44,7 @@ export async function revokeERC1155Approval(spenderAddress) {
         return true;
     } catch (error) {
         console.error("❌ Error revoking ERC-1155 approval:", error);
-        return false;
+        return { success: false, error: error.message || "Unknown error" };
     }
 }
 
@@ -72,10 +72,11 @@ export async function revokeMultipleERC1155Approvals(approvals) {
             console.log(`✅ Approval revoked for: ${spender} on contract ${contract}`);
         }
 
-        return true;
+        return { success: true };
     } catch (error) {
         console.error("❌ Error in batch ERC-1155 revocation:", error);
-        return false;
+        return { success: false, error: error.message || "Unknown error" };
+
     }
 }
 

@@ -132,103 +132,91 @@ const ApprovalDashboard = () => {
   const handleRevoke = async () => {
     if (!selectedApprovals.length || processing) return;
 
-    // Access to types array
-    const approvalTypes = Array.isArray(selectedApprovals) 
-      ? [...new Set(selectedApprovals.map(a => a?.type).filter(Boolean))]
-      : [];
-      
+    // Identify the selected approval types
+    const approvalTypes = [...new Set(selectedApprovals.map(a => a?.type).filter(Boolean))];
+
     if (approvalTypes.length > 1) {
-       console.log("🔄 Switching to MixedBatchRevoke...");
-      setShowMixedBatchRevoke(true);
-      return; // This prevents execution of regular revoke logic
+        console.log("🔄 Switching to MixedBatchRevoke...");
+        setShowMixedBatchRevoke(true);
+        return; // Prevent execution of regular revoke logic
     }
 
-    // Save a copy for revocation
+    // Save selected approvals and reset UI states
     const approvalsToRevoke = [...selectedApprovals];
     setSelectedApprovals([]);
     setProcessing(true);
     setMessage({ type: 'info', text: 'Processing revocation...' });
-    
-    // Reset progress when starting a new operation
+
+    // Reset progress
     setProgressValue(0);
     setProgressStatus('Initializing revocation...');
 
     try {
-      setProgressValue(10);
-      setProgressStatus('Connecting to wallet...');
-      const provider = await getProvider();
-      const signer = await provider.getSigner();
-      let result;
+        setProgressValue(10);
+        setProgressStatus('Connecting to wallet...');
+        const provider = await getProvider();
+        const signer = await provider.getSigner();
+        let result = { success: false, error: "Unexpected error" };
 
-      setProgressValue(30);
-      setProgressStatus('Preparing transaction...');
+        setProgressValue(30);
+        setProgressStatus('Preparing transaction...');
 
-      // Safe checks
-      if (approvalsToRevoke.every(a => a?.type === 'ERC-20')) {
-        setProgressStatus('Revoking ERC-20 approvals...');
-        result = await revokeERC20Approvals(approvalsToRevoke, signer);
-        setProgressValue(80); 
-      } else if (approvalsToRevoke.every(a => a?.type === 'ERC-721')) {
-        setProgressStatus('Revoking ERC-721 approvals...');
-        result = await revokeERC721Approvals(approvalsToRevoke, signer);
-        setProgressValue(80); 
-      } else if (approvalsToRevoke.every(a => a?.type === 'ERC-1155')) {
-        setProgressStatus('Revoking ERC-1155 approvals...');
-        result = await revokeMultipleERC1155Approvals(
-          approvalsToRevoke.map(a => ({ contract: a.contract, spender: a.spender }))
-        );
-        setProgressValue(80); 
-      } else {
-        throw new Error("Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately.");
-      }
-
-      setProgressValue(90);
-      setProgressStatus('Updating state...');
-
-      if (result?.success) {
-        console.log("🗑️ Removing revoked approvals from Redux...");
-        
-        // FIX: Safe update with careful null checking
-        dispatch(setApprovals(prevApprovals => {
-          if (!Array.isArray(prevApprovals)) return [];
-          
-          return prevApprovals.filter(a => {
-            if (!a) return false;
-            
-            return !approvalsToRevoke.some(sel => 
-              sel.contract === a.contract && 
-              sel.spender === a.spender && 
-              (a.tokenId ? sel.tokenId === a.tokenId : true)
+        // Handle ERC-20, ERC-721, ERC-1155 separately
+        if (approvalsToRevoke.every(a => a?.type === 'ERC-20')) {
+            setProgressStatus('Revoking ERC-20 approvals...');
+            result = await revokeERC20Approvals(approvalsToRevoke, signer);
+        } else if (approvalsToRevoke.every(a => a?.type === 'ERC-721')) {
+            setProgressStatus('Revoking ERC-721 approvals...');
+            result = await revokeERC721Approvals(approvalsToRevoke, signer);
+        } else if (approvalsToRevoke.every(a => a?.type === 'ERC-1155')) {
+            setProgressStatus('Revoking ERC-1155 approvals...');
+            result = await revokeMultipleERC1155Approvals(
+                approvalsToRevoke.map(a => ({ contract: a.contract, spender: a.spender }))
             );
-          });
-        }));
-
-        setProgressValue(100);
-        setProgressStatus('Revocation complete!');
-        setMessage({ type: 'success', text: `Revoked ${result.count || 0} approval(s)!` });
-        setTimeout(loadApprovals, 2000);
-      } else {
-        setProgressValue(0);
-        setMessage({ type: 'danger', text: `Error: ${result?.error || 'Unknown error during revocation'}` });
-      }
-    } catch (error) {
-      console.error("❌ Revocation Error:", error);
-      setProgressValue(0);
-      setMessage({ type: 'danger', text: `Error: ${error?.message || 'Unknown error'}` });
-    } finally {
-      const currentProgressValue = progressValue; // Current value
-      setTimeout(() => {
-        setProcessing(false);
-        // Reset progress after a delay to show the completed progress bar
-        if (currentProgressValue === 100) {
-          setTimeout(() => {
-            setProgressValue(0);
-            setProgressStatus('');
-          }, 1000);
+        } else {
+            throw new Error("Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately.");
         }
-      }, 500);
+
+        setProgressValue(90);
+        setProgressStatus('Updating state...');
+
+        if (result?.success) {
+            console.log("🗑️ Removing revoked approvals from Redux...");
+
+            dispatch(setApprovals(prevApprovals => {
+                if (!Array.isArray(prevApprovals)) return [];
+                return prevApprovals.filter(a =>
+                    !approvalsToRevoke.some(sel =>
+                        sel.contract === a.contract &&
+                        sel.spender === a.spender &&
+                        (a.tokenId ? sel.tokenId === a.tokenId : true)
+                    )
+                );
+            }));
+
+            setProgressValue(100);
+            setProgressStatus('Revocation complete!');
+            setMessage({ type: 'success', text: `Revoked ${approvalsToRevoke.length} approval(s)!` });
+
+            setTimeout(loadApprovals, 2000);
+        } else {
+            throw new Error(result?.error || 'Unknown error during revocation');
+        }
+    } catch (error) {
+        console.error("❌ Revocation Error:", error);
+        setProgressValue(0);
+        setMessage({ type: 'danger', text: `Error: ${error.message || 'Unknown error'}` });
+    } finally {
+        setTimeout(() => {
+            setProcessing(false);
+            setTimeout(() => {
+                setProgressValue(0);
+                setProgressStatus('');
+            }, 1000);
+        }, 500);
     }
-  };
+};
+
 
 return (
     <div className="card shadow-lg">
