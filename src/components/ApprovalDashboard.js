@@ -186,10 +186,29 @@ if (result.success) {
     approvals.map((a, idx) => {
       return (
         <tr key={idx}>
-          <td>...</td> 
-          <td>{a.type}</td>
-          <td>{a.contract}</td>
-          <td>{a.spender}</td>
+          <td>
+            <input
+              type="checkbox"
+              checked={selectedApprovals.some(sel =>
+                sel.contract === a.contract &&
+                sel.spender === a.spender &&
+                (a.tokenId ? sel.tokenId === a.tokenId : true)
+              )}
+              onChange={() => handleSelect(a)}
+            />
+          </td>
+          <td>
+            <span className={`badge bg-${a.type === 'ERC-20' ? 'success' : a.type === 'ERC-721' ? 'primary' : 'warning'}`}>
+              {a.type}
+            </span>
+          </td>
+          <td><code>{a.contract.substring(0, 8)}...</code></td>
+          <td><code>{a.spender.substring(0, 8)}...</code></td>
+          <td>
+            {a.type === "ERC-20" && `Unlimited Allowance (${a.amount})`}
+            {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId}`)}
+            {a.type === "ERC-1155" && "Collection-wide Approval"}
+          </td>
         </tr>
       );
     })
@@ -199,6 +218,7 @@ if (result.success) {
     </tr>
   )}
 </tbody>
+
 
     </table>
 
