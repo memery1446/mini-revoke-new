@@ -295,11 +295,12 @@ return (
                       </td>
                       <td><code>{a.contract?.substring(0, 8)}...</code></td>
                       <td><code>{a.spender?.substring(0, 8)}...</code></td>
-                      <td>
-                        {a.type === "ERC-20" && `Unlimited Allowance (${a.amount || 0})`}
-                        {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId || 'N/A'}`)}
-                        {a.type === "ERC-1155" && "Collection-wide Approval"}
-                      </td>
+              <td>
+                {a.type === "ERC-20" &&
+                  `Unlimited Allowance ${a.amount === "115792089237316195423570985008687907853269984665640564039457584007913129639935" ? "" : `(${Number(a.amount || 0).toLocaleString()})`}`}
+                {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId || "N/A"}`)}
+                {a.type === "ERC-1155" && "Collection-wide Approval"}
+              </td>
                     </tr>
                   ))
                 ) : (
