@@ -16,7 +16,7 @@ function safeGetAddress(address) {
 }
 
 /**
- * 🔹 Revoke ERC-20 approvals (single or batch)
+ * Revoke ERC-20 approvals (single or batch)
  * @param {Array<Object>} approvals - List of { contract, spender }
  * @param {ethers.Signer} signer - Wallet signer
  */
@@ -42,7 +42,7 @@ export async function revokeERC20Approvals(approvals, signer) {
 }
 
 /**
- * 🔹 Revoke ERC-721 approvals (single or batch)
+ * Revoke ERC-721 approvals (single or batch)
  * @param {Array<Object>} approvals - List of { contract, spender, tokenId }
  * @param {ethers.Signer} signer - Wallet signer
  */
@@ -72,7 +72,7 @@ export async function revokeERC721Approvals(approvals, signer) {
 }
 
 /**
- * 🔹 Revoke ERC-1155 approvals (single or batch)
+ * Revoke ERC-1155 approvals (single or batch)
  * @param {Array<Object>} approvals - List of { contract, spender }
  * @param {ethers.Signer} signer - Wallet signer
  */
@@ -96,3 +96,4 @@ export async function revokeERC1155Approvals(approvals, signer) {
     return { success: false, error: error.message };
   }
 }
+

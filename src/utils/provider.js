@@ -3,7 +3,7 @@ import { JsonRpcProvider, BrowserProvider } from "ethers";
 // Log that the provider module is loaded
 console.log("🔌 provider.js loaded - " + new Date().toISOString());
 
-// ✅ Load API keys from environment variables
+// Load API keys from environment variables
 const NETWORK_RPC_URLS = {
     1: process.env.REACT_APP_ALCHEMY_MAINNET_URL, // Ethereum Mainnet
     11155111: process.env.REACT_APP_ALCHEMY_SEPOLIA_URL, // Sepolia Testnet
@@ -16,7 +16,7 @@ const NETWORK_RPC_URLS = {
     80001: process.env.REACT_APP_ALCHEMY_POLYGON_MUMBAI_URL, // Polygon Mumbai
 };
 
-// Expose network info to window for debugging
+// Expose network info to window 
 if (typeof window !== 'undefined') {
     window.NETWORK_INFO = {
         supportedNetworks: Object.keys(NETWORK_RPC_URLS).map(Number),
@@ -38,7 +38,7 @@ if (typeof window !== 'undefined') {
     console.log("🌐 Network info exposed to window.NETWORK_INFO");
 }
 
-// ✅ Bootstrap Wrapper for UI Components
+// Bootstrap Wrapper for UI Components
 const BootstrapWrapper = ({ children }) => (
     <div className="container mt-4">{children}</div>
 );
@@ -62,7 +62,7 @@ async function getProvider() {
                 console.warn("⚠️ Redux store not available, network not updated");
             }
 
-            // ✅ Check if the network is supported
+            // Check if the network is supported
             if (!NETWORK_RPC_URLS[chainId]) {
                 console.warn(`⚠️ WARNING: Network (${chainId}) not supported.`);
                 return provider; // Still return provider even if network is not in our list
@@ -77,7 +77,7 @@ async function getProvider() {
             return provider;
         }
 
-        // ✅ Automatically detect the right network RPC
+        // Automatically detect the right network RPC
         const defaultNetwork = 11155111; // Default to Sepolia if nothing is set
         console.log("📡 No wallet detected, using RPC:", NETWORK_RPC_URLS[defaultNetwork]);
         
@@ -103,3 +103,4 @@ async function getProvider() {
 }
 
 export { getProvider, BootstrapWrapper };
+

@@ -13,7 +13,7 @@ import TransactionProgressBar from "../components/TransactionProgressBar";
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
   const wallet = useSelector((state) => state.web3?.account);
-  // ✅ FIX: Ensure approvals is always an array with proper fallback
+  // Ensure approvals is always an array with proper fallback
   const approvals = useSelector((state) => state.web3?.approvals) || [];
   const [isLoading, setIsLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -81,7 +81,7 @@ const ApprovalDashboard = () => {
       setProgressValue(90);
       setProgressStatus('Processing results...');
 
-      // ✅ FIX: Safe spread and map operations
+      // Spread and map operations
       const allApprovals = [
         ...(Array.isArray(erc20List) ? erc20List.map(a => ({ ...a, type: 'ERC-20' })) : []),
         ...(Array.isArray(erc721List) ? erc721List.map(a => ({ ...a, type: 'ERC-721' })) : []),
@@ -97,7 +97,7 @@ const ApprovalDashboard = () => {
     } catch (error) {
       console.error("❌ Load Error:", error);
       setMessage({ type: 'danger', text: `Error: ${error.message || 'Unknown error'}` });
-      // ✅ FIX: In case of error, set empty array to ensure consistent state
+      // In case of error, set empty array to ensure consistent state
       dispatch(setApprovals([]));
     } finally {
       setTimeout(() => {
@@ -132,7 +132,7 @@ const ApprovalDashboard = () => {
   const handleRevoke = async () => {
     if (!selectedApprovals.length || processing) return;
 
-    // ✅ FIX: Safe access to types array
+    // Access to types array
     const approvalTypes = Array.isArray(selectedApprovals) 
       ? [...new Set(selectedApprovals.map(a => a?.type).filter(Boolean))]
       : [];
@@ -163,21 +163,21 @@ const ApprovalDashboard = () => {
       setProgressValue(30);
       setProgressStatus('Preparing transaction...');
 
-      // ✅ FIX: Safer checks
+      // Safe checks
       if (approvalsToRevoke.every(a => a?.type === 'ERC-20')) {
         setProgressStatus('Revoking ERC-20 approvals...');
         result = await revokeERC20Approvals(approvalsToRevoke, signer);
-        setProgressValue(80); // For now, just jump ahead since we don't have progress callbacks
+        setProgressValue(80); 
       } else if (approvalsToRevoke.every(a => a?.type === 'ERC-721')) {
         setProgressStatus('Revoking ERC-721 approvals...');
         result = await revokeERC721Approvals(approvalsToRevoke, signer);
-        setProgressValue(80); // For now, just jump ahead since we don't have progress callbacks
+        setProgressValue(80); 
       } else if (approvalsToRevoke.every(a => a?.type === 'ERC-1155')) {
         setProgressStatus('Revoking ERC-1155 approvals...');
         result = await revokeMultipleERC1155Approvals(
           approvalsToRevoke.map(a => ({ contract: a.contract, spender: a.spender }))
         );
-        setProgressValue(80); // For now, just jump ahead since we don't have progress callbacks
+        setProgressValue(80); 
       } else {
         throw new Error("Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately.");
       }
@@ -188,7 +188,7 @@ const ApprovalDashboard = () => {
       if (result?.success) {
         console.log("🗑️ Removing revoked approvals from Redux...");
         
-        // ✅ FIX: Safe update with careful null checking
+        // FIX: Safe update with careful null checking
         dispatch(setApprovals(prevApprovals => {
           if (!Array.isArray(prevApprovals)) return [];
           
@@ -216,7 +216,7 @@ const ApprovalDashboard = () => {
       setProgressValue(0);
       setMessage({ type: 'danger', text: `Error: ${error?.message || 'Unknown error'}` });
     } finally {
-      const currentProgressValue = progressValue; // Capture the current value
+      const currentProgressValue = progressValue; // Current value
       setTimeout(() => {
         setProcessing(false);
         // Reset progress after a delay to show the completed progress bar
@@ -256,7 +256,7 @@ return (
             selectedApprovals={selectedApprovals} 
             onComplete={() => {
               setShowMixedBatchRevoke(false);
-              setSelectedApprovals([]);  // ✅ Clear selections after revoking
+              setSelectedApprovals([]);  // Clearing selections after revoking
               loadApprovals();
             }} 
           />
@@ -273,7 +273,7 @@ return (
                 </tr>
               </thead>
               <tbody>
-                {/* ✅ FIX: Safe length check and mapping */}
+                {/* FIX: Safe length check and mapping */}
                 {Array.isArray(approvals) && approvals.length > 0 ? (
                   approvals.map((a, idx) => (
                     <tr key={idx}>

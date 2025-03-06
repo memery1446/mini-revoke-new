@@ -10,13 +10,13 @@ import { getERC1155Approvals } from '../utils/erc1155Approvals';
 
 const BatchRevoke = () => {
   const dispatch = useDispatch();
-  // ✅ FIX: Ensure approvals is always an array with proper fallback
+  // Ensure approvals is always an array with proper fallback
   const approvals = useSelector((state) => state.web3?.approvals || []);
   const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [isRevoking, setIsRevoking] = useState(false);
   const [results, setResults] = useState(null);
 
-  // ✅ FIX: Safe array filtering with checks
+  // Safe array filtering with checks
   const erc20Approvals = Array.isArray(approvals) ? approvals.filter(a => a?.type === 'ERC-20') : [];
   const erc721Approvals = Array.isArray(approvals) ? approvals.filter(a => a?.type === 'ERC-721') : [];
   const erc1155Approvals = Array.isArray(approvals) ? approvals.filter(a => a?.type === 'ERC-1155') : [];
@@ -46,7 +46,7 @@ const BatchRevoke = () => {
       console.log("🎨 Fetched ERC-721 Approvals:", erc721Fetched);
       console.log("🛠️ Fetched ERC-1155 Approvals:", erc1155Fetched);
 
-      // ✅ FIX: Safely create the array for dispatch
+      // Safely create the array for dispatch
       const allApprovals = [
         ...(Array.isArray(erc20Fetched) ? erc20Fetched.map(a => ({ ...a, type: 'ERC-20' })) : []),
         ...(Array.isArray(erc721Fetched) ? erc721Fetched.map(a => ({ ...a, type: 'ERC-721' })) : []),
@@ -94,7 +94,7 @@ const BatchRevoke = () => {
         erc1155Results = await revokeERC1155Approvals(erc1155Selected, signer);
       }
 
-      // ✅ FIX: Safe array operation with null check for Redux state
+      // Safe array operation with null check for Redux state
       dispatch(setApprovals(prevApprovals => {
         if (!Array.isArray(prevApprovals)) return [];
         
@@ -124,7 +124,6 @@ const BatchRevoke = () => {
     }
   };
 
-// No UI component...moved to backend after establishish functionality
   return null;
 };
 

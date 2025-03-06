@@ -3,7 +3,7 @@ import web3Reducer from "./web3Slice"
 
 console.log("🚀 store/index.js is being executed")
 
-// Create a very simple middleware to log all actions
+// Middleware 
 const simpleLoggerMiddleware = (store) => (next) => (action) => {
   console.log("Action:", action.type)
   console.log("Payload:", action.payload)
@@ -12,7 +12,7 @@ const simpleLoggerMiddleware = (store) => (next) => (action) => {
   return result
 }
 
-// Configure store with simple logging
+// Configure store 
 const store = configureStore({
   reducer: {
     web3: web3Reducer,
@@ -26,7 +26,6 @@ const store = configureStore({
 console.log("🏗️ Redux store created")
 console.log("Initial state:", store.getState())
 
-// Expose store to window for debugging
 if (typeof window !== "undefined") {
   window.reduxStore = store
   console.log("📊 Redux store exposed as window.reduxStore")

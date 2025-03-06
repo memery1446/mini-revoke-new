@@ -4,7 +4,7 @@ import { setNetwork } from "../store/web3Slice";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-// ✅ Ensure all environment variables are correctly prefixed with `REACT_APP_`
+// Ensure all environment variables are correctly prefixed with `REACT_APP_`
 const supportedNetworks = {
   1: { 
     chainId: "0x1", 
@@ -34,7 +34,7 @@ const supportedNetworks = {
   56: {  
     chainId: "0x38", 
     name: "Binance Smart Chain", 
-    rpcUrl: "https://bsc-dataseed.binance.org/", // ✅ No API Key Needed
+    rpcUrl: "https://bsc-dataseed.binance.org/", // No API Key Needed
   },
   420: {  
     chainId: "0x1a4", 

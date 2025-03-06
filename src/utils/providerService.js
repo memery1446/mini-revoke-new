@@ -233,3 +233,4 @@ if (typeof window !== 'undefined') {
     connectWallet
   };
 }
+

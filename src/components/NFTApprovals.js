@@ -22,7 +22,6 @@ const NFTApprovals = ({ contractAddress, spender }) => {
       const signer = await provider.getSigner();
       const owner = await signer.getAddress();
 
-      // Fetching ERC-721 approvals (assuming you have this function defined somewhere)
       const fetchedApprovals = await getERC721Approvals(owner);
       setApprovals(fetchedApprovals);
     } catch (error) {
@@ -108,3 +107,4 @@ const NFTApprovals = ({ contractAddress, spender }) => {
 };
 
 export default NFTApprovals;
+

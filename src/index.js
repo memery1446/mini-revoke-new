@@ -1,16 +1,16 @@
 import React from "react";
-import ReactDOM from "react-dom/client";  // ✅ Correct import for React 18
-import { BootstrapWrapper } from "./utils/provider";  // ✅ Bootstrap wrapper
+import ReactDOM from "react-dom/client";  
+import { BootstrapWrapper } from "./utils/provider";  
 import { Provider } from "react-redux";
-import store from "./store/index"; // ✅ Import Redux store
+import store from "./store/index"; 
 import App from "./App";
-import "bootstrap/dist/css/bootstrap.min.css";  // ✅ Bootstrap styles
+import "bootstrap/dist/css/bootstrap.min.css";  
 import { ethers } from "ethers";
 
 // Log when the file loads
 console.log("🚀 Root index.js loaded - " + new Date().toISOString());
 
-// Make ethers available globally with a safety check
+// Make ethers available globally 
 if (typeof window !== 'undefined') {
   window.ethers = ethers;
   console.log("🟢 window.ethers is now available in root index.js!");
@@ -63,3 +63,4 @@ root.render(
     </BootstrapWrapper>
   </Provider>
 );
+

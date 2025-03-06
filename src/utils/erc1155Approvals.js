@@ -3,7 +3,7 @@ import { getProvider } from "../utils/provider";
 import { ERC1155_ABI, CONTRACT_ADDRESSES } from "../constants/abis";
 
 /**
- * 🔍 Fetch ERC-1155 approvals for a given owner.
+ * Fetch ERC-1155 approvals for a given owner.
  * @param {string} ownerAddress - The wallet address of the token owner.
  * @returns {Promise<Array>} - Resolves to an array of approvals.
  */
@@ -26,7 +26,7 @@ export async function getERC1155Approvals(ownerAddress) {
 }
 
 /**
- * 🚨 Revoke a **single** ERC-1155 approval.
+ * Revoke a **single** ERC-1155 approval.
  * @param {string} spenderAddress - The spender to revoke approval for.
  * @returns {Promise<boolean>} - `true` if successful, `false` otherwise.
  */
@@ -49,7 +49,7 @@ export async function revokeERC1155Approval(spenderAddress) {
 }
 
 /**
- * 🔄 Batch revoke **multiple** ERC-1155 approvals.
+ * Batch revoke **multiple** ERC-1155 approvals.
  * @param {Array<string>} spenderAddresses - Array of spender addresses to revoke approval for.
  * @returns {Promise<boolean>} - `true` if all approvals revoked, `false` otherwise.
  */
@@ -78,5 +78,4 @@ export async function revokeMultipleERC1155Approvals(approvals) {
         return false;
     }
 }
-
 

@@ -3,10 +3,10 @@ export const NETWORK_CONFIG = {
     name: "Hardhat Local Fork",
     rpcUrl: "http://127.0.0.1:8545",
     contracts: {
-      tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",  // ✅ TK1
-      secondToken: "0xE7B9Ede68593354aff96690600D008A40519D3CF",  // ✅ TK2
-      erc721: "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354",  // ✅ Updated NFT
-      erc1155: "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A",   // ✅ Updated ERC1155
+      tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",  
+      secondToken: "0xE7B9Ede68593354aff96690600D008A40519D3CF",  
+      erc721: "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354",  
+      erc1155: "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A",   
       MockSpender: "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608"
     }
   },

@@ -11,7 +11,7 @@ contract TestToken is ERC20 {
         _mint(msg.sender, 1000000 * 10**decimals); // Initial mint to deployer
     }
 
-    // 🔥 Allow only the owner to mint new tokens
+    // Allow only the owner to mint new tokens
     function mint(address to, uint256 amount) external {
         require(msg.sender == owner, "Not authorized");
         _mint(to, amount);

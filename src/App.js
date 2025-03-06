@@ -16,7 +16,7 @@ import { initializeProvider } from "./utils/providerService"
 
 console.log("🔴 App.js loaded - " + new Date().toISOString())
 
-// Create a separate inner component that uses Redux hooks
+// Use Redux hooks
 const AppContent = () => {
   console.log("🔶 App content component rendering")
   const dispatch = useDispatch()

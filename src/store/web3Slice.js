@@ -5,26 +5,26 @@ const web3Slice = createSlice({
   initialState: {
     account: null,
     network: null,
-    approvals: [], // ✅ Ensure this is always an array
+    approvals: [], // Ensure this is always an array
   },
   reducers: {
     setAccount: (state, action) => {
-      state.account = action.payload; // ✅ Keep wallet as a string
+      state.account = action.payload; // Keep wallet as a string
       console.log("👛 Account set:", action.payload); // Add logging for easier debugging
     },
     setNetwork: (state, action) => {
-      state.network = Number.parseInt(action.payload, 10) || null; // ✅ Ensure it's always a number or null if parsing fails
+      state.network = Number.parseInt(action.payload, 10) || null; // Ensure it's always a number or null if parsing fails
       console.log("🌐 Network set:", state.network); // Add logging for easier debugging
     },
     setApprovals: (state, action) => {
-      state.approvals = action.payload || []; // ✅ Prevent undefined errors
+      state.approvals = action.payload || []; // Prevent undefined errors
       console.log("📋 Approvals Updated:", state.approvals);
     },
     resetWeb3: (state) => {
       console.log("🛑 Resetting Web3 State");
       state.account = null;
       state.network = null;
-      state.approvals = []; // ✅ Reset to an empty array
+      state.approvals = []; // Reset to an empty array
     },
     addApproval: (state, action) => {
       console.log("🚀 Attempting to Add Approval:", action.payload);
@@ -67,3 +67,4 @@ if (typeof window !== 'undefined') {
 export const { setAccount, setNetwork, setApprovals, resetWeb3, addApproval, removeApproval } = web3Slice.actions;
 
 export default web3Slice.reducer;
+
