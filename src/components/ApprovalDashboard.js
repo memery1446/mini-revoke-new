@@ -226,6 +226,6 @@ return (
     </div>
   </div>
 );
-
+};
 
 export default ApprovalDashboard;
