@@ -64,11 +64,15 @@ const MixedBatchRevoke = ({ selectedApprovals = [], onComplete }) => {
 
       // ✅ Remove revoked approvals from Redux
       if (revokedApprovals.length) {
-        dispatch(setApprovals(prevApprovals =>
-          prevApprovals.filter(a => !revokedApprovals.some(r => 
-            r.contract === a.contract && r.spender === a.spender
-          ))
-        ));
+dispatch(setApprovals(prevApprovals =>
+  prevApprovals.filter(a =>
+    !selectedApprovals.some(sel => 
+      sel.contract === a.contract && 
+      sel.spender === a.spender && 
+      (a.tokenId ? sel.tokenId === a.tokenId : true)
+    )
+  )
+));
       }
 
       // ✅ Refresh the dashboard

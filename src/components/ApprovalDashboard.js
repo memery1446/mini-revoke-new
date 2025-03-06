@@ -100,6 +100,7 @@ const ApprovalDashboard = () => {
     }
 
     // ✅ Clear selections before revoking
+    const approvalsToRevoke = [...selectedApprovals]; // Save a copy for the revocation process
     setSelectedApprovals([]);
     setProcessing(true);
     setMessage({ type: 'info', text: 'Processing revocation...' });
@@ -109,13 +110,13 @@ const ApprovalDashboard = () => {
       const signer = await provider.getSigner();
       let result;
 
-      if (selectedApprovals.every(a => a.type === 'ERC-20')) {
-        result = await revokeERC20Approvals(selectedApprovals, signer);
-      } else if (selectedApprovals.every(a => a.type === 'ERC-721')) {
-        result = await revokeERC721Approvals(selectedApprovals, signer);
-      } else if (selectedApprovals.every(a => a.type === 'ERC-1155')) {
+      if (approvalsToRevoke.every(a => a.type === 'ERC-20')) {
+        result = await revokeERC20Approvals(approvalsToRevoke, signer);
+      } else if (approvalsToRevoke.every(a => a.type === 'ERC-721')) {
+        result = await revokeERC721Approvals(approvalsToRevoke, signer);
+      } else if (approvalsToRevoke.every(a => a.type === 'ERC-1155')) {
         result = await revokeMultipleERC1155Approvals(
-          selectedApprovals.map(a => ({ contract: a.contract, spender: a.spender }))
+          approvalsToRevoke.map(a => ({ contract: a.contract, spender: a.spender }))
         );
       } else {
         throw new Error("Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately.");
@@ -123,11 +124,16 @@ const ApprovalDashboard = () => {
 
       if (result.success) {
         console.log("🗑️ Removing revoked approvals from Redux...");
-dispatch(setApprovals(prevApprovals =>
-  prevApprovals.filter(a =>
-    !selectedApprovals.some(sel => sel.contract === a.contract && sel.spender === a.spender)
-  )
-));
+        // Updated to use the same logic as MixedBatchRevoke
+        dispatch(setApprovals(prevApprovals =>
+          prevApprovals.filter(a =>
+            !approvalsToRevoke.some(sel => 
+              sel.contract === a.contract && 
+              sel.spender === a.spender && 
+              (a.tokenId ? sel.tokenId === a.tokenId : true)
+            )
+          )
+        ));
 
         setMessage({ type: 'success', text: `Revoked ${result.count} approval(s)!` });
         setTimeout(loadApprovals, 2000);
