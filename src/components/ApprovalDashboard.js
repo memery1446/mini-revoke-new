@@ -7,6 +7,8 @@ import { setApprovals } from "../store/web3Slice";
 import { getProvider } from "../utils/provider";
 import { revokeERC20Approvals, revokeERC721Approvals } from "../utils/batchRevokeUtils";
 import { CONTRACT_ADDRESSES } from "../constants/abis"; 
+import MixedBatchRevoke from "../components/MixedBatchRevoke";
+
 
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
@@ -16,6 +18,8 @@ const ApprovalDashboard = () => {
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState(null);
   const [selectedApprovals, setSelectedApprovals] = useState([]);
+  const [showMixedBatchRevoke, setShowMixedBatchRevoke] = useState(false);
+
 
   useEffect(() => {
     if (wallet) loadApprovals();
@@ -97,8 +101,10 @@ if (!selectedApprovals.length || processing) return;
 // ✅ Ensure we are only revoking one type at a time
 const approvalTypes = [...new Set(selectedApprovals.map(a => a.type))];
 if (approvalTypes.length > 1) {
-  return <MixedBatchRevoke selectedApprovals={selectedApprovals} onComplete={loadApprovals} />;
+  setShowMixedBatchRevoke(true);
+  return;
 }
+
 
 
 // ✅ Clear previous selections before revoking
@@ -155,6 +161,13 @@ if (result.success) {
       {isLoading ? 'Loading...' : 'Refresh'}
     </button>
   </div>
+  {showMixedBatchRevoke && (
+  <MixedBatchRevoke selectedApprovals={selectedApprovals} onComplete={() => {
+    setShowMixedBatchRevoke(false);
+    loadApprovals();
+  }} />
+)}
+
   <div className="card-body">
     {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
 
