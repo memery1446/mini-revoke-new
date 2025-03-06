@@ -10,15 +10,16 @@ import { getERC1155Approvals } from '../utils/erc1155Approvals';
 
 const BatchRevoke = () => {
   const dispatch = useDispatch();
-  const approvals = useSelector((state) => state.web3.approvals);
+  // ✅ FIX: Ensure approvals is always an array with proper fallback
+  const approvals = useSelector((state) => state.web3?.approvals || []);
   const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [isRevoking, setIsRevoking] = useState(false);
   const [results, setResults] = useState(null);
 
-  // Select ERC-20, ERC-721, and ERC-1155 approvals
-  const erc20Approvals = approvals.filter(a => a.type === 'ERC-20');
-  const erc721Approvals = approvals.filter(a => a.type === 'ERC-721');
-  const erc1155Approvals = approvals.filter(a => a.type === 'ERC-1155');
+  // ✅ FIX: Safe array filtering with checks
+  const erc20Approvals = Array.isArray(approvals) ? approvals.filter(a => a?.type === 'ERC-20') : [];
+  const erc721Approvals = Array.isArray(approvals) ? approvals.filter(a => a?.type === 'ERC-721') : [];
+  const erc1155Approvals = Array.isArray(approvals) ? approvals.filter(a => a?.type === 'ERC-1155') : [];
 
   const handleSelectApproval = (approval) => {
     setSelectedApprovals(prev => {
@@ -45,7 +46,14 @@ const BatchRevoke = () => {
       console.log("🎨 Fetched ERC-721 Approvals:", erc721Fetched);
       console.log("🛠️ Fetched ERC-1155 Approvals:", erc1155Fetched);
 
-      dispatch(setApprovals([...erc20Fetched, ...erc721Fetched, ...erc1155Fetched]));
+      // ✅ FIX: Safely create the array for dispatch
+      const allApprovals = [
+        ...(Array.isArray(erc20Fetched) ? erc20Fetched.map(a => ({ ...a, type: 'ERC-20' })) : []),
+        ...(Array.isArray(erc721Fetched) ? erc721Fetched.map(a => ({ ...a, type: 'ERC-721' })) : []),
+        ...(Array.isArray(erc1155Fetched) ? erc1155Fetched.map(a => ({ ...a, type: 'ERC-1155' })) : [])
+      ];
+      
+      dispatch(setApprovals(allApprovals));
     } catch (error) {
       console.error("❌ Error refreshing approvals:", error);
     } finally {
@@ -62,9 +70,10 @@ const BatchRevoke = () => {
       const signer = await provider.getSigner();
       console.log("🔄 Starting batch revocation with signer:", await signer.getAddress());
 
-      const erc20Selected = selectedApprovals.filter(a => a.type === 'ERC-20');
-      const erc721Selected = selectedApprovals.filter(a => a.type === 'ERC-721');
-      const erc1155Selected = selectedApprovals.filter(a => a.type === 'ERC-1155');
+      // ✅ FIX: Safe filtering
+      const erc20Selected = Array.isArray(selectedApprovals) ? selectedApprovals.filter(a => a?.type === 'ERC-20') : [];
+      const erc721Selected = Array.isArray(selectedApprovals) ? selectedApprovals.filter(a => a?.type === 'ERC-721') : [];
+      const erc1155Selected = Array.isArray(selectedApprovals) ? selectedApprovals.filter(a => a?.type === 'ERC-1155') : [];
 
       let erc20Results = { successful: [], failed: [] };
       let erc721Results = { successful: [], failed: [] };
@@ -85,20 +94,26 @@ const BatchRevoke = () => {
         erc1155Results = await revokeERC1155Approvals(erc1155Selected, signer);
       }
 
-      const updatedApprovals = approvals.filter(approval => {
-        if (approval.type === 'ERC-20') {
-          return !erc20Results.successful.some(a => a.contract === approval.contract && a.spender === approval.spender);
-        }
-        if (approval.type === 'ERC-721') {
-          return !erc721Results.successful.some(a => a.contract === approval.contract && a.spender === approval.spender);
-        }
-        if (approval.type === 'ERC-1155') {
-          return !erc1155Results.successful.some(a => a.contract === approval.contract && a.spender === approval.spender);
-        }
-        return true;
-      });
-
-      dispatch(setApprovals(updatedApprovals));
+      // ✅ FIX: Safe array operation with null check for Redux state
+      dispatch(setApprovals(prevApprovals => {
+        if (!Array.isArray(prevApprovals)) return [];
+        
+        return prevApprovals.filter(approval => {
+          if (!approval) return false;
+          
+          if (approval.type === 'ERC-20') {
+            return !erc20Results.successful.some(a => a.contract === approval.contract && a.spender === approval.spender);
+          }
+          if (approval.type === 'ERC-721') {
+            return !erc721Results.successful.some(a => a.contract === approval.contract && a.spender === approval.spender);
+          }
+          if (approval.type === 'ERC-1155') {
+            return !erc1155Results.successful.some(a => a.contract === approval.contract && a.spender === approval.spender);
+          }
+          return true;
+        });
+      }));
+      
       setSelectedApprovals([]);
       setResults({ success: true, message: "Revocations successful!" });
     } catch (error) {
@@ -115,12 +130,11 @@ const BatchRevoke = () => {
         <h5 className="mb-0">🔥 Select and Revoke Approvals</h5>
       </div>
       <div className="card-body">
-
+        {/* Content here */}
       </div>
     </div>
   );
 };
 
 export default BatchRevoke;
-
 

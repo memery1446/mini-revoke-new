@@ -12,8 +12,9 @@ import MixedBatchRevoke from "../components/MixedBatchRevoke";
 
 const ApprovalDashboard = () => {
   const dispatch = useDispatch();
-  const wallet = useSelector((state) => state.web3.account);
-  const approvals = useSelector((state) => state.web3.approvals) || [];
+  const wallet = useSelector((state) => state.web3?.account);
+  // ✅ FIX: Ensure approvals is always an array with proper fallback
+  const approvals = useSelector((state) => state.web3?.approvals) || [];
   const [isLoading, setIsLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState(null);
@@ -44,18 +45,30 @@ const ApprovalDashboard = () => {
 
       try { 
         erc20List = await getERC20Approvals([CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2], address) || []; 
-      } catch (err) { console.error("❌ ERC-20 Fetch Error:", err); }
+      } catch (err) { 
+        console.error("❌ ERC-20 Fetch Error:", err); 
+        erc20List = []; // ✅ FIX: Ensure it's an array on error
+      }
 
-      try { erc721List = await getERC721Approvals(address) || []; }
-      catch (err) { console.error("❌ ERC-721 Fetch Error:", err); }
+      try { 
+        erc721List = await getERC721Approvals(address) || []; 
+      } catch (err) { 
+        console.error("❌ ERC-721 Fetch Error:", err); 
+        erc721List = []; // ✅ FIX: Ensure it's an array on error
+      }
 
-      try { erc1155List = await getERC1155Approvals(address) || []; }
-      catch (err) { console.error("❌ ERC-1155 Fetch Error:", err); }
+      try { 
+        erc1155List = await getERC1155Approvals(address) || []; 
+      } catch (err) { 
+        console.error("❌ ERC-1155 Fetch Error:", err); 
+        erc1155List = []; // ✅ FIX: Ensure it's an array on error
+      }
 
+      // ✅ FIX: Safe spread and map operations
       const allApprovals = [
-        ...erc20List.map(a => ({ ...a, type: 'ERC-20' })),
-        ...erc721List.map(a => ({ ...a, type: 'ERC-721' })),
-        ...erc1155List.map(a => ({ ...a, type: "ERC-1155" }))
+        ...(Array.isArray(erc20List) ? erc20List.map(a => ({ ...a, type: 'ERC-20' })) : []),
+        ...(Array.isArray(erc721List) ? erc721List.map(a => ({ ...a, type: 'ERC-721' })) : []),
+        ...(Array.isArray(erc1155List) ? erc1155List.map(a => ({ ...a, type: "ERC-1155" })) : [])
       ];
 
       console.log("🔹 Final approval list before dispatch:", allApprovals);
@@ -64,7 +77,9 @@ const ApprovalDashboard = () => {
       setMessage({ type: 'success', text: `Found ${allApprovals.length} approvals` });
     } catch (error) {
       console.error("❌ Load Error:", error);
-      setMessage({ type: 'danger', text: `Error: ${error.message}` });
+      setMessage({ type: 'danger', text: `Error: ${error.message || 'Unknown error'}` });
+      // ✅ FIX: In case of error, set empty array to ensure consistent state
+      dispatch(setApprovals([]));
     } finally {
       setIsLoading(false);
     }
@@ -91,16 +106,19 @@ const ApprovalDashboard = () => {
   const handleRevoke = async () => {
     if (!selectedApprovals.length || processing) return;
 
-    // ✅ Route mixed approvals to `MixedBatchRevoke`
-    const approvalTypes = [...new Set(selectedApprovals.map(a => a.type))];
+    // ✅ FIX: Safe access to types array
+    const approvalTypes = Array.isArray(selectedApprovals) 
+      ? [...new Set(selectedApprovals.map(a => a?.type).filter(Boolean))]
+      : [];
+      
     if (approvalTypes.length > 1) {
        console.log("🔄 Switching to MixedBatchRevoke...");
       setShowMixedBatchRevoke(true);
-      return; // This prevents exectution of regular revoke logic
+      return; // This prevents execution of regular revoke logic
     }
 
-    // ✅ Clear selections before revoking
-    const approvalsToRevoke = [...selectedApprovals]; // Save a copy for the revocation process
+    // Save a copy for revocation
+    const approvalsToRevoke = [...selectedApprovals];
     setSelectedApprovals([]);
     setProcessing(true);
     setMessage({ type: 'info', text: 'Processing revocation...' });
@@ -110,11 +128,12 @@ const ApprovalDashboard = () => {
       const signer = await provider.getSigner();
       let result;
 
-      if (approvalsToRevoke.every(a => a.type === 'ERC-20')) {
+      // ✅ FIX: Safer checks
+      if (approvalsToRevoke.every(a => a?.type === 'ERC-20')) {
         result = await revokeERC20Approvals(approvalsToRevoke, signer);
-      } else if (approvalsToRevoke.every(a => a.type === 'ERC-721')) {
+      } else if (approvalsToRevoke.every(a => a?.type === 'ERC-721')) {
         result = await revokeERC721Approvals(approvalsToRevoke, signer);
-      } else if (approvalsToRevoke.every(a => a.type === 'ERC-1155')) {
+      } else if (approvalsToRevoke.every(a => a?.type === 'ERC-1155')) {
         result = await revokeMultipleERC1155Approvals(
           approvalsToRevoke.map(a => ({ contract: a.contract, spender: a.spender }))
         );
@@ -122,27 +141,32 @@ const ApprovalDashboard = () => {
         throw new Error("Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately.");
       }
 
-      if (result.success) {
+      if (result?.success) {
         console.log("🗑️ Removing revoked approvals from Redux...");
-        // Updated to use the same logic as MixedBatchRevoke
-        dispatch(setApprovals(prevApprovals =>
-          prevApprovals.filter(a =>
-            !approvalsToRevoke.some(sel => 
+        
+        // ✅ FIX: Safe update with careful null checking
+        dispatch(setApprovals(prevApprovals => {
+          if (!Array.isArray(prevApprovals)) return [];
+          
+          return prevApprovals.filter(a => {
+            if (!a) return false;
+            
+            return !approvalsToRevoke.some(sel => 
               sel.contract === a.contract && 
               sel.spender === a.spender && 
               (a.tokenId ? sel.tokenId === a.tokenId : true)
-            )
-          )
-        ));
+            );
+          });
+        }));
 
-        setMessage({ type: 'success', text: `Revoked ${result.count} approval(s)!` });
+        setMessage({ type: 'success', text: `Revoked ${result.count || 0} approval(s)!` });
         setTimeout(loadApprovals, 2000);
       } else {
-        setMessage({ type: 'danger', text: `Error: ${result.error}` });
+        setMessage({ type: 'danger', text: `Error: ${result?.error || 'Unknown error during revocation'}` });
       }
     } catch (error) {
       console.error("❌ Revocation Error:", error);
-      setMessage({ type: 'danger', text: `Error: ${error.message}` });
+      setMessage({ type: 'danger', text: `Error: ${error?.message || 'Unknown error'}` });
     } finally {
       setProcessing(false);
     }
@@ -182,7 +206,8 @@ return (
                 </tr>
               </thead>
               <tbody>
-                {approvals.length > 0 ? (
+                {/* ✅ FIX: Safe length check and mapping */}
+                {Array.isArray(approvals) && approvals.length > 0 ? (
                   approvals.map((a, idx) => (
                     <tr key={idx}>
                       <td>
@@ -201,11 +226,11 @@ return (
                           {a.type}
                         </span>
                       </td>
-                      <td><code>{a.contract.substring(0, 8)}...</code></td>
-                      <td><code>{a.spender.substring(0, 8)}...</code></td>
+                      <td><code>{a.contract?.substring(0, 8)}...</code></td>
+                      <td><code>{a.spender?.substring(0, 8)}...</code></td>
                       <td>
-                        {a.type === "ERC-20" && `Unlimited Allowance (${a.amount})`}
-                        {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId}`)}
+                        {a.type === "ERC-20" && `Unlimited Allowance (${a.amount || 0})`}
+                        {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId || 'N/A'}`)}
                         {a.type === "ERC-1155" && "Collection-wide Approval"}
                       </td>
                     </tr>
