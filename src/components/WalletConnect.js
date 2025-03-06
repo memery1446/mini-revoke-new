@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setAccount } from "../store/web3Slice";
 import { connectWallet } from "../utils/providerService";
@@ -11,82 +11,34 @@ const WalletConnect = () => {
   const account = useSelector((state) => state.web3?.account);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState(null);
-  const debugRef = useRef(null);
 
   // Log when component renders (safely)
-  safeConsoleLog("🔵 WalletConnect component rendering");
-  
-  // Create debug element
   useEffect(() => {
+    safeConsoleLog("🔵 WalletConnect component mounted");
+    
+    // Remove any existing debug elements that might be left over
     try {
-      // Create a visible debug element
-      const debugElement = document.createElement('div');
-      debugElement.id = 'wallet-debug';
-      debugElement.style.position = 'fixed';
-      debugElement.style.top = '10px';
-      debugElement.style.left = '10px';
-      debugElement.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-      debugElement.style.color = 'white';
-      debugElement.style.padding = '10px';
-      debugElement.style.zIndex = '9999';
-      debugElement.style.fontSize = '12px';
-      debugElement.style.maxWidth = '300px';
-      debugElement.style.maxHeight = '200px';
-      debugElement.style.overflow = 'auto';
-      debugElement.style.borderRadius = '5px';
-      document.body.appendChild(debugElement);
-      debugRef.current = debugElement;
+      const existingDebug = document.getElementById('wallet-debug');
+      if (existingDebug && document.body.contains(existingDebug)) {
+        document.body.removeChild(existingDebug);
+      }
       
-      // Define update function
-      const updateDebug = (msg) => {
-        try {
-          const el = document.getElementById('wallet-debug');
-          if (el) {
-            const entry = document.createElement('div');
-            entry.textContent = `${new Date().toLocaleTimeString()}: ${msg}`;
-            el.appendChild(entry);
-            el.scrollTop = el.scrollHeight;
-          }
-          safeConsoleLog(msg);
-        } catch (error) {
-          safeConsoleLog("Debug update error:", error);
-        }
-      };
-      
-      // Set safe global reference (using a getter to avoid direct assignment)
-      Object.defineProperty(window, '_updateDebug', {
-        get: () => updateDebug,
-        configurable: true
-      });
-      
-      updateDebug("WalletConnect mounted");
+      // Clean up global reference if it exists
+      if (window._updateDebug) {
+        window._updateDebug = null;
+        delete window._updateDebug;
+      }
     } catch (err) {
-      safeConsoleLog("Debug setup error:", err);
+      // Silently handle any cleanup errors
     }
     
-    // Clean up on unmount
     return () => {
-      try {
-        if (debugRef.current && document.body.contains(debugRef.current)) {
-          document.body.removeChild(debugRef.current);
-        }
-        
-        // Clean up global reference safely
-        if (Object.getOwnPropertyDescriptor(window, '_updateDebug')) {
-          Object.defineProperty(window, '_updateDebug', {
-            value: null,
-            configurable: true
-          });
-        }
-      } catch (err) {
-        safeConsoleLog("Debug cleanup error:", err);
-      }
+      safeConsoleLog("🔵 WalletConnect component unmounted");
     };
   }, []);
 
   const handleConnect = async () => {
     try {
-      window._updateDebug?.("Connect button clicked");
       safeConsoleLog("🔌 Connect button clicked");
       
       setConnecting(true);
@@ -95,15 +47,14 @@ const WalletConnect = () => {
       // Use the connectWallet function from providerService
       const success = await connectWallet();
       
-      window._updateDebug?.(`Wallet connection ${success ? "successful" : "failed"}`);
+      safeConsoleLog(`Wallet connection ${success ? "successful" : "failed"}`);
       
       if (!success) {
         setError("Failed to connect wallet");
-        window._updateDebug?.("❌ Wallet connection failed");
+        safeConsoleLog("❌ Wallet connection failed");
       }
     } catch (err) {
       safeConsoleLog("❌ Wallet connection error:", err);
-      window._updateDebug?.(`Error: ${err.message || "Unknown connection error"}`);
       setError(err.message || "Connection failed");
     } finally {
       setConnecting(false);
@@ -112,7 +63,7 @@ const WalletConnect = () => {
 
   const handleDisconnect = () => {
     try {
-      window._updateDebug?.("Disconnecting wallet");
+      safeConsoleLog("Disconnecting wallet");
       dispatch(setAccount(null));
     } catch (err) {
       safeConsoleLog("Disconnect error:", err);
@@ -122,8 +73,7 @@ const WalletConnect = () => {
   // Log when account changes
   useEffect(() => {
     try {
-      window._updateDebug?.(`Account state: ${account || "not connected"}`);
-      safeConsoleLog("👛 Account state updated:", account);
+      safeConsoleLog("👛 Account state updated:", account || "not connected");
     } catch (err) {
       safeConsoleLog("Account update error:", err);
     }
@@ -164,7 +114,7 @@ const WalletConnect = () => {
         )}
         
         <div className="mt-3 text-muted small">
-          <p>Debug: {connecting ? "Connecting..." : account ? "Connected" : "Not connected"}</p>
+          <p>Status: {connecting ? "Connecting..." : account ? "Connected" : "Not connected"}</p>
         </div>
       </div>
     </div>
