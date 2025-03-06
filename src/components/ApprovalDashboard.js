@@ -184,6 +184,15 @@ return (
       <div className="card-body">
         {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
 
+        {/* Progress Bar - Show when loading or processing */}
+        {(isLoading || processing || progress > 0) && (
+          <TransactionProgressBar 
+            progress={progress} 
+            status={progressStatus}
+            variant={isLoading ? "info" : "primary"}
+          />
+        )}
+
         {showMixedBatchRevoke ? (
           <MixedBatchRevoke 
             selectedApprovals={selectedApprovals} 
