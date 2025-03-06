@@ -154,7 +154,7 @@ return (
     <div className="card-body">
       {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
 
-      {showMixedBatchRevoke ? (
+       {showMixedBatchRevoke ? (
         <MixedBatchRevoke 
           selectedApprovals={selectedApprovals} 
           onComplete={() => {
@@ -164,7 +164,7 @@ return (
           }} 
         />
       ) : (
-        <>
+        <> {/* ✅ Properly opening the JSX fragment */}
           <table className="table table-hover">
             <thead className="table-dark">
               <tr>
@@ -213,19 +213,22 @@ return (
           </table>
 
           {/* REVOKE BUTTON - Always Visible */}
-    {!showMixedBatchRevoke && (
-      <button
-        className="btn btn-danger w-100 mt-3"
-        onClick={handleRevoke}
-        disabled={processing || selectedApprovals.length === 0}
-      >
-        {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
-      </button>
-    )}
-    
-    </div>  {/* ✅ This closes the card-body div correctly */}
+          {!showMixedBatchRevoke && (
+            <button
+              className="btn btn-danger w-100 mt-3"
+              onClick={handleRevoke}
+              disabled={processing || selectedApprovals.length === 0}
+            >
+              {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
+            </button>
+          )}
+
+        </>  {/* ✅ Correctly closing the JSX fragment */}
+      )}
+    </div>
   </div>
 );
 };
 
 export default ApprovalDashboard;
+
