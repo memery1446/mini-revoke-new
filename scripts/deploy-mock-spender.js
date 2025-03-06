@@ -11,13 +11,12 @@ async function main() {
     const mockSpender = await MockSpender.deploy();
 
     console.log("⏳ Waiting for deployment to complete...");
-    await mockSpender.waitForDeployment(); // ✅ Ethers v6 equivalent of `.deployed()`
+    await mockSpender.waitForDeployment(); 
 
-    const contractAddress = await mockSpender.getAddress(); // ✅ Ethers v6 way to get contract address
+    const contractAddress = await mockSpender.getAddress(); 
 
     console.log("✅ MockSpender deployed to:", contractAddress);
 
-    // Save contract address to a JSON file
     fs.writeFileSync(
         "./deployed-mock-spender.json",
         JSON.stringify({ address: contractAddress }, null, 2)
@@ -25,7 +24,6 @@ async function main() {
 
     console.log("📂 Address saved in deployed-mock-spender.json");
 
-    // Optional: Verify contract on Etherscan (if ETHERSCAN_API_KEY exists)
     if (process.env.ETHERSCAN_API_KEY) {
         console.log("🔍 Verifying contract on Etherscan...");
         await run("verify:verify", {
@@ -43,3 +41,5 @@ main()
         console.error("❌ Deployment failed:", error);
         process.exit(1);
     });
+
+    

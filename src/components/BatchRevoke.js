@@ -46,7 +46,7 @@ const BatchRevoke = () => {
       console.log("🎨 Fetched ERC-721 Approvals:", erc721Fetched);
       console.log("🛠️ Fetched ERC-1155 Approvals:", erc1155Fetched);
 
-      // Safely create the array for dispatch
+      // Create the array for dispatch
       const allApprovals = [
         ...(Array.isArray(erc20Fetched) ? erc20Fetched.map(a => ({ ...a, type: 'ERC-20' })) : []),
         ...(Array.isArray(erc721Fetched) ? erc721Fetched.map(a => ({ ...a, type: 'ERC-721' })) : []),
@@ -70,7 +70,6 @@ const BatchRevoke = () => {
       const signer = await provider.getSigner();
       console.log("🔄 Starting batch revocation with signer:", await signer.getAddress());
 
-      // ✅ FIX: Safe filtering
       const erc20Selected = Array.isArray(selectedApprovals) ? selectedApprovals.filter(a => a?.type === 'ERC-20') : [];
       const erc721Selected = Array.isArray(selectedApprovals) ? selectedApprovals.filter(a => a?.type === 'ERC-721') : [];
       const erc1155Selected = Array.isArray(selectedApprovals) ? selectedApprovals.filter(a => a?.type === 'ERC-1155') : [];

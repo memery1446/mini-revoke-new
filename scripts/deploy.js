@@ -56,7 +56,7 @@ console.log(`🔍 Deployer owns ${nftBalance.toString()} NFTs`);
   await testERC1155.mint(deployer.address, 1, 100);
   console.log(`✅ Minted 100 ERC1155 tokens`);
 
-  // ✅ Ensure account1 exists before transferring
+  // Ensure account1 exists before transferring
   if (!account1 || !account1.address) {
     throw new Error("❌ Error: account1 is undefined. Ensure you have multiple signers.");
   }

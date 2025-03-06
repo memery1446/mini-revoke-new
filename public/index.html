@@ -2,25 +2,24 @@
 <html lang="en">
 <head>
   <script>
-  // Install emergency console logging
+  // Emergency console logging
   (function() {
     // Check if console is working
     var originalLog = console.log;
     var originalWarn = console.warn;
     var originalError = console.error;
     
-    // Flag to track if console seems broken
+    // Track if console seems broken
     var consoleWorks = false;
     
     try {
-      // Try to use console
       originalLog("Console initialization check");
       consoleWorks = true;
     } catch (e) {
-      // Console might be broken - create emergency logging
+      // Emergency logging
       console = console || {};
       
-      // Create a visible logging div
+      // Logging div
       function setupLogDiv() {
         var logDiv = document.createElement('div');
         logDiv.id = 'emergency-console';
@@ -100,11 +99,10 @@
       if (consoleWorks) {
         console.log("Browser console is working normally");
       } else {
-        // Already using emergency console
         console.log("Using emergency console logging");
       }
       
-      // Setup global error handler
+      // Global error handler
       window.onerror = function(message, source, lineno, colno, error) {
         console.error("GLOBAL ERROR:", message, "at", source, lineno + ":" + colno);
         console.error("Error details:", error);
@@ -121,3 +119,4 @@
   <div id="root"></div>
 </body>
 </html>
+

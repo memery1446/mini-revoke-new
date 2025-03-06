@@ -43,7 +43,7 @@ async function main() {
 
 
 
-// 🔹 Approve ERC-20 Tokens
+// Approve ERC-20 Tokens
 async function approveERC20(tokenAddress, deployer, amount) {
   try {
     const contract = new ethers.Contract(tokenAddress, TOKEN_ABI, deployer);
@@ -65,7 +65,7 @@ async function approveERC20(tokenAddress, deployer, amount) {
   }
 }
 
-// 🔹 Approve ERC-721 NFTs
+// Approve ERC-721 NFTs
 async function approveERC721(nftAddress, deployer, tokenIds) {
   try {
     const contract = new ethers.Contract(nftAddress, NFT_ABI, deployer);
@@ -95,7 +95,7 @@ async function approveERC721(nftAddress, deployer, tokenIds) {
   }
 }
 
-// 🔹 Approve ERC-1155 Collection
+// Approve ERC-1155 Collection
 async function approveERC1155(erc1155Address, deployer) {
   try {
     const contract = new ethers.Contract(erc1155Address, ERC1155_ABI, deployer);
@@ -113,3 +113,4 @@ main().catch((error) => {
   console.error("❌ Script failed:", error);
   process.exit(1);
 });
+

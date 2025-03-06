@@ -9,7 +9,7 @@ const TokenAllowanceManager = ({ wallet }) => {
   const [customAmount, setCustomAmount] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Proper Provider Setup
+  // Provider Setup
   const provider = window.ethereum
     ? new BrowserProvider(window.ethereum)
     : new JsonRpcProvider("http://127.0.0.1:8545");
@@ -150,3 +150,4 @@ const TokenAllowanceManager = ({ wallet }) => {
 };
 
 export default TokenAllowanceManager;
+

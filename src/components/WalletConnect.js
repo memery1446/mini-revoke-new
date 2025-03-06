@@ -16,20 +16,20 @@ const WalletConnect = () => {
   useEffect(() => {
     safeConsoleLog("🔵 WalletConnect component mounted");
     
-    // Remove any existing debug elements that might be left over
+    // Remove existing debug elements 
     try {
       const existingDebug = document.getElementById('wallet-debug');
       if (existingDebug && document.body.contains(existingDebug)) {
         document.body.removeChild(existingDebug);
       }
       
-      // Clean up global reference if it exists
+      // Clean up global reference 
       if (window._updateDebug) {
         window._updateDebug = null;
         delete window._updateDebug;
       }
     } catch (err) {
-      // Silently handle any cleanup errors
+      // Handle any cleanup errors
     }
     
     return () => {
@@ -79,7 +79,6 @@ const WalletConnect = () => {
     }
   }, [account]);
 
-  // Render safely
   return (
     <div className="card h-100">
       <div className="card-body">
