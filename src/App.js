@@ -73,8 +73,11 @@ const AppContent = () => {
             <div className="col-lg-12">
               {/* Only render BatchRevoke if feature is enabled */}
               {FEATURES.batchRevoke.enabled && <BatchRevoke />}
-              
-              {/* Always show single revocation UI */}
+
+              {/* Educational Section */}
+              <ApprovalEducation />
+
+              {/* Approval List */}
               <ApprovalDashboard />
               
               {/* Environment indicator for testing */}
