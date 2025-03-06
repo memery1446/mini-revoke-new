@@ -7,6 +7,7 @@ import store from "./store/index" // Keep import for Redux store
 import WalletConnect from "./components/WalletConnect.js"
 import NetworkSelector from "./components/NetworkSelector.js"
 import ApprovalDashboard from "./components/ApprovalDashboard.js"
+import ApprovalEducation from "./components/ApprovalEducation.js"
 import BatchRevoke from "./components/BatchRevoke.js" 
 import { FEATURES } from './constants/config' // Import feature toggles
 import "bootstrap/dist/css/bootstrap.min.css"
