@@ -8,6 +8,7 @@ import { getProvider } from "../utils/provider";
 import { revokeERC20Approvals, revokeERC721Approvals } from "../utils/batchRevokeUtils";
 import { CONTRACT_ADDRESSES } from "../constants/abis"; 
 import MixedBatchRevoke from "../components/MixedBatchRevoke";
+import TransactionProgressBar from "../components/TransactionProgressBar";
 
 
 const ApprovalDashboard = () => {
