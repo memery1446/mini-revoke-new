@@ -212,17 +212,18 @@ return (
             </tbody>
           </table>
 
-          {/* ✅ REVOKE BUTTON - Always Visible */}
-{!showMixedBatchRevoke && (
-  <button
-    className="btn btn-danger w-100 mt-3"
-    onClick={handleRevoke}
-    disabled={processing || selectedApprovals.length === 0}
-  >
-    {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
-  </button>
-)}
-
+          {/* REVOKE BUTTON - Always Visible */}
+    {!showMixedBatchRevoke && (
+      <button
+        className="btn btn-danger w-100 mt-3"
+        onClick={handleRevoke}
+        disabled={processing || selectedApprovals.length === 0}
+      >
+        {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
+      </button>
+    )}
+    
+    </> 
     </div>
   </div>
 );
