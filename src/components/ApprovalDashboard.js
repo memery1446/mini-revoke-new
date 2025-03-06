@@ -20,7 +20,6 @@ const ApprovalDashboard = () => {
   const [selectedApprovals, setSelectedApprovals] = useState([]);
   const [showMixedBatchRevoke, setShowMixedBatchRevoke] = useState(false);
 
-
   useEffect(() => {
     if (wallet) loadApprovals();
   }, [wallet]);
@@ -43,13 +42,9 @@ const ApprovalDashboard = () => {
 
       let erc20List = [], erc721List = [], erc1155List = [];
 
-try { 
-  erc20List = await getERC20Approvals(
-    [CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2], 
-    address
-  ) || []; 
-}
-      catch (err) { console.error("❌ ERC-20 Fetch Error:", err); }
+      try { 
+        erc20List = await getERC20Approvals([CONTRACT_ADDRESSES.TK1, CONTRACT_ADDRESSES.TK2], address) || []; 
+      } catch (err) { console.error("❌ ERC-20 Fetch Error:", err); }
 
       try { erc721List = await getERC721Approvals(address) || []; }
       catch (err) { console.error("❌ ERC-721 Fetch Error:", err); }
@@ -62,7 +57,6 @@ try {
         ...erc721List.map(a => ({ ...a, type: 'ERC-721' })),
         ...erc1155List.map(a => ({ ...a, type: "ERC-1155" }))
       ];
-console.log("🔹 ERC-20 Approvals Fetched:", erc20List);
 
       console.log("🔹 Final approval list before dispatch:", allApprovals);
       dispatch(setApprovals(allApprovals));
@@ -76,48 +70,44 @@ console.log("🔹 ERC-20 Approvals Fetched:", erc20List);
     }
   };
 
-const handleSelect = (approval) => {
-  setSelectedApprovals(prev => {
-    const exists = prev.some(a =>
-      a.contract === approval.contract &&
-      a.spender === approval.spender &&
-      (a.tokenId ? a.tokenId === approval.tokenId : true) // ✅ Fix: Match tokenId
-    );
+  const handleSelect = (approval) => {
+    setSelectedApprovals(prev => {
+      const exists = prev.some(a =>
+        a.contract === approval.contract &&
+        a.spender === approval.spender &&
+        (a.tokenId ? a.tokenId === approval.tokenId : true)
+      );
 
-    return exists
-      ? prev.filter(a =>
-          !(a.contract === approval.contract &&
-            a.spender === approval.spender &&
-            (a.tokenId ? a.tokenId === approval.tokenId : true)) // ✅ Unselect exact approval
-        )
-      : [...prev, approval];
-  });
-};
-
+      return exists
+        ? prev.filter(a =>
+            !(a.contract === approval.contract &&
+              a.spender === approval.spender &&
+              (a.tokenId ? a.tokenId === approval.tokenId : true))
+          )
+        : [...prev, approval];
+    });
+  };
 
   const handleRevoke = async () => {
-if (!selectedApprovals.length || processing) return;
+    if (!selectedApprovals.length || processing) return;
 
-// ✅ Ensure we are only revoking one type at a time
-const approvalTypes = [...new Set(selectedApprovals.map(a => a.type))];
-if (approvalTypes.length > 1) {
-  setShowMixedBatchRevoke(true);
-  return;
-}
+    // ✅ Route mixed approvals to `MixedBatchRevoke`
+    const approvalTypes = [...new Set(selectedApprovals.map(a => a.type))];
+    if (approvalTypes.length > 1) {
+      setShowMixedBatchRevoke(true);
+      return;
+    }
 
-
-
-// ✅ Clear previous selections before revoking
-setSelectedApprovals([]);
-
+    // ✅ Clear selections before revoking
+    setSelectedApprovals([]);
     setProcessing(true);
     setMessage({ type: 'info', text: 'Processing revocation...' });
 
     try {
       const provider = await getProvider();
       const signer = await provider.getSigner();
-
       let result;
+
       if (selectedApprovals.every(a => a.type === 'ERC-20')) {
         result = await revokeERC20Approvals(selectedApprovals, signer);
       } else if (selectedApprovals.every(a => a.type === 'ERC-721')) {
@@ -130,19 +120,16 @@ setSelectedApprovals([]);
         throw new Error("Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately.");
       }
 
-if (result.success) {
-  console.log("🗑️ Removing revoked approvals from Redux...");
-  dispatch(setApprovals(approvals.filter(a => 
-    !(selectedApprovals.some(sel => 
-      sel.contract === a.contract && sel.spender === a.spender
-    ))
-  )));
-
-  setMessage({ type: 'success', text: `Revoked ${result.count} approval(s)!` });
-  setSelectedApprovals([]);
-  setTimeout(loadApprovals, 2000);
-}
- else {
+      if (result.success) {
+        console.log("🗑️ Removing revoked approvals from Redux...");
+        dispatch(setApprovals(approvals.filter(a => 
+          !selectedApprovals.some(sel => 
+            sel.contract === a.contract && sel.spender === a.spender
+          )
+        )));
+        setMessage({ type: 'success', text: `Revoked ${result.count} approval(s)!` });
+        setTimeout(loadApprovals, 2000);
+      } else {
         setMessage({ type: 'danger', text: `Error: ${result.error}` });
       }
     } catch (error) {
@@ -154,83 +141,54 @@ if (result.success) {
   };
 
   return (
-<div className="card shadow-lg">
-  <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-    <h5 className="mb-0">Token Approvals</h5>
-    <button className="btn btn-light" onClick={loadApprovals} disabled={isLoading}>
-      {isLoading ? 'Loading...' : 'Refresh'}
-    </button>
-  </div>
-  {showMixedBatchRevoke && (
-  <MixedBatchRevoke selectedApprovals={selectedApprovals} onComplete={() => {
-    setShowMixedBatchRevoke(false);
-    loadApprovals();
-  }} />
-)}
+    <div className="card shadow-lg">
+      <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 className="mb-0">Token Approvals</h5>
+        <button className="btn btn-light" onClick={loadApprovals} disabled={isLoading}>
+          {isLoading ? 'Loading...' : 'Refresh'}
+        </button>
+      </div>
 
-  <div className="card-body">
-    {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
+      <div className="card-body">
+        {message && <div className={`alert alert-${message.type}`}>{message.text}</div>}
 
-    <table className="table table-hover">
-      <thead className="table-dark">
-        <tr>
-          <th>Select</th>
-          <th>Type</th>
-          <th>Contract</th>
-          <th>Spender</th>
-          <th>Details</th>
-        </tr>
-      </thead>
-<tbody>
-  {approvals && Array.isArray(approvals) && approvals.length > 0 ? (
-    approvals.map((a, idx) => (
-      <tr key={idx}>
-        <td>
-          <input
-            type="checkbox"
-            checked={selectedApprovals.some(sel =>
-              sel.contract === a.contract &&
-              sel.spender === a.spender &&
-              (a.tokenId ? sel.tokenId === a.tokenId : true)
-            )}
-            onChange={() => handleSelect(a)}
+        {showMixedBatchRevoke && (
+          <MixedBatchRevoke 
+            selectedApprovals={selectedApprovals} 
+            onComplete={() => {
+              setShowMixedBatchRevoke(false);
+              loadApprovals();
+            }} 
           />
-        </td>
-        <td>
-          <span className={`badge bg-${a.type === 'ERC-20' ? 'success' : a.type === 'ERC-721' ? 'primary' : 'warning'}`}>
-            {a.type}
-          </span>
-        </td>
-        <td><code>{a.contract.substring(0, 8)}...</code></td>
-        <td><code>{a.spender.substring(0, 8)}...</code></td>
-        <td>
-          {a.type === "ERC-20" && `Unlimited Allowance (${a.amount})`}
-          {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId}`)}
-          {a.type === "ERC-1155" && "Collection-wide Approval"}
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="5" className="text-center text-muted">No active approvals found.</td>
-    </tr>
-  )}
-</tbody>
-    </table>
+        )}
 
-    <button
-      className="btn btn-danger w-100 mt-3"
-      onClick={handleRevoke}
-      disabled={processing || selectedApprovals.length === 0}
-    >
-      {processing ? 'Revoking...' : `Revoke Selected (${selectedApprovals.length})`}
-    </button>
-  </div>
-</div>
-
+        <table className="table table-hover">
+          <thead className="table-dark">
+            <tr>
+              <th>Select</th>
+              <th>Type</th>
+              <th>Contract</th>
+              <th>Spender</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {approvals.map((a, idx) => (
+              <tr key={idx}>
+                <td>
+                  <input type="checkbox" onChange={() => handleSelect(a)} />
+                </td>
+                <td>{a.type}</td>
+                <td>{a.contract}</td>
+                <td>{a.spender}</td>
+                <td>{a.tokenId || "Collection-wide Approval"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 
 export default ApprovalDashboard;
-
-

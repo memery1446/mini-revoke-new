@@ -24,6 +24,11 @@ const MixedBatchRevoke = ({ selectedApprovals, onComplete }) => {
       const erc721Approvals = selectedApprovals.filter(a => a.type === "ERC-721");
       const erc1155Approvals = selectedApprovals.filter(a => a.type === "ERC-1155");
 
+      console.log("🔄 Mixed Batch Revoke Starting...");
+      console.log("💰 ERC-20 Approvals to Revoke:", erc20Approvals);
+      console.log("🖼️ ERC-721 Approvals to Revoke:", erc721Approvals);
+      console.log("🎮 ERC-1155 Approvals to Revoke:", erc1155Approvals);
+
       if (erc20Approvals.length) {
         const result = await revokeERC20Approvals(erc20Approvals, signer);
         if (result.success) revokedApprovals.push(...erc20Approvals);
@@ -41,8 +46,16 @@ const MixedBatchRevoke = ({ selectedApprovals, onComplete }) => {
         if (result.success) revokedApprovals.push(...erc1155Approvals);
       }
 
+      console.log("✅ Mixed Batch Revoke Completed! Revoked Approvals:", revokedApprovals);
+
       // ✅ Remove revoked approvals from Redux
-      dispatch(setApprovals(prevApprovals => prevApprovals.filter(a => !revokedApprovals.includes(a))));
+      if (revokedApprovals.length) {
+        dispatch(setApprovals(prevApprovals =>
+          prevApprovals.filter(a => !revokedApprovals.some(r => 
+            r.contract === a.contract && r.spender === a.spender
+          ))
+        ));
+      }
 
       // ✅ Refresh the dashboard
       onComplete();
@@ -64,4 +77,5 @@ const MixedBatchRevoke = ({ selectedApprovals, onComplete }) => {
 };
 
 export default MixedBatchRevoke;
+
 
