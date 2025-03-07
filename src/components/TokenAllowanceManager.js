@@ -10,9 +10,9 @@ const TokenAllowanceManager = ({ wallet }) => {
   const [loading, setLoading] = useState(false);
 
   // Provider Setup
-  const provider = window.ethereum
-    ? new BrowserProvider(window.ethereum)
-    : new JsonRpcProvider("http://127.0.0.1:8545");
+const provider = window.ethereum
+  ? new BrowserProvider(window.ethereum)
+  : new JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
 
   useEffect(() => {
     if (wallet && selectedToken && spender) {
