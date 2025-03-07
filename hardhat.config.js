@@ -19,7 +19,7 @@ module.exports = {
   },
   networks: {
     sepolia: {
-      url: `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
+      url: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
       accounts: PRIVATE_KEYS,
       chainId: 11155111,
       explorerUrl: "https://sepolia.etherscan.io/"
