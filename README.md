@@ -1,3 +1,6 @@
+Here's your complete, updated README.md file that combines the original content with our new instructions:
+
+```markdown
 ## Overview
 
 Approval-Manager is a comprehensive tool for managing and monitoring token approvals on Ethereum and compatible blockchains. It provides a streamlined interface for handling ERC20, ERC721, and ERC1155 token approvals, helping users secure their assets by maintaining visibility and control over smart contract permissions. The project is currently deployed on the Sepolia testnet.
@@ -14,11 +17,37 @@ docker pull memery1446/approval-manager:latest
 docker stop approval-app
 docker rm approval-app
 
-# Run the new container
-docker run -d -p 3000:3000 --name approval-app memery1446/approval-manager:latest
+# Run the container with required environment variables
+docker run -d -p 3000:3000 --name approval-app \
+  -e SEPOLIA_RPC_URL="https://sepolia.infura.io/v3/YOUR_INFURA_KEY" \
+  -e INFURA_API_KEY="YOUR_INFURA_KEY" \
+  -e ALCHEMY_API_KEY="YOUR_ALCHEMY_KEY" \
+  -e ETHERSCAN_API_KEY="YOUR_ETHERSCAN_KEY" \
+  memery1446/approval-manager:latest
 ```
 
 Then access the application at [http://localhost:3000](http://localhost:3000)
+
+## Running Scripts in Docker
+
+To run Hardhat scripts (like approving tokens) inside the container:
+
+1. Enter the container:
+   ```bash
+   docker exec -it approval-app bash
+   ```
+
+2. Set your private key:
+   ```bash
+   export PRIVATE_KEYS=0xYOUR_PRIVATE_KEY_HERE
+   ```
+
+3. Run your script:
+   ```bash
+   npx hardhat run scripts/Approve2ofEach.js --network sepolia
+   ```
+
+Note: For security, avoid storing private keys in files or sharing them in commands. Use environment variables or Docker secrets for production environments.
 
 ## Features
 
@@ -29,7 +58,6 @@ Then access the application at [http://localhost:3000](http://localhost:3000)
 - **User-Friendly Display**: Clear presentation of token amounts and contract addresses
 - **Cross-Chain Support**: Works across Ethereum and compatible chains
 - **Sepolia Testnet Integration**: Fully functional on Sepolia testnet for testing
-
 
 ## Deployments
 
@@ -47,7 +75,6 @@ MockSpender: "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608"
 
 - **Frontend URL**: [https://approval-manager-git-main-memery1446s-projects.vercel.app/](https://approval-manager-git-main-memery1446s-projects.vercel.app/)
 
-
 ## Usage
 
 1. Connect your wallet (configured for Sepolia testnet)
@@ -56,13 +83,7 @@ MockSpender: "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608"
 4. For batch operations, select multiple approvals of the same type
 5. For mixed token types, the application will guide you through the process
 
-
-## Contact
-
-- Project Maintainer: Mark Emery
-- GitHub Repository: [memery1446/approval-manager](https://github.com/memery1446/approval-manager)
-
-## For Mark
+## Docker Management Commands
 
 ### Option 1: Remove the existing container first (recommended)
 
@@ -73,20 +94,22 @@ docker stop approval-app
 # Then remove it
 docker rm approval-app
 
-# Now you can run the new container
-docker run -d -p 3000:3000 --name approval-app memery1446/approval-manager:latest
+# Now you can run the new container (see Quick Start section)
 ```
 
 ### Option 2: Use a different name for the new container
 
 ```shellscript
 # Run with a different name
-docker run -d -p 3000:3000 --name approval-app-new memery1446/approval-manager:latest
+docker run -d -p 3000:3000 --name approval-app-new \
+  -e SEPOLIA_RPC_URL="https://sepolia.infura.io/v3/YOUR_INFURA_KEY" \
+  -e INFURA_API_KEY="YOUR_INFURA_KEY" \
+  -e ALCHEMY_API_KEY="YOUR_ALCHEMY_KEY" \
+  -e ETHERSCAN_API_KEY="YOUR_ETHERSCAN_KEY" \
+  memery1446/approval-manager:latest
 ```
 
 ### Option 3: Start the existing container if it's stopped
-
-If you just want to use the container you already created:
 
 ```shellscript
 # Check if the container exists but is stopped
@@ -96,6 +119,14 @@ docker ps -a | grep approval-app
 docker start approval-app
 ```
 
-For your boss testing scenario, Option 1 is probably best as it ensures you're running the latest version of the image. This is the typical workflow when updating a Docker application.
+## Troubleshooting
 
-After running these commands, you should be able to access the application at [http://localhost:3000](http://localhost:3000).
+- **Connection Issues**: If the application can't connect to the blockchain, ensure you've provided valid API keys in your Docker run command
+- **Script Errors**: When running scripts inside the container, make sure you've set your private key with `export PRIVATE_KEYS=0xYOUR_KEY`
+- **Container Access**: Use `docker logs approval-app` to view application logs for debugging
+
+## Contact
+
+- Project Maintainer: Mark Emery
+- GitHub Repository: [memery1446/approval-manager](https://github.com/memery1446/approval-manager)
+```

@@ -56,9 +56,10 @@ module.exports = {
       chainId: 1337,
       allowUnlimitedContractSize: true
     },
-localhost: {
-  url: "http://127.0.0.1:1337",  
-  chainId: 1337
+    localhost: {
+      url: "http://127.0.0.1:1337",  
+      chainId: 1337
+    }
   },
   gasReporter: {
     enabled: true,
@@ -68,6 +69,6 @@ localhost: {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY
-  },
+  }
 };
 
