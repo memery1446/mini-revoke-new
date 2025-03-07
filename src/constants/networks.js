@@ -1,7 +1,9 @@
 export const NETWORK_CONFIG = {
-  31337: {
+1337: {
     name: "Hardhat Local Fork",
-    rpcUrl: "http://127.0.0.1:8545",
+    rpcUrl: process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 
+            process.env.SEPOLIA_RPC_URL || 
+            "https://ethereum-sepolia-rpc.publicnode.com",
     contracts: {
       tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",  
       secondToken: "0xE7B9Ede68593354aff96690600D008A40519D3CF",  

@@ -1,7 +1,7 @@
 import { Contract, JsonRpcProvider, getAddress } from "ethers";
 import { CONTRACT_ADDRESSES, TOKEN_ABI } from "../../src/constants/abis";
+import { getProvider } from "./provider";
 
-const provider = new JsonRpcProvider(process.env.REACT_APP_ALCHEMY_SEPOLIA_URL);
 
 // Define spender addresses
 const spenderAddresses = [CONTRACT_ADDRESSES.MockSpender];
@@ -17,6 +17,14 @@ export async function getERC20Approvals(tokenContracts, ownerAddress) {
 
   console.log("🔍 Checking token contracts:", tokenContracts);
   let approvals = [];
+
+  // Get provider at function execution time
+  const provider = await getProvider();
+  
+  if (!provider) {
+    console.error("❌ Failed to get provider for ERC-20 checks");
+    return [];
+  }
 
   for (let tokenAddress of tokenContracts) {
     try {

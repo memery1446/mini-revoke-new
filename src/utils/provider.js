@@ -3,10 +3,19 @@ import { JsonRpcProvider, BrowserProvider } from "ethers";
 // Log that the provider module is loaded
 console.log("🔌 provider.js loaded - " + new Date().toISOString());
 
+// Enhanced fallback mechanism for RPC URLs
+const getRpcUrl = () => {
+  // Try all possible environment variable formats, maintain original priority
+  return process.env.SEPOLIA_RPC_URL || 
+         process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 
+         `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY || process.env.NEXT_PUBLIC_INFURA_API_KEY}` ||
+         "https://ethereum-sepolia-rpc.publicnode.com"; // Public fallback as last resort
+};
+
 // Load API keys from environment variables
 const NETWORK_RPC_URLS = {
     // 1: process.env.MAINNET_RPC_URL, // Ethereum Mainnet
-    11155111: process.env.SEPOLIA_RPC_URL, // Sepolia Testnet
+    11155111: getRpcUrl(), // Sepolia Testnet with enhanced fallback
     // 10: process.env.OPTIMISM_RPC_URL, // Optimism
     // 42161: process.env.ARBITRUM_RPC_URL, // Arbitrum One
     // 137: process.env.POLYGON_RPC_URL, // Polygon Mainnet
@@ -80,7 +89,19 @@ async function getProvider() {
         const rpcUrl = NETWORK_RPC_URLS[defaultNetwork];
 
         if (!rpcUrl) {
-            throw new Error("🚨 No valid Sepolia RPC URL found! Check your .env file.");
+            console.warn("⚠️ No RPC URL from environment, using public fallback");
+            // Last resort fallback to public RPC (better than failing)
+            const publicFallback = "https://ethereum-sepolia-rpc.publicnode.com";
+            
+            // Update Redux with the default network
+            if (window.store && window.store.dispatch) {
+                window.store.dispatch({ type: 'web3/setNetwork', payload: defaultNetwork });
+            }
+            
+            const fallbackProvider = new JsonRpcProvider(publicFallback);
+            window.ethersProvider = fallbackProvider;
+            console.log("🔌 Public fallback provider exposed as window.ethersProvider");
+            return fallbackProvider;
         }
 
         console.log(`📡 No wallet detected, using RPC: ${rpcUrl}`);
@@ -108,5 +129,4 @@ async function getProvider() {
 
 // ✅ **Fixed: Now exporting `BootstrapWrapper`**
 export { getProvider, BootstrapWrapper };
-
 
