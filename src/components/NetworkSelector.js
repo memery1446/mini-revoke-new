@@ -51,7 +51,7 @@ const supportedNetworks = {
     name: "Polygon Mumbai",
     rpcUrl: process.env.POLYGON_MUMBAI_RPC_URL || `https://polygon-mumbai.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
   },
-31337: {
+1337: {
   chainId: "0x7A69",
   name: "Hardhat Local",
   rpcUrl: process.env.SEPOLIA_RPC_URL, // Ensures no fallback to localhost
