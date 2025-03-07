@@ -54,7 +54,8 @@ const supportedNetworks = {
 1337: {
   chainId: "0x7A69",
   name: "Hardhat Local",
-  rpcUrl: process.env.SEPOLIA_RPC_URL, // Ensures no fallback to localhost
+  rpcUrl: process.env.SEPOLIA_RPC_URL || "http://127.0.0.1:1337",
+
 },
 
 };
@@ -111,7 +112,7 @@ const NetworkSelector = () => {
           </div>
         </div>
         <small className="text-muted mt-2 d-block">
-          Using {currentNetwork === 31337 ? "Hardhat Local" : "Alchemy / Infura Remote Node"}
+          Using {currentNetwork === 1337 ? "Hardhat Local" : "Alchemy / Infura Remote Node"}
         </small>
       </div>
     </div>

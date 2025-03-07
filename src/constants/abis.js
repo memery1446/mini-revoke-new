@@ -17,7 +17,7 @@ module.exports = {
     NETWORK_CONFIG: {
         1337: {
             name: "Hardhat Local Fork",
-            rpcUrl: "http://127.0.0.1:8545",
+            rpcUrl: process.env.SEPOLIA_RPC_URL,  
             contracts: {
                 tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",
                 secondToken: "0xE7B9Ede68593354aff96690600D008A40519D3CF",
