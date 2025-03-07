@@ -5,15 +5,15 @@ console.log("🔌 provider.js loaded - " + new Date().toISOString());
 
 // Load API keys from environment variables
 const NETWORK_RPC_URLS = {
-    1: process.env.MAINNET_RPC_URL, // Ethereum Mainnet
+    // 1: process.env.MAINNET_RPC_URL, // Ethereum Mainnet
     11155111: process.env.SEPOLIA_RPC_URL, // Sepolia Testnet
-    10: process.env.OPTIMISM_RPC_URL, // Optimism
-    42161: process.env.ARBITRUM_RPC_URL, // Arbitrum One
-    137: process.env.POLYGON_RPC_URL, // Polygon Mainnet
-    56: "https://bsc-dataseed.binance.org/", // Binance Smart Chain (Public RPC)
-    420: process.env.OPTIMISM_GOERLI_RPC_URL, // Optimism Goerli
-    421613: process.env.ARBITRUM_GOERLI_RPC_URL, // Arbitrum Goerli
-    80001: process.env.POLYGON_MUMBAI_RPC_URL, // Polygon Mumbai
+    // 10: process.env.OPTIMISM_RPC_URL, // Optimism
+    // 42161: process.env.ARBITRUM_RPC_URL, // Arbitrum One
+    // 137: process.env.POLYGON_RPC_URL, // Polygon Mainnet
+    // 56: "https://bsc-dataseed.binance.org/", // Binance Smart Chain (Public RPC)
+    // 420: process.env.OPTIMISM_GOERLI_RPC_URL, // Optimism Goerli
+    // 421613: process.env.ARBITRUM_GOERLI_RPC_URL, // Arbitrum Goerli
+    // 80001: process.env.POLYGON_MUMBAI_RPC_URL, // Polygon Mumbai
 };
 
 // Expose network info to window
@@ -52,6 +52,13 @@ async function getProvider() {
             const provider = new BrowserProvider(window.ethereum);
             const network = await provider.getNetwork();
             const chainId = Number(network.chainId);
+
+            // 🚨 Force Sepolia Only 🚨
+            if (chainId !== 11155111) {
+                alert("❌ Wrong network detected! Please switch to Sepolia in MetaMask.");
+                return null;
+            }
+
             console.log(`✅ Connected to Chain ID: ${chainId}`);
 
             // Update Redux store with network info
@@ -69,15 +76,15 @@ async function getProvider() {
         }
 
         // Automatically detect the right network RPC
-        const defaultNetwork = 11155111; // Default to Sepolia if nothing is set
+        const defaultNetwork = 11155111; // ✅ Default to Sepolia
         const rpcUrl = NETWORK_RPC_URLS[defaultNetwork];
 
         if (!rpcUrl) {
-            throw new Error("🚨 No valid RPC URL found! Check your .env file.");
+            throw new Error("🚨 No valid Sepolia RPC URL found! Check your .env file.");
         }
 
         console.log(`📡 No wallet detected, using RPC: ${rpcUrl}`);
-        
+
         // Update Redux with the default network
         if (window.store && window.store.dispatch) {
             window.store.dispatch({ type: 'web3/setNetwork', payload: defaultNetwork });
@@ -90,13 +97,14 @@ async function getProvider() {
         // Expose the fallback provider to window for debugging
         window.ethersProvider = fallbackProvider;
         console.log("🔌 Fallback provider exposed as window.ethersProvider");
-        
+
         return fallbackProvider;
     } catch (error) {
         console.error("❌ Provider error:", error);
         return null;
     }
 }
+
 
 // ✅ **Fixed: Now exporting `BootstrapWrapper`**
 export { getProvider, BootstrapWrapper };

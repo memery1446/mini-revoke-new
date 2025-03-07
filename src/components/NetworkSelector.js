@@ -14,49 +14,49 @@ const supportedNetworks = {
   11155111: {
     chainId: "0xaa36a7",
     name: "Sepolia Testnet",
-    rpcUrl: process.env.SEPOLIA_RPC_URL || `${process.env.INFURA_URL}${process.env.INFURA_API_KEY}`,
+    rpcUrl: process.env.SEPOLIA_RPC_URL || `${process.env.SEPOLIA_URL}${process.env.SEPOLIA_API_KEY}`,
   },
-  10: {
-    chainId: "0xa",
-    name: "Optimism",
-    rpcUrl: process.env.OPTIMISM_RPC_URL || `https://optimism.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-  },
-  42161: {
-    chainId: "0xa4b1",
-    name: "Arbitrum One",
-    rpcUrl: process.env.ARBITRUM_RPC_URL || `https://arb1.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-  },
-  137: {
-    chainId: "0x89",
-    name: "Polygon",
-    rpcUrl: process.env.POLYGON_RPC_URL || `https://polygon.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-  },
-  56: {
-    chainId: "0x38",
-    name: "Binance Smart Chain",
-    rpcUrl: "https://bsc-dataseed.binance.org/", // No API Key Needed
-  },
-  420: {
-    chainId: "0x1a4",
-    name: "Optimism Goerli",
-    rpcUrl: process.env.OPTIMISM_GOERLI_RPC_URL || `https://optimism-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-  },
-  421613: {
-    chainId: "0x66eed",
-    name: "Arbitrum Goerli",
-    rpcUrl: process.env.ARBITRUM_GOERLI_RPC_URL || `https://arb-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-  },
-  80001: {
-    chainId: "0x13881",
-    name: "Polygon Mumbai",
-    rpcUrl: process.env.POLYGON_MUMBAI_RPC_URL || `https://polygon-mumbai.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-  },
-1337: {
-  chainId: "0x7A69",
-  name: "Hardhat Local",
-  rpcUrl: process.env.SEPOLIA_RPC_URL || "http://127.0.0.1:1337",
+//   10: {
+//     chainId: "0xa",
+//     name: "Optimism",
+//     rpcUrl: process.env.OPTIMISM_RPC_URL || `https://optimism.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+//   },
+//   42161: {
+//     chainId: "0xa4b1",
+//     name: "Arbitrum One",
+//     rpcUrl: process.env.ARBITRUM_RPC_URL || `https://arb1.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+//   },
+//   137: {
+//     chainId: "0x89",
+//     name: "Polygon",
+//     rpcUrl: process.env.POLYGON_RPC_URL || `https://polygon.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+//   },
+//   56: {
+//     chainId: "0x38",
+//     name: "Binance Smart Chain",
+//     rpcUrl: "https://bsc-dataseed.binance.org/", // No API Key Needed
+//   },
+//   420: {
+//     chainId: "0x1a4",
+//     name: "Optimism Goerli",
+//     rpcUrl: process.env.OPTIMISM_GOERLI_RPC_URL || `https://optimism-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+//   },
+//   421613: {
+//     chainId: "0x66eed",
+//     name: "Arbitrum Goerli",
+//     rpcUrl: process.env.ARBITRUM_GOERLI_RPC_URL || `https://arb-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+//   },
+//   80001: {
+//     chainId: "0x13881",
+//     name: "Polygon Mumbai",
+//     rpcUrl: process.env.POLYGON_MUMBAI_RPC_URL || `https://polygon-mumbai.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+//   },
+// 1337: {
+//   chainId: "0x7A69",
+//   name: "Hardhat Local",
+//   rpcUrl: process.env.SEPOLIA_RPC_URL || "http://127.0.0.1:1337",
 
-},
+// },
 
 };
 

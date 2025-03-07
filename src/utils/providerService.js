@@ -200,8 +200,15 @@ export async function connectWallet() {
       safeDispatch({ type: 'web3/setAccount', payload: accounts[0] });
       
       // Get and set network ID
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      safeDispatch({ type: 'web3/setNetwork', payload: parseInt(chainId, 16) });
+const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+if (parseInt(chainId, 16) !== 11155111) {
+    alert("❌ Wrong network detected! Please switch to Sepolia.");
+    return false;
+}
+
+safeDispatch({ type: 'web3/setNetwork', payload: 11155111 });
+
       
       // Make sure event listeners are set up
       if (!initialized) {
