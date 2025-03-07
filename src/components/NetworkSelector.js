@@ -4,59 +4,64 @@ import { setNetwork } from "../store/web3Slice";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-// Ensure all environment variables are correctly prefixed with `REACT_APP_`
+// Ensure all environment variables are correctly used
 const supportedNetworks = {
-  1: { 
-    chainId: "0x1", 
-    name: "Ethereum Mainnet", 
-    rpcUrl: process.env.REACT_APP_ALCHEMY_MAINNET_URL,
+  1: {
+    chainId: "0x1",
+    name: "Ethereum Mainnet",
+    rpcUrl: process.env.MAINNET_RPC_URL || `${process.env.INFURA_URL}${process.env.INFURA_API_KEY}`,
   },
-  11155111: {  
-    chainId: "0xaa36a7", 
-    name: "Sepolia Testnet", 
-    rpcUrl: process.env.REACT_APP_ALCHEMY_SEPOLIA_URL,
+  11155111: {
+    chainId: "0xaa36a7",
+    name: "Sepolia Testnet",
+    rpcUrl: process.env.SEPOLIA_RPC_URL || `${process.env.INFURA_URL}${process.env.INFURA_API_KEY}`,
   },
-  10: {  
-    chainId: "0xa", 
-    name: "Optimism", 
-    rpcUrl: process.env.REACT_APP_ALCHEMY_OPTIMISM_URL, 
+  10: {
+    chainId: "0xa",
+    name: "Optimism",
+    rpcUrl: process.env.OPTIMISM_RPC_URL || `https://optimism.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
   },
-  42161: {  
-    chainId: "0xa4b1", 
-    name: "Arbitrum One", 
-    rpcUrl: process.env.REACT_APP_ALCHEMY_ARBITRUM_URL, 
+  42161: {
+    chainId: "0xa4b1",
+    name: "Arbitrum One",
+    rpcUrl: process.env.ARBITRUM_RPC_URL || `https://arb1.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
   },
-  137: {  
-    chainId: "0x89", 
-    name: "Polygon", 
-    rpcUrl: process.env.REACT_APP_ALCHEMY_POLYGON_URL, 
+  137: {
+    chainId: "0x89",
+    name: "Polygon",
+    rpcUrl: process.env.POLYGON_RPC_URL || `https://polygon.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
   },
-  56: {  
-    chainId: "0x38", 
-    name: "Binance Smart Chain", 
+  56: {
+    chainId: "0x38",
+    name: "Binance Smart Chain",
     rpcUrl: "https://bsc-dataseed.binance.org/", // No API Key Needed
   },
-  420: {  
-    chainId: "0x1a4", 
-    name: "Optimism Goerli", 
-    rpcUrl: process.env.REACT_APP_ALCHEMY_OPTIMISM_GOERLI_URL, 
+  420: {
+    chainId: "0x1a4",
+    name: "Optimism Goerli",
+    rpcUrl: process.env.OPTIMISM_GOERLI_RPC_URL || `https://optimism-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
   },
-  421613: {  
-    chainId: "0x66eed", 
-    name: "Arbitrum Goerli", 
-    rpcUrl: process.env.REACT_APP_ALCHEMY_ARBITRUM_GOERLI_URL, 
+  421613: {
+    chainId: "0x66eed",
+    name: "Arbitrum Goerli",
+    rpcUrl: process.env.ARBITRUM_GOERLI_RPC_URL || `https://arb-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
   },
-  80001: {  
-    chainId: "0x13881", 
-    name: "Polygon Mumbai", 
-    rpcUrl: process.env.REACT_APP_ALCHEMY_POLYGON_MUMBAI_URL, 
+  80001: {
+    chainId: "0x13881",
+    name: "Polygon Mumbai",
+    rpcUrl: process.env.POLYGON_MUMBAI_RPC_URL || `https://polygon-mumbai.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+  },
+  31337: {
+    chainId: "0x7A69",
+    name: "Hardhat Local",
+    rpcUrl: "http://localhost:8545", // Hardhat still uses localhost
   },
 };
 
 const NetworkSelector = () => {
   const dispatch = useDispatch();
   const currentNetwork = useSelector((state) => state.web3.network);
-  
+
   const switchNetwork = async (chainId) => {
     const networkId = parseInt(chainId, 10);
     console.warn(`⚠️ Switching to ${supportedNetworks[networkId]?.name || "Unknown Network"}`);
@@ -77,9 +82,7 @@ const NetworkSelector = () => {
           <h5 className="mb-0">Network Selection</h5>
           <div>
             <span className="fw-bold me-2">Current:</span>
-            <span className="badge bg-success">
-              {getCurrentNetworkName()}
-            </span>
+            <span className="badge bg-success">{getCurrentNetworkName()}</span>
           </div>
         </div>
       </div>
@@ -107,7 +110,7 @@ const NetworkSelector = () => {
           </div>
         </div>
         <small className="text-muted mt-2 d-block">
-          Using {isProduction ? "Alchemy Sepolia" : "Hardhat Local"}
+          Using {currentNetwork === 31337 ? "Hardhat Local" : "Alchemy / Infura Remote Node"}
         </small>
       </div>
     </div>
