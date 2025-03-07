@@ -5,18 +5,18 @@ console.log("🔌 provider.js loaded - " + new Date().toISOString());
 
 // Load API keys from environment variables
 const NETWORK_RPC_URLS = {
-    1: process.env.REACT_APP_ALCHEMY_MAINNET_URL, // Ethereum Mainnet
-    11155111: process.env.REACT_APP_ALCHEMY_SEPOLIA_URL, // Sepolia Testnet
-    10: process.env.REACT_APP_ALCHEMY_OPTIMISM_URL, // Optimism
-    42161: process.env.REACT_APP_ALCHEMY_ARBITRUM_URL, // Arbitrum One
-    137: process.env.REACT_APP_ALCHEMY_POLYGON_URL, // Polygon Mainnet
+    1: process.env.MAINNET_RPC_URL, // Ethereum Mainnet
+    11155111: process.env.SEPOLIA_RPC_URL, // Sepolia Testnet
+    10: process.env.OPTIMISM_RPC_URL, // Optimism
+    42161: process.env.ARBITRUM_RPC_URL, // Arbitrum One
+    137: process.env.POLYGON_RPC_URL, // Polygon Mainnet
     56: "https://bsc-dataseed.binance.org/", // Binance Smart Chain (Public RPC)
-    420: process.env.REACT_APP_ALCHEMY_OPTIMISM_GOERLI_URL, // Optimism Goerli
-    421613: process.env.REACT_APP_ALCHEMY_ARBITRUM_GOERLI_URL, // Arbitrum Goerli
-    80001: process.env.REACT_APP_ALCHEMY_POLYGON_MUMBAI_URL, // Polygon Mumbai
+    420: process.env.OPTIMISM_GOERLI_RPC_URL, // Optimism Goerli
+    421613: process.env.ARBITRUM_GOERLI_RPC_URL, // Arbitrum Goerli
+    80001: process.env.POLYGON_MUMBAI_RPC_URL, // Polygon Mumbai
 };
 
-// Expose network info to window 
+// Expose network info to window
 if (typeof window !== 'undefined') {
     window.NETWORK_INFO = {
         supportedNetworks: Object.keys(NETWORK_RPC_URLS).map(Number),
@@ -38,7 +38,7 @@ if (typeof window !== 'undefined') {
     console.log("🌐 Network info exposed to window.NETWORK_INFO");
 }
 
-// Bootstrap Wrapper for UI Components
+// ✅ **Re-added Bootstrap Wrapper**
 const BootstrapWrapper = ({ children }) => (
     <div className="container mt-4">{children}</div>
 );
@@ -46,54 +46,50 @@ const BootstrapWrapper = ({ children }) => (
 async function getProvider() {
     try {
         console.log("📡 Attempting to get provider...");
-        
+
         if (typeof window !== "undefined" && window.ethereum) {
             console.log("🦊 MetaMask or similar provider detected");
             const provider = new BrowserProvider(window.ethereum);
             const network = await provider.getNetwork();
             const chainId = Number(network.chainId);
             console.log(`✅ Connected to Chain ID: ${chainId}`);
-            
-            // Update Redux store with network info - using window.store instead of direct import
-            if (typeof window !== 'undefined' && window.store && window.store.dispatch) {
+
+            // Update Redux store with network info
+            if (window.store && window.store.dispatch) {
                 window.store.dispatch({ type: 'web3/setNetwork', payload: chainId });
                 console.log("🔄 Updated network in Redux:", chainId);
             } else {
                 console.warn("⚠️ Redux store not available, network not updated");
             }
 
-            // Check if the network is supported
-            if (!NETWORK_RPC_URLS[chainId]) {
-                console.warn(`⚠️ WARNING: Network (${chainId}) not supported.`);
-                return provider; // Still return provider even if network is not in our list
-            }
-            
             // Expose the provider to window for debugging
-            if (typeof window !== 'undefined') {
-                window.ethersProvider = provider;
-                console.log("🔌 Provider exposed as window.ethersProvider");
-            }
-            
+            window.ethersProvider = provider;
+            console.log("🔌 Provider exposed as window.ethersProvider");
             return provider;
         }
 
         // Automatically detect the right network RPC
         const defaultNetwork = 11155111; // Default to Sepolia if nothing is set
-        console.log("📡 No wallet detected, using RPC:", NETWORK_RPC_URLS[defaultNetwork]);
+        const rpcUrl = NETWORK_RPC_URLS[defaultNetwork];
+
+        if (!rpcUrl) {
+            throw new Error("🚨 No valid RPC URL found! Check your .env file.");
+        }
+
+        console.log(`📡 No wallet detected, using RPC: ${rpcUrl}`);
         
-        // Update Redux with the default network - using window.store instead of direct import
-        if (typeof window !== 'undefined' && window.store && window.store.dispatch) {
+        // Update Redux with the default network
+        if (window.store && window.store.dispatch) {
             window.store.dispatch({ type: 'web3/setNetwork', payload: defaultNetwork });
             console.log("🔄 Updated network in Redux to default:", defaultNetwork);
         }
-        
-        const fallbackProvider = new JsonRpcProvider(NETWORK_RPC_URLS[defaultNetwork]);
-        
+
+        // Use the correct RPC provider (NOT localhost)
+        const fallbackProvider = new JsonRpcProvider(rpcUrl);
+
         // Expose the fallback provider to window for debugging
-        if (typeof window !== 'undefined') {
-            window.ethersProvider = fallbackProvider;
-            console.log("🔌 Fallback provider exposed as window.ethersProvider");
-        }
+        window.ethersProvider = fallbackProvider;
+        console.log("🔌 Fallback provider exposed as window.ethersProvider");
         
         return fallbackProvider;
     } catch (error) {
@@ -102,5 +98,7 @@ async function getProvider() {
     }
 }
 
+// ✅ **Fixed: Now exporting `BootstrapWrapper`**
 export { getProvider, BootstrapWrapper };
+
 
