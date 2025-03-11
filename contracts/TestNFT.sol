@@ -22,14 +22,14 @@ contract TestNFT is ERC721Enumerable, Ownable {
     /**
      * @dev Allows the owner to batch revoke approvals for multiple token IDs.
      */
-function batchRevokeApprovals(uint256[] memory tokenIds) external {
-    for (uint256 i = 0; i < tokenIds.length; i++) {
-        require(tokenIds[i] != 0, "TestNFT: Token ID 0 is reserved and cannot be used");
-        require(ownerOf(tokenIds[i]) == msg.sender, "Not owner of token");
-        approve(address(0), tokenIds[i]); // Revoke individual token approval
-        emit ApprovalRevoked(tokenIds[i], msg.sender);
+    function batchRevokeApprovals(uint256[] memory tokenIds) external {
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            require(tokenIds[i] != 0, "TestNFT: Token ID 0 is reserved and cannot be used");
+            require(ownerOf(tokenIds[i]) == msg.sender, "Not owner of token");
+            approve(address(0), tokenIds[i]); // Revoke individual token approval
+            emit ApprovalRevoked(tokenIds[i], msg.sender);
+        }
     }
-}
 
     /**
      * @dev Mints a new NFT to the specified address.
@@ -45,4 +45,3 @@ function batchRevokeApprovals(uint256[] memory tokenIds) external {
      */
     event ApprovalRevoked(uint256 indexed tokenId, address indexed owner);
 }
-

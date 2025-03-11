@@ -1,6 +1,8 @@
 Overview
 Approval-Manager is a comprehensive tool for managing and monitoring token approvals on Ethereum and compatible blockchains. It provides a streamlined interface for handling ERC20, ERC721, and ERC1155 token approvals, helping users secure their assets by maintaining visibility and control over smart contract permissions. The project is currently deployed on the Sepolia testnet.
+
 Getting Started
+
 Clone the Repository
 First, clone the repository to your local machine:
 shellCopy# Clone the repository
@@ -14,8 +16,8 @@ shellCopy# Pull the latest image
 docker pull memery1446/approval-manager:latest
 
 # If you already have a container running, stop and remove it
-docker stop approval-app
-docker rm approval-app
+docker stop approval-manager
+docker rm approval-manager
 
 # Run the container with required environment variables
 docker run -d -p 3000:3000 --name approval-app \
@@ -87,10 +89,10 @@ For mixed token types, the application will guide you through the process
 Docker Management Commands
 Option 1: Remove the existing container first (recommended)
 shellCopy# First, stop the container if it's running
-docker stop approval-app
+docker stop approval-manager
 
 # Then remove it
-docker rm approval-app
+docker rm approval-manager
 
 # Now you can run the new container (see Quick Start section)
 Option 2: Use a different name for the new container
