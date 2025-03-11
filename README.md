@@ -25,9 +25,16 @@ docker rm approval-manager
 
 docker rmi approval-manager
 
-### Build the Docker image
+### Build the Docker image from source
 
 docker build -t approval-manager .
+
+--OR--
+ 
+### pull from Docker Hub:
+
+docker pull memery1446/approval-manager:latest
+
 
 ### run the Dapp
 
