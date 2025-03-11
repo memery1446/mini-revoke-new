@@ -1,9 +1,9 @@
 export const NETWORK_CONFIG = {
-1337: {
-    name: "Hardhat Local Fork",
-    rpcUrl: process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 
-            process.env.SEPOLIA_RPC_URL || 
-            "https://ethereum-sepolia-rpc.publicnode.com",
+11155111: {  // Sepolia Chain ID
+  name: "Sepolia",
+  rpcUrl: process.env.SEPOLIA_RPC_URL || 
+          "https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY",
+
     contracts: {
       tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",  
       secondToken: "0xE7B9Ede68593354aff96690600D008A40519D3CF",  
