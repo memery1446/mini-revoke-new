@@ -2,14 +2,14 @@
 
 import { useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
-import { Provider } from "react-redux" // Keep this import
-import store from "./store/index" // Keep import for Redux store
+import { Provider } from "react-redux" 
+import store from "./store/index" 
 import WalletConnect from "./components/WalletConnect.js"
 import NetworkSelector from "./components/NetworkSelector.js"
 import ApprovalDashboard from "./components/ApprovalDashboard.js"
 import ApprovalEducation from "./components/ApprovalEducation.js"
 import BatchRevoke from "./components/BatchRevoke.js" 
-import { FEATURES } from './constants/config' // Import feature toggles
+import { FEATURES } from './constants/config' 
 import "bootstrap/dist/css/bootstrap.min.css"
 import { BootstrapWrapper } from "./utils/provider"
 import { initializeProvider } from "./utils/providerService"

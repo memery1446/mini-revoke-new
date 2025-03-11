@@ -37,7 +37,7 @@ To run Hardhat scripts (like approving tokens) inside the container:
 
 2. Set your private key:
    ```bash
-   export PRIVATE_KEYS=0xYOUR_PRIVATE_KEY_HERE
+   export PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
    ```
 
 3. Run your script:

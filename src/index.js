@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
     console.log("📊 Redux store already exposed to window");
   }
   
-  // Enhanced debugging helpers
+  // Debugging helpers
   window.debugApp = {
     getState: () => store.getState(),
     logState: () => {
