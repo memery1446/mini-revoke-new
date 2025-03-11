@@ -20,31 +20,31 @@ module.exports = {
   networks: {
     sepolia: {
       url: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
-      accounts: PRIVATE_KEY,
+      accounts: [PRIVATE_KEY],
       chainId: 11155111,
       explorerUrl: "https://sepolia.etherscan.io/"
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${INFURA_API_KEY}`,
-      accounts: PRIVATE_KEY,
+      accounts: [PRIVATE_KEY],
       chainId: 1,
       explorerUrl: "https://etherscan.io/"
     },
     polygon: {
       url: `https://polygon-mainnet.infura.io/v3/${INFURA_API_KEY}`,
-      accounts: PRIVATE_KEY,
+      accounts: [PRIVATE_KEY],
       chainId: 137,
       explorerUrl: "https://polygonscan.com/"
     },
     bsc: {
       url: "https://bsc-dataseed.binance.org/",
-      accounts: PRIVATE_KEY,
+      accounts: [PRIVATE_KEY],
       chainId: 56,
       explorerUrl: "https://bscscan.com/"
     },
     arbitrum: {
       url: "https://arb1.arbitrum.io/rpc",
-      accounts: PRIVATE_KEY,
+      accounts: [PRIVATE_KEY],
       chainId: 42161,
       explorerUrl: "https://arbiscan.io/"
     },
