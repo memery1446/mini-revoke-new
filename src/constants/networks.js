@@ -5,10 +5,10 @@ export const NETWORK_CONFIG = {
           "https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY",
 
     contracts: {
-      tokenManager: "0x2B042eF97864f2B78309BEE80Af70Aea6FFcDc79",  
-      secondToken: "0x50AE7C0a775b2fC8Cb4089CE9F9aa3ffEc341f7b",  
-      erc721: "0xDd81A953804F8DE4942cC2DF51FC7dc7273112E2",  
-      erc1155: "0xDDC69cbaD475C1477d6D7fdF7CA8580f75EC53EF",   
+      tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",  
+      secondToken: "0xE7B9Ede68593354aff96690600D008A40519D3CF",  
+      erc721: "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354",  
+      erc1155: "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A",   
       MockSpender: "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608"
     }
   },
