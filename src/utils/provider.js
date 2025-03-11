@@ -30,6 +30,11 @@ if (typeof window !== 'undefined') {
     console.log("🌐 Network info exposed to window.NETWORK_INFO");
 }
 
+// ✅ Ensure BootstrapWrapper is correctly defined
+const BootstrapWrapper = ({ children }) => (
+    <div className="container mt-4">{children}</div>
+);
+
 async function getProvider() {
     try {
         console.log("📡 Attempting to get provider...");
@@ -74,6 +79,6 @@ async function getProvider() {
     }
 }
 
-// ✅ **Export getProvider function**
-export { getProvider };
+// ✅ **Export everything correctly**
+export { getProvider, BootstrapWrapper };
 
