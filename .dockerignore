@@ -3,3 +3,9 @@ npm-debug.log
 .env
 .next
 .vercel
+.env.local
+.env.development
+.env.production
+.git
+.gitignore
+
