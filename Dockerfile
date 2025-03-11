@@ -1,44 +1,32 @@
-# Use Node.js 18 as the base image
+# Use a base Node.js image
 FROM node:18
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json first (helps with caching)
+# Copy package.json first (for caching)
 COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the entire project to the container
-# This will copy everything, excluding items in .dockerignore
+# Copy the entire project
 COPY . .
 
-# Define ARG instructions for build-time variables
-ARG SEPOLIA_RPC_URL
-ARG INFURA_API_KEY
-ARG ALCHEMY_API_KEY
-ARG ETHERSCAN_API_KEY
-ARG CMC_API_KEY
-ARG PRIVATE_KEY
-
-# Pass environment variables to the container
+# Load environment variables from .env file
 ENV SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL}
+ENV TOKEN_API_URL=https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}/getTokenBalances
+ENV NFT_API_URL=https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}
 ENV INFURA_API_KEY=${INFURA_API_KEY}
 ENV ALCHEMY_API_KEY=${ALCHEMY_API_KEY}
 ENV ETHERSCAN_API_KEY=${ETHERSCAN_API_KEY}
-ENV CMC_API_KEY=${CMC_API_KEY}
 ENV PRIVATE_KEY=${PRIVATE_KEY}
-
-# Add Next.js/React client-side environment variables
-ENV NEXT_PUBLIC_SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL}
-ENV NEXT_PUBLIC_INFURA_API_KEY=${INFURA_API_KEY}
-ENV REACT_APP_ALCHEMY_SEPOLIA_URL=${SEPOLIA_RPC_URL}
+ENV CMC_API_KEY=${CMC_API_KEY}
 
 # Build the application
 RUN npm run build
 
-# Expose the port your app runs on
+# Expose the port
 EXPOSE 3000
 
 # Start the application
