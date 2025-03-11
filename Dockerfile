@@ -10,16 +10,9 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm install
 
-# Copy the project to the container, excluding .env file
-# First, create a .dockerignore file in your project root with ".env" in it
-# Or use the more specific copy approach below
-COPY src/ ./src/
-COPY public/ ./public/
-COPY next.config.js ./
-COPY jsconfig.json ./
-COPY .eslintrc.json ./
-COPY tsconfig.json ./
-# Add any other necessary project files/directories
+# Copy the entire project to the container
+# This will copy everything, excluding items in .dockerignore
+COPY . .
 
 # Define ARG instructions for build-time variables
 ARG SEPOLIA_RPC_URL
