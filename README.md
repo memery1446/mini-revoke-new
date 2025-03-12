@@ -5,11 +5,11 @@ Approval-Manager is a comprehensive tool for managing and monitoring token appro
 
 ### Clone the Repository
 
-git clone https://github.com/memery1446/approval-manager.git 
+git clone https://github.com/memery1446/approval-manager.git <your-clone-name-here>
 
 ### Navigate to the project directory and install dependencies
 
-cd approval-manager
+cd approval-manager or your chosen name
 
 npm install
 
@@ -26,50 +26,40 @@ docker rm approval-manager
 docker rmi approval-manager
 
 ## Choose pull and run command combo that matches your setup
+### Make sure docker desktop is started
  
-### Pull and run on Mac (ARM64):
+### Pull and run on MAC (ARM64):
 
 docker pull memery1446/approval-manager:arm64
 
 docker run -d -p 3000:3000 --name approval-manager --env-file .env memery1446/approval-manager:arm64
 
-### Pull and run on Windows (AMD64):
+### Pull and run on WINDOWS (AMD64):
 
 docker pull memery1446/approval-manager:amd64
 
 docker run -d -p 3000:3000 --name approval-manager --env-file .env memery1446/approval-manager:amd64
 
 
-### pull from Docker Hub:
-
-docker pull memery1446/approval-manager:arm64
-
--or- 
-
-docker pull memery1446/approval-manager:amd64
-
-
-### run the Dapp
-
-docker run -d -p 3000:3000 --name approval-manager --env-file .env memery1446/approval-manager:arm64 -or- amd64
-
+## Approve 2 ERC20s, 2 ERC721s, and a collection of ERC1155 (one permission for collection)
 ### To run Hardhat scripts (like approving tokens) inside the container:
 
-### Enter the container:
+#### Enter the container:
 
 docker exec -it approval-manager bash
 
-
-### Run your script:
+#### Run your script:
 
 npx hardhat run scripts/approveOnly.js --network sepolia
 
 
-### If you need to run the deploy script: 
+### Deploy Script
+
+#### If you need to run the deploy script: 
 
 npx hardhat run scripts/deploy.js --network sepolia
 
-### ...then update addresses in: 
+#### ...then update addresses in two files: 
 
 src/constants/abis.js 
 
