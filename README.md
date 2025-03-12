@@ -25,20 +25,33 @@ docker rm approval-manager
 
 docker rmi approval-manager
 
-### Build the Docker image from source
-
-docker build -t approval-manager .
-
---OR--
+## Choose pull and run command combo that matches your setup
  
+### Pull and run on Mac (ARM64):
+
+docker pull memery1446/approval-manager:arm64
+
+docker run -d -p 3000:3000 --name approval-manager --env-file .env memery1446/approval-manager:arm64
+
+### Pull and run on Windows (AMD64):
+
+docker pull memery1446/approval-manager:amd64
+
+docker run -d -p 3000:3000 --name approval-manager --env-file .env memery1446/approval-manager:amd64
+
+
 ### pull from Docker Hub:
 
-docker pull memery1446/approval-manager:latest
+docker pull memery1446/approval-manager:arm64
+
+-or- 
+
+docker pull memery1446/approval-manager:amd64
 
 
 ### run the Dapp
 
-docker run -d -p 3000:3000 --name approval-manager --env-file .env approval-manager
+docker run -d -p 3000:3000 --name approval-manager --env-file .env memery1446/approval-manager:arm64 -or- amd64
 
 ### To run Hardhat scripts (like approving tokens) inside the container:
 
