@@ -40,32 +40,22 @@ docker pull memery1446/approval-manager:amd64
 
 docker run -d -p 3000:3000 --name approval-manager --env-file .env memery1446/approval-manager:amd64
 
-
-## Approve 2 ERC20s, 2 ERC721s, and a collection of ERC1155 (one permission for collection)
-### To run Hardhat scripts (like approving tokens) inside the container:
-
-#### Enter the container:
+## Deploy contracts and update Addresses
+### Enter the container:
 
 docker exec -it approval-manager bash
 
-#### Run your script:
-
-npx hardhat run scripts/approveOnly.js --network sepolia
-
-
-### Deploy Script
-
-#### If you need to run the deploy script: 
+### Run a fresh deployment:
 
 npx hardhat run scripts/deploy.js --network sepolia
 
-#### ...then update addresses in two files: 
+### Copy the new contract addresses to constants/abis.js and constants/networks.js.
 
-src/constants/abis.js 
+manually update and save the addresses in abis.js and networks.js
 
--and- 
+### Run the approval script:
 
-src/constants/networks.js
+npx hardhat run scripts/approveOnly.js --network sepolia
 
 
 ## Features
