@@ -83,13 +83,28 @@ const ApprovalDashboard = () => {
 
       // Spread and map operations
       const allApprovals = [
-        ...(Array.isArray(erc20List) ? erc20List.map(a => ({ ...a, type: 'ERC-20' })) : []),
-        ...(Array.isArray(erc721List) ? erc721List.map(a => ({ ...a, type: 'ERC-721' })) : []),
-        ...(Array.isArray(erc1155List) ? erc1155List.map(a => ({ ...a, type: "ERC-1155" })) : [])
+        ...(Array.isArray(erc20List) ? erc20List.map(a => ({
+          ...a,
+          type: 'ERC-20',
+          valueAtRisk: a.amount,
+          lastUpdated: Date.now() / 1000
+        })) : []),
+        ...(Array.isArray(erc721List) ? erc721List.map(a => ({
+          ...a,
+          type: 'ERC-721',
+          valueAtRisk: `Token ID: ${a.tokenId || "N/A"}`,
+          lastUpdated: Date.now() / 1000
+        })) : []),
+        ...(Array.isArray(erc1155List) ? erc1155List.map(a => ({
+          ...a,
+          type: "ERC-1155",
+          valueAtRisk: "Collection-wide Approval",
+          lastUpdated: Date.now() / 1000
+        })) : [])
       ];
 
-      console.log("🔹 Final approval list before dispatch:", allApprovals);
       dispatch(setApprovals(allApprovals));
+
 
       setProgressValue(100);
       setProgressStatus('Complete!');
@@ -253,42 +268,28 @@ return (
             <table className="table table-hover">
               <thead className="table-dark">
                 <tr>
-                  <th>Select</th>
+                  <th>Asset</th>
                   <th>Type</th>
-                  <th>Contract</th>
-                  <th>Spender</th>
-                  <th>Details</th>
+                  <th>Value at Risk</th>
+                  <th>Last Updated</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {/* FIX: Safe length check and mapping */}
-                {Array.isArray(approvals) && approvals.length > 0 ? (
+                {approvals.length > 0 ? (
                   approvals.map((a, idx) => (
                     <tr key={idx}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedApprovals.some(sel =>
-                            sel.contract === a.contract &&
-                            sel.spender === a.spender &&
-                            (a.tokenId ? sel.tokenId === a.tokenId : true)
-                          )}
-                          onChange={() => handleSelect(a)}
-                        />
-                      </td>
+                      <td>{a.asset || a.contract?.substring(0, 8)}</td> 
                       <td>
                         <span className={`badge bg-${a.type === 'ERC-20' ? 'success' : a.type === 'ERC-721' ? 'primary' : 'warning'}`}>
                           {a.type}
                         </span>
                       </td>
-                      <td><code>{a.contract?.substring(0, 8)}...</code></td>
-                      <td><code>{a.spender?.substring(0, 8)}...</code></td>
-              <td>
-                {a.type === "ERC-20" &&
-                  `Unlimited Allowance ${a.amount === "115792089237316195423570985008687907853269984665640564039457584007913129639935" ? "" : `(${Number(a.amount || 0).toLocaleString()})`}`}
-                {a.type === "ERC-721" && (a.tokenId === "all" ? "All Tokens" : `Token ID: ${a.tokenId || "N/A"}`)}
-                {a.type === "ERC-1155" && "Collection-wide Approval"}
-              </td>
+                      <td>{a.valueAtRisk}</td>
+                      <td>{new Date(a.lastUpdated * 1000).toLocaleDateString()}</td>
+                      <td>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleRevoke(a)}>Revoke</button>
+                      </td>
                     </tr>
                   ))
                 ) : (

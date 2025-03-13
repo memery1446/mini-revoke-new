@@ -30,10 +30,12 @@ const ExistingApprovals = ({ onToggleSelect }) => {
       console.log("🟢 Approvals BEFORE Redux update:", [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched]);
 
       // Temporarily remove filtering
-      const uniqueApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched];
+const uniqueApprovals = [...erc20Fetched, ...erc721Fetched, ...erc1155Fetched].map(a => ({
+  ...a,
+  lastUpdated: Date.now() / 1000
+}));
 
-      console.log("🟢 Approvals AFTER Processing:", uniqueApprovals);
-      dispatch(setApprovals(uniqueApprovals));
+dispatch(setApprovals(uniqueApprovals));
     } catch (err) {
       console.error("❌ Error fetching approvals:", err);
       setError(err.message);
