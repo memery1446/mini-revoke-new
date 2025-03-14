@@ -7,24 +7,24 @@ module.exports = {
     NFT_ABI: testNFTABI,
     ERC1155_ABI: testERC1155ABI,
     CONTRACT_ADDRESSES: {
-        TK1: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",
-        TK2: "0xE7B9Ede68593354aff96690600D008A40519D3CF",
-        TestNFT: "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354",
-        ERC1155: "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A",
+        TK1: "0x111111111117dC0aa78b770fA6A738034120C302", // 1INCH Token ✅ Fixed Comment
+        TK2: "0x111111111117dC0aa78b770fA6A738034120C302",
+        TestNFT: "0x06012c8cf97BEaD5deAe237070F9587f8E7A266d", // CryptoKitties
+        ERC1155: "0x0DB30C6CC6440E2B534D06EDF2969FCAED1C6B2B", // Enjin Coin ✅ Fixed Checksum
         MockSpender: "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608"
     },
 
     NETWORK_CONFIG: {
-1337: {
-    name: "Hardhat Local Fork",
-    rpcUrl: typeof window !== 'undefined' 
-            ? (process.env.HARDHAT_RPC_URL || "http://127.0.0.1:8545")
-            : process.env.HARDHAT_RPC_URL, 
+        1337: {
+            name: "Hardhat Local Fork",
+            rpcUrl: typeof window !== 'undefined' 
+                    ? (process.env.HARDHAT_RPC_URL || "http://127.0.0.1:8545")
+                    : process.env.HARDHAT_RPC_URL, 
             contracts: {
-                tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",
-                secondToken: "0xE7B9Ede68593354aff96690600D008A40519D3CF",
-                erc721: "0x8BB5f4628d7cFf1e2c9342B064f6F1b38376f354",
-                erc1155: "0x1bd10C54831F9231fDc5bD58139e2c101BE4396A",
+                tokenManager: "0x111111111117dC0aa78b770fA6A738034120C302",
+                secondToken: "0x111111111117dC0aa78b770fA6A738034120C302",
+                erc721: "0x06012c8cf97BEaD5deAe237070F9587f8E7A266d",
+                erc1155: "0x0DB30C6CC6440E2B534D06EDF2969FCAED1C6B2B", // ✅ Fixed Checksum
                 MockSpender: "0x3C8A478ff7839e07fAF3Dac72DCa575F5d4bC608"
             }
         },
@@ -57,4 +57,3 @@ module.exports = {
         }
     }
 };
-

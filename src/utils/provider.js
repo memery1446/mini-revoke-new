@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
             const names = {
                 1: "Ethereum Mainnet",
                 11155111: "Sepolia Testnet",
-                1337: "Hardhat Localhost"
+                31337: "Hardhat Localhost"
             };
             return names[chainId] || `Unknown Network (${chainId})`;
         }

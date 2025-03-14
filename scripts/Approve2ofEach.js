@@ -1,62 +1,70 @@
 require("dotenv").config();
-const { ethers } = require("hardhat");
+const { ethers, network } = require("hardhat");
 const { TOKEN_ABI, NFT_ABI, ERC1155_ABI, CONTRACT_ADDRESSES } = require("../src/constants/abis");
+
+// ✅ Force Ethers v6 to accept the address
+function forceChecksum(address) {
+    try {
+        return ethers.getAddress(address);
+    } catch (error) {
+        console.error(`❌ Address checksum failed: ${address}`);
+        process.exit(1);
+    }
+}
 
 async function main() {
   console.log("🚀 Starting approval script...");
 
-  // Load signer from Hardhat using multiple private keys
-  const signers = await ethers.getSigners();
-  if (!signers.length) throw new Error("❌ No signers found! Is Hardhat configured correctly?");
-  
-  const deployer = signers[0]; // Use the first signer
-  console.log(`📌 Using signer: ${deployer.address}`);
+  const impersonatedAddress = forceChecksum("0xf977814e90da44bfa03b6295a0616a897441acec");
 
-  const MAX_UINT256 = ethers.MaxUint256;
-  const TOKEN_IDS = [1, 2, 3]; // Ensure we approve multiple NFTs
+  // Impersonate the account
+  await network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: [impersonatedAddress],
+  });
+
+  const impersonatedSigner = await ethers.getSigner(impersonatedAddress);
+  console.log(`📌 Impersonating: ${impersonatedSigner.address}`);
+
+  const MaxUint256 = ethers.MaxUint256;
+  const TOKEN_IDS = [1, 2]; // Sample NFT Token IDs to approve
 
   try {
-    // Mint NFTs before approving them
-    const testNFT = await ethers.getContractAt(NFT_ABI, CONTRACT_ADDRESSES.TestNFT, deployer);
-    console.log(`🔄 Minting 3 NFTs...`);
-    for (let i = 0; i < 3; i++) {
-      const tx = await testNFT.safeMint(deployer.address);
-      await tx.wait();
-      console.log(`✅ Minted NFT #${i + 1}`);
-    }
+    // ✅ Ensure all contract addresses pass the checksum
+const token1Address = ethers.getAddress(CONTRACT_ADDRESSES.TK1);
+const nftAddress = ethers.getAddress(CONTRACT_ADDRESSES.TestNFT);
+const erc1155Address = ethers.getAddress(CONTRACT_ADDRESSES.ERC1155);
 
-    // Approve ERC-20 Tokens
-    await approveERC20(CONTRACT_ADDRESSES.TK1, deployer, MAX_UINT256);
-    await approveERC20(CONTRACT_ADDRESSES.TK2, deployer, MAX_UINT256);
 
-    // Approve ERC-721 NFTs
-    await approveERC721(CONTRACT_ADDRESSES.TestNFT, deployer, TOKEN_IDS);
+    // ✅ Approve ERC-20 Token (USDC)
+    await approveERC20(token1Address, impersonatedSigner, MaxUint256);
 
-    // Approve ERC-1155 Collection
-    await approveERC1155(CONTRACT_ADDRESSES.ERC1155, deployer);
+    // ✅ Approve CryptoKitties (ERC-721)
+    await approveERC721(nftAddress, impersonatedSigner, TOKEN_IDS);
+
+    // ✅ Approve Enjin Coin (ERC-1155)
+    await approveERC1155(erc1155Address, impersonatedSigner);
 
     console.log("✅ All approvals completed successfully!");
   } catch (error) {
     console.error("❌ Error approving tokens:", error.message);
   }
+
+  // Stop impersonating the account
+  await network.provider.request({
+    method: "hardhat_stopImpersonatingAccount",
+    params: [impersonatedAddress],
+  });
+
+  console.log(`🛑 Stopped impersonating ${impersonatedAddress}`);
 }
 
-
-
-// Approve ERC-20 Tokens
-async function approveERC20(tokenAddress, deployer, amount) {
+// ✅ Fix 1: ERC-20 Approval with Checksum Address Fix
+async function approveERC20(tokenAddress, impersonatedSigner, amount) {
   try {
-    const contract = new ethers.Contract(tokenAddress, TOKEN_ABI, deployer);
-    const allowance = await contract.allowance(deployer.address, CONTRACT_ADDRESSES.MockSpender);
+    const contract = new ethers.Contract(tokenAddress, TOKEN_ABI, impersonatedSigner);
     
-    console.log(`🔍 Current allowance for ${tokenAddress}: ${allowance.toString()}`);
-    
-    if (allowance > 0) {
-      console.log(`✅ ERC-20 ${tokenAddress} is already approved. Skipping...`);
-      return;
-    }
-
-    console.log(`💰 Approving ERC-20 at ${tokenAddress}...`);
+    console.log(`💰 Approving ERC-20 token at ${tokenAddress}...`);
     const tx = await contract.approve(CONTRACT_ADDRESSES.MockSpender, amount);
     await tx.wait();
     console.log(`✅ Approved ERC-20: ${tokenAddress}`);
@@ -65,10 +73,10 @@ async function approveERC20(tokenAddress, deployer, amount) {
   }
 }
 
-// Approve ERC-721 NFTs
-async function approveERC721(nftAddress, deployer, tokenIds) {
+// ✅ Fix 2: ERC-721 Approval with `approve()` Instead of `setApprovalForAll()`
+async function approveERC721(nftAddress, impersonatedSigner, tokenIds) {
   try {
-    const contract = new ethers.Contract(nftAddress, NFT_ABI, deployer);
+    const contract = new ethers.Contract(nftAddress, NFT_ABI, impersonatedSigner);
 
     for (const tokenId of tokenIds) {
       let owner;
@@ -80,7 +88,7 @@ async function approveERC721(nftAddress, deployer, tokenIds) {
         continue;
       }
 
-      if (owner.toLowerCase() !== deployer.address.toLowerCase()) {
+      if (owner.toLowerCase() !== impersonatedSigner.address.toLowerCase()) {
         console.log(`⚠️ Skipping approval: Not the owner of ERC-721 Token ID ${tokenId}`);
         continue;
       }
@@ -95,10 +103,11 @@ async function approveERC721(nftAddress, deployer, tokenIds) {
   }
 }
 
-// Approve ERC-1155 Collection
-async function approveERC1155(erc1155Address, deployer) {
+// ✅ Fix 3: ERC-1155 Approval with Checksum Address Fix
+async function approveERC1155(erc1155Address, impersonatedSigner) {
   try {
-    const contract = new ethers.Contract(erc1155Address, ERC1155_ABI, deployer);
+    const contract = new ethers.Contract(erc1155Address, ERC1155_ABI, impersonatedSigner);
+    
     console.log(`🛠️ Approving ERC-1155 for all...`);
     const tx = await contract.setApprovalForAll(CONTRACT_ADDRESSES.MockSpender, true);
     await tx.wait();
@@ -113,4 +122,3 @@ main().catch((error) => {
   console.error("❌ Script failed:", error);
   process.exit(1);
 });
-
