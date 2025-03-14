@@ -1,8 +1,8 @@
 export const NETWORK_CONFIG = {
-11155111: {  // Sepolia Chain ID
-  name: "Sepolia",
-  rpcUrl: process.env.SEPOLIA_RPC_URL || 
-          "https://sepolia.infura.io/v3/YOUR_INFURA_API_KEY",
+1337: {  // Hardhat Chain ID
+  name: "Hardhat",
+  rpcUrl: process.env.HARDHAT_RPC_URL || 
+          "http://127.0.0.1:8545",
 
     contracts: {
       tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",  

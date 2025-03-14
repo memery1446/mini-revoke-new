@@ -18,8 +18,8 @@ module.exports = {
 1337: {
     name: "Hardhat Local Fork",
     rpcUrl: typeof window !== 'undefined' 
-            ? (process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com")
-            : process.env.SEPOLIA_RPC_URL, 
+            ? (process.env.HARDHAT_RPC_URL || "http://127.0.0.1:8545")
+            : process.env.HARDHAT_RPC_URL, 
             contracts: {
                 tokenManager: "0x483FA7f61170c19276B3DbB399e735355Ae7676a",
                 secondToken: "0xE7B9Ede68593354aff96690600D008A40519D3CF",

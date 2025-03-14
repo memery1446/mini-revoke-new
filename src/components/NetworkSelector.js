@@ -6,16 +6,16 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // Ensure all environment variables are correctly used
 const supportedNetworks = {
-  1: {
-    chainId: "0x1",
-    name: "Ethereum Mainnet",
-    rpcUrl: process.env.MAINNET_RPC_URL || `${process.env.INFURA_URL}${process.env.INFURA_API_KEY}`,
-  },
-  11155111: {
-    chainId: "0xaa36a7",
-    name: "Sepolia Testnet",
-    rpcUrl: process.env.SEPOLIA_RPC_URL || `${process.env.SEPOLIA_URL}${process.env.SEPOLIA_API_KEY}`,
-  },
+  // 1: {
+  //   chainId: "0x1",
+  //   name: "Ethereum Mainnet",
+  //   rpcUrl: process.env.MAINNET_RPC_URL || `${process.env.INFURA_URL}${process.env.INFURA_API_KEY}`,
+  // },
+  // 11155111: {
+  //   chainId: "0xaa36a7",
+  //   name: "Sepolia Testnet",
+  //   rpcUrl: process.env.SEPOLIA_RPC_URL || `${process.env.SEPOLIA_URL}${process.env.SEPOLIA_API_KEY}`,
+  // },
 //   10: {
 //     chainId: "0xa",
 //     name: "Optimism",
@@ -51,12 +51,12 @@ const supportedNetworks = {
 //     name: "Polygon Mumbai",
 //     rpcUrl: process.env.POLYGON_MUMBAI_RPC_URL || `https://polygon-mumbai.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
 //   },
-// 1337: {
-//   chainId: "0x7A69",
-//   name: "Hardhat Local",
-//   rpcUrl: process.env.SEPOLIA_RPC_URL || "http://127.0.0.1:1337",
+1337: {
+  chainId: "0x7A69",
+  name: "Hardhat Local",
+  rpcUrl: process.env.HARDHAT_RPC_URL || "http://127.0.0.1:8545",
 
-// },
+},
 
 };
 

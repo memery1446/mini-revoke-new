@@ -5,14 +5,14 @@ console.log("🔌 provider.js loaded - " + new Date().toISOString());
 
 // Function to get RPC URL from environment variables
 const getRpcUrl = () => {
-  return process.env.SEPOLIA_RPC_URL || 
+  return process.env.HARDHAT_RPC_URL || 
          `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}` || 
          "https://ethereum-sepolia-rpc.publicnode.com"; // Public fallback
 };
 
 // Load API keys from environment variables
 const NETWORK_RPC_URLS = {
-    11155111: getRpcUrl(), // Sepolia Testnet
+    1337: getRpcUrl(), // Hardhat Testnet
 };
 
 // Expose network info to window for debugging
@@ -23,6 +23,7 @@ if (typeof window !== 'undefined') {
             const names = {
                 1: "Ethereum Mainnet",
                 11155111: "Sepolia Testnet",
+                1337: "Hardhat Localhost"
             };
             return names[chainId] || `Unknown Network (${chainId})`;
         }
@@ -45,9 +46,9 @@ async function getProvider() {
             const network = await provider.getNetwork();
             const chainId = Number(network.chainId);
 
-            // 🚨 Ensure Sepolia is used 🚨
-            if (chainId !== 11155111) {
-                alert("❌ Wrong network detected! Please switch to Sepolia in MetaMask.");
+            // 🚨 Ensure Certain Network is used 🚨
+            if (chainId !== 1337) {
+                alert("❌ Wrong network detected! Please switch to Hardhat in MetaMask.");
                 return null;
             }
 
