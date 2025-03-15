@@ -65,13 +65,17 @@ async function approveERC20(tokenAddress, impersonatedSigner, amount) {
     const contract = new ethers.Contract(tokenAddress, TOKEN_ABI, impersonatedSigner);
     
     console.log(`💰 Approving ERC-20 token at ${tokenAddress}...`);
-    const tx = await contract.approve(CONTRACT_ADDRESSES.MockSpender, amount);
+    const tx = await contract.approve(CONTRACT_ADDRESSES.MockSpender, ethers.MaxUint256, { // ✅ FIXED
+        maxFeePerGas: ethers.parseUnits("25", "gwei"),
+        maxPriorityFeePerGas: ethers.parseUnits("2", "gwei")
+    });
     await tx.wait();
     console.log(`✅ Approved ERC-20: ${tokenAddress}`);
   } catch (error) {
     console.error(`❌ ERC-20 Approval Failed: ${error.message}`);
   }
 }
+
 
 // ✅ Fix 2: ERC-721 Approval with `approve()` Instead of `setApprovalForAll()`
 async function approveERC721(nftAddress, impersonatedSigner, tokenIds) {
@@ -109,7 +113,10 @@ async function approveERC1155(erc1155Address, impersonatedSigner) {
     const contract = new ethers.Contract(erc1155Address, ERC1155_ABI, impersonatedSigner);
     
     console.log(`🛠️ Approving ERC-1155 for all...`);
-    const tx = await contract.setApprovalForAll(CONTRACT_ADDRESSES.MockSpender, true);
+const tx = await contract.setApprovalForAll(CONTRACT_ADDRESSES.MockSpender, true, {
+    maxFeePerGas: ethers.parseUnits("25", "gwei"),
+    maxPriorityFeePerGas: ethers.parseUnits("2", "gwei")
+});
     await tx.wait();
     console.log(`✅ Approved ERC-1155 for MockSpender`);
   } catch (error) {

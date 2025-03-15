@@ -16,10 +16,19 @@ const web3Slice = createSlice({
       state.network = Number.parseInt(action.payload, 10) || null; // Ensure it's always a number or null if parsing fails
       console.log("🌐 Network set:", state.network); // Add logging for easier debugging
     },
-    setApprovals: (state, action) => {
-      state.approvals = action.payload || []; // Prevent undefined errors
-      console.log("📋 Approvals Updated:", state.approvals);
-    },
+setApprovals: (state, action) => {
+  console.log("🔄 Redux: Approvals BEFORE update:", state.approvals);
+  console.log("📥 Incoming Approvals Payload:", action.payload);
+
+  if (!action.payload || !Array.isArray(action.payload)) {
+    console.error("❌ Invalid approvals data:", action.payload);
+    return;
+  }
+
+  state.approvals = [...action.payload]; // Ensure fresh reference
+  console.log("✅ Redux: Approvals AFTER update:", state.approvals);
+},
+
     resetWeb3: (state) => {
       console.log("🛑 Resetting Web3 State");
       state.account = null;

@@ -1,21 +1,17 @@
 import { JsonRpcProvider, BrowserProvider } from "ethers";
 
-// Log that the provider module is loaded
 console.log("🔌 provider.js loaded - " + new Date().toISOString());
 
-// Function to get RPC URL from environment variables
 const getRpcUrl = () => {
   return process.env.HARDHAT_RPC_URL || 
          `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}` || 
          "https://ethereum-sepolia-rpc.publicnode.com"; // Public fallback
 };
 
-// Load API keys from environment variables
 const NETWORK_RPC_URLS = {
     1337: getRpcUrl(), // Hardhat Testnet
 };
 
-// Expose network info to window for debugging
 if (typeof window !== 'undefined') {
     window.NETWORK_INFO = {
         supportedNetworks: Object.keys(NETWORK_RPC_URLS).map(Number),
@@ -31,11 +27,6 @@ if (typeof window !== 'undefined') {
     console.log("🌐 Network info exposed to window.NETWORK_INFO");
 }
 
-// ✅ Ensure BootstrapWrapper is correctly defined
-const BootstrapWrapper = ({ children }) => (
-    <div className="container mt-4">{children}</div>
-);
-
 async function getProvider() {
     try {
         console.log("📡 Attempting to get provider...");
@@ -46,7 +37,6 @@ async function getProvider() {
             const network = await provider.getNetwork();
             const chainId = Number(network.chainId);
 
-            // 🚨 Ensure Certain Network is used 🚨
             if (chainId !== 1337) {
                 alert("❌ Wrong network detected! Please switch to Hardhat in MetaMask.");
                 return null;
@@ -54,24 +44,23 @@ async function getProvider() {
 
             console.log(`✅ Connected to Chain ID: ${chainId}`);
 
-            // Update Redux store
+            window.ethersProvider = provider; // Assign to global scope immediately
+            console.log("🔌 Provider set globally!");
+
             if (window.store && window.store.dispatch) {
                 window.store.dispatch({ type: 'web3/setNetwork', payload: chainId });
                 console.log("🔄 Updated network in Redux:", chainId);
             }
 
-            window.ethersProvider = provider;
-            console.log("🔌 Provider exposed as window.ethersProvider");
             return provider;
         }
 
-        // Use the correct RPC provider (not localhost)
         const rpcUrl = getRpcUrl();
         console.log(`📡 No wallet detected, using RPC: ${rpcUrl}`);
 
         const fallbackProvider = new JsonRpcProvider(rpcUrl);
         window.ethersProvider = fallbackProvider;
-        console.log("🔌 Fallback provider exposed as window.ethersProvider");
+        console.log("🔌 Fallback provider set globally!");
 
         return fallbackProvider;
     } catch (error) {
@@ -80,6 +69,16 @@ async function getProvider() {
     }
 }
 
-// ✅ **Export everything correctly**
-export { getProvider, BootstrapWrapper };
+// ✅ Restore BootstrapWrapper
+const BootstrapWrapper = ({ children }) => {
+  return <div className="bootstrap-wrapper">{children}</div>;
+};
 
+// ✅ Force provider setup when the script loads
+(async () => {
+    console.log("🔄 Ensuring provider is initialized...");
+    await getProvider();
+    console.log("✅ Provider setup complete!");
+})();
+
+export { getProvider, BootstrapWrapper };

@@ -11,12 +11,33 @@ export async function getERC1155Approvals(ownerAddress) {
     try {
         console.log("🔍 Fetching ERC-1155 approvals for:", ownerAddress);
         const provider = await getProvider();
-        const contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ERC1155_ABI, provider);
-
         const spender = getAddress(CONTRACT_ADDRESSES.MockSpender);
-        const isApproved = await contract.isApprovedForAll(ownerAddress, spender);
 
-        const approvals = isApproved ? [{ contract: CONTRACT_ADDRESSES.ERC1155, spender, isApproved }] : [];
+        const erc1155Contracts = [
+            CONTRACT_ADDRESSES.TestERC1155,
+            CONTRACT_ADDRESSES.UpgradeableERC1155
+        ].filter(Boolean); // Remove null/undefined values
+
+        if (erc1155Contracts.length === 0) {
+            console.error("❌ No valid ERC-1155 contract addresses found.");
+            return [];
+        }
+
+        const approvals = [];
+        for (const address of erc1155Contracts) {
+            try {
+                console.log(`🔍 Checking ERC-1155 approval for contract: ${address}`);
+                const contract = new Contract(address, ERC1155_ABI, provider);
+                const isApproved = await contract.isApprovedForAll(ownerAddress, spender);
+
+                if (isApproved) {
+                    approvals.push({ contract: address, spender, isApproved });
+                }
+            } catch (error) {
+                console.error(`❌ Error checking ERC-1155 approval for ${address}:`, error);
+            }
+        }
+
         console.log("✅ Fetched ERC-1155 approvals:", approvals);
         return approvals;
     } catch (error) {
@@ -35,12 +56,19 @@ export async function revokeERC1155Approval(spenderAddress) {
         console.log("🚨 Revoking ERC-1155 approval for:", spenderAddress);
         const provider = await getProvider();
         const signer = await provider.getSigner();
-        const contract = new Contract(CONTRACT_ADDRESSES.ERC1155, ["function setApprovalForAll(address,bool)"], signer);
+        const erc1155Contracts = [
+            CONTRACT_ADDRESSES.TestERC1155,
+            CONTRACT_ADDRESSES.UpgradeableERC1155
+        ].filter(Boolean);
 
-        const tx = await contract.setApprovalForAll(spenderAddress, false);
-        await tx.wait();
+        for (const address of erc1155Contracts) {
+            console.log(`🔄 Revoking approval for contract: ${address}`);
+            const contract = new Contract(address, ["function setApprovalForAll(address,bool)"], signer);
+            const tx = await contract.setApprovalForAll(spenderAddress, false);
+            await tx.wait();
+            console.log(`✅ Approval revoked on contract: ${address}`);
+        }
 
-        console.log("✅ ERC-1155 approval revoked.");
         return true;
     } catch (error) {
         console.error("❌ Error revoking ERC-1155 approval:", error);
@@ -50,7 +78,7 @@ export async function revokeERC1155Approval(spenderAddress) {
 
 /**
  * Batch revoke **multiple** ERC-1155 approvals.
- * @param {Array<string>} spenderAddresses - Array of spender addresses to revoke approval for.
+ * @param {Array<string>} approvals - Array of approvals (contract + spender) to revoke.
  * @returns {Promise<boolean>} - `true` if all approvals revoked, `false` otherwise.
  */
 export async function revokeMultipleERC1155Approvals(approvals) {
@@ -76,7 +104,5 @@ export async function revokeMultipleERC1155Approvals(approvals) {
     } catch (error) {
         console.error("❌ Error in batch ERC-1155 revocation:", error);
         return { success: false, error: error.message || "Unknown error" };
-
     }
 }
-

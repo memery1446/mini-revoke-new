@@ -1,0 +1,25 @@
+.exit
+console.log("✅ Loaded TestToken Factory:", TestToken);
+const TestToken = await hre.ethers.getContractFactory("TestToken");
+console.log("✅ Loaded TestNFT Factory:", TestNFT);
+const TestNFT = await hre.ethers.getContractFactory("TestNFT");
+console.log("✅ Loaded TestERC1155 Factory:", TestERC1155);
+const TestERC1155 = await hre.ethers.getContractFactory("TestERC1155");
+console.log(deployments);
+const deployments = await hre.deployments.all();
+console.log("✅ TestToken Contract Found:", testToken.address);
+);
+  "0xa85EffB2658CFd81e0B1AaD4f2364CdBCd89F3a1"
+  "TestToken",
+const testToken = await hre.ethers.getContractAt(
+console.log("✅ TestNFT Contract Found:", testNFT.address);
+);
+  "0x6484EB0792c646A4827638Fc1B6F20461418eB00"
+  "TestNFT",
+const testNFT = await hre.ethers.getContractAt(
+console.log("✅ TestERC1155 Contract Found:", testERC1155.address);
+);
+  "0x26291175Fa0Ea3C8583fEdEB56805eA68289b105"
+  "TestERC1155",
+const testERC1155 = await hre.ethers.getContractAt(
+const hre = require("hardhat");
