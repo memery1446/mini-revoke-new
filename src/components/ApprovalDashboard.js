@@ -26,10 +26,7 @@ const ApprovalDashboard = () => {
   const [progressStatus, setProgressStatus] = useState('');
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    console.log("📋 UI: Approvals Updated:", approvals);
-    console.log("📊 Total approvals in dashboard:", approvals.length);
-  }, [approvals]);
+
 
   // ✅ Allow selection of individual approvals
   const handleSelect = (approval) => {
@@ -49,20 +46,7 @@ const ApprovalDashboard = () => {
         : [...prev, approval];
     });
   };
-  // Somewhere near the top of your ApprovalDashboard component, add this:
-useEffect(() => {
-  if (approvals && approvals.length > 0) {
-    console.log("TRYING TO FORCE RENDER APPROVALS:", 
-                JSON.stringify(approvals, null, 2));
-    
-    // Force a re-render by dispatching the same data again
-    const timer = setTimeout(() => {
-      dispatch(setApprovals([...approvals]));
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }
-}, [approvals]);
+
 
   // NEW: Add a function to handle single approval revokes
   const handleSingleRevoke = (approval) => {
@@ -169,16 +153,37 @@ useEffect(() => {
     >
       Debug
     </button>
-    <button 
-      className="btn btn-secondary" 
-      onClick={() => {
-        console.log("Manual refresh without page reload");
-        // Just force a re-render by updating state
-        dispatch(setApprovals([...approvals]));
-      }}
-    >
-      🔄 Refresh
-    </button>
+<button 
+  className="btn btn-secondary" 
+  onClick={async () => {
+    console.log("Fetching fresh approval data");
+    try {
+      const provider = await getProvider();
+      if (!provider) {
+        throw new Error("Failed to get provider");
+      }
+      
+      // Fetch all types of approvals
+      const erc20Approvals = await getERC20Approvals(wallet, provider);
+      const erc721Approvals = await getERC721Approvals(wallet, provider);
+      const erc1155Approvals = await getERC1155Approvals(wallet, provider);
+      
+      // Combine all approvals
+      const allApprovals = [
+        ...erc20Approvals, 
+        ...erc721Approvals, 
+        ...erc1155Approvals
+      ];
+      
+      dispatch(setApprovals(allApprovals));
+    } catch (error) {
+      console.error("Error refreshing approvals:", error);
+      setError("Failed to refresh approvals: " + error.message);
+    }
+  }}
+>
+  🔄 Refresh
+</button>
   </div>
 </div>
 
