@@ -4,7 +4,6 @@ import { setNetwork } from "../store/web3Slice";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-// Ensure all environment variables are correctly used
 const supportedNetworks = {
   // 1: {
   //   chainId: "0x1",

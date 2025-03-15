@@ -15,12 +15,13 @@ import { BootstrapWrapper } from "./utils/provider"
 import { initializeProvider } from "./utils/providerService"
 import ReduxDebugger from './components/ReduxDebugger';
 import MinimalTest from './components/MinimalTest';
+import AutoApprovalLoader from "./components/AutoApprovalLoader"
 
 
 
 console.log("🔴 App.js loaded - " + new Date().toISOString())
 
-// Use Redux hooks
+// Redux hooks
 const AppContent = () => {
   console.log("🔶 App content component rendering")
   const dispatch = useDispatch()
@@ -51,6 +52,7 @@ const AppContent = () => {
 
   return (
     <BootstrapWrapper>
+    <AutoApprovalLoader />
       <div className="container my-5">
         <header className="mb-4 text-center">
           <h1 className="text-primary fw-bold">
@@ -60,12 +62,12 @@ const AppContent = () => {
         </header>
 
         <div className="row mb-4">
-<div className="col-md-6">
-  {/* Comment out problematic components temporarily */}
-  {/* <MinimalTest /> */}
-  {/* <ReduxDebugger /> */}
-  <WalletConnect />
-</div>
+        <div className="col-md-6">
+          {/* Optional Components*/}
+          {/* <MinimalTest /> */}
+          {/* <ReduxDebugger /> */}
+          <WalletConnect />
+        </div>
           <div className="col-md-6">
             <NetworkSelector />
 

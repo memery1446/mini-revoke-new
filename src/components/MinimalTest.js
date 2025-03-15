@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-// Super simple component to test Redux integration
+// Simple component to test Redux integration
 const MinimalTest = () => {
   const dispatch = useDispatch();
   
-  // Directly read from Redux with minimal processing
+  // Read from Redux directly
   const approvalsRaw = useSelector(state => state.web3?.approvals);
   
-  // Track local operation status
+  // Track local status
   const [status, setStatus] = useState('Ready');
   
   // Add test data directly to Redux
@@ -26,7 +26,7 @@ const MinimalTest = () => {
     ];
     
     try {
-      // Dispatch directly with basic action
+      // Dispatch directly 
       dispatch({ 
         type: 'web3/setApprovals', 
         payload: testApprovals 
@@ -135,3 +135,4 @@ const MinimalTest = () => {
 };
 
 export default MinimalTest;
+

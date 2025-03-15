@@ -1,4 +1,4 @@
-// Minimal Redux slice for testing
+// Minimal Slice 3.14.25
 import { createSlice } from "@reduxjs/toolkit";
 
 const minimalWeb3Slice = createSlice({
@@ -10,12 +10,11 @@ const minimalWeb3Slice = createSlice({
     lastUpdated: new Date().toISOString()
   },
   reducers: {
-    // Simplified setApprovals that just replaces the array
     setApprovals: (state, action) => {
       console.log("🔄 MinimalRedux: setApprovals called");
       console.log("📥 Payload:", action.payload);
       
-      // Very robust validation and handling
+      // Validation and handling
       if (!action.payload) {
         console.warn("⚠️ Empty payload received, setting empty array");
         state.approvals = [];
@@ -25,7 +24,7 @@ const minimalWeb3Slice = createSlice({
         state.approvals = [action.payload];
       } 
       else {
-        state.approvals = action.payload; // Simple direct assignment
+        state.approvals = action.payload; // direct assignment
       }
       
       // Update timestamp
@@ -34,7 +33,7 @@ const minimalWeb3Slice = createSlice({
       console.log("✅ New approvals state:", state.approvals);
     },
     
-    // Simplified account setter
+    // Account setter
     setAccount: (state, action) => {
       state.account = action.payload;
       console.log("👛 Account set:", action.payload);
@@ -53,14 +52,7 @@ export default minimalWeb3Slice.reducer;
 
 
 
-
-
-
-
-
-
-
-
+// Sepolia version that worked....
 // // import { createSlice } from "@reduxjs/toolkit";
 
 // // Helper to ensure array type

@@ -26,9 +26,7 @@ const ApprovalDashboard = () => {
   const [progressStatus, setProgressStatus] = useState('');
   const [error, setError] = useState(null);
 
-
-
-  // ✅ Allow selection of individual approvals
+  // Selection of individual approvals
   const handleSelect = (approval) => {
     console.log("🔘 Selecting approval:", approval);
     setSelectedApprovals((prev) => {
@@ -47,8 +45,7 @@ const ApprovalDashboard = () => {
     });
   };
 
-
-  // NEW: Add a function to handle single approval revokes
+  // Handle single approval revokes
   const handleSingleRevoke = (approval) => {
     console.log("🔴 Revoking single approval:", approval);
     // Set the selected approval and then call the main revoke function
@@ -57,7 +54,7 @@ const ApprovalDashboard = () => {
     setTimeout(() => handleRevoke(), 0);
   };
 
-  // ✅ Fix revocation to process selected approvals
+  // Process selected approvals
 const handleRevoke = async () => {
   if (!selectedApprovals.length || processing) {
     console.log("⚠️ No approvals selected or already processing");
@@ -97,7 +94,7 @@ const handleRevoke = async () => {
     
     let successfulApprovals = [];
     
-    // Process ERC-20 tokens if any
+    // Process ERC-20 
     if (erc20Approvals.length > 0) {
       console.log("💰 Revoking ERC-20 approvals");
       setProgressStatus('Revoking ERC-20 approvals...');
@@ -113,7 +110,7 @@ const handleRevoke = async () => {
       }
     }
     
-    // Process ERC-721 tokens if any
+    // Process ERC-721 
     if (erc721Approvals.length > 0) {
       console.log("🖼️ Revoking ERC-721 approvals");
       setProgressStatus('Revoking ERC-721 approvals...');
@@ -129,7 +126,7 @@ const handleRevoke = async () => {
       }
     }
     
-    // Process ERC-1155 tokens if any
+    // Process ERC-1155 
     if (erc1155Approvals.length > 0) {
       console.log("🎮 Revoking ERC-1155 approvals");
       setProgressStatus('Revoking ERC-1155 approvals...');
@@ -146,7 +143,6 @@ const handleRevoke = async () => {
         console.error("❌ ERC-1155 revocation error:", error);
       }
     }
-    
     setProgressValue(80);
     setProgressStatus('Updating state...');
     
@@ -160,7 +156,6 @@ const handleRevoke = async () => {
           (a.tokenId ? sel.tokenId === a.tokenId : true)
         )
       );
-      
       console.log("🟢 Updating Redux with remaining approvals:", remainingApprovals.length);
       dispatch(setApprovals(remainingApprovals));
       setProgressValue(100);
@@ -184,50 +179,49 @@ const handleRevoke = async () => {
 
   return (
     <div className="card shadow-lg">
-<div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-  <h5 className="mb-0">Token Approvals</h5>
-  <div>
+    <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h5 className="mb-0">Token Approvals</h5>
+      <div>
+        <button 
+          className="btn btn-info btn-sm me-2" 
+          onClick={() => console.log("Current Redux approvals:", approvals)}
+        >
+          Debug
+        </button>
     <button 
-      className="btn btn-info btn-sm me-2" 
-      onClick={() => console.log("Current Redux approvals:", approvals)}
+      className="btn btn-secondary" 
+      onClick={async () => {
+        console.log("Fetching fresh approval data");
+        try {
+          const provider = await getProvider();
+          if (!provider) {
+            throw new Error("Failed to get provider");
+          }
+          
+          // Fetch all types of approvals
+          // Fix: Pass empty array as first parameter to getERC20Approvals
+          const erc20Approvals = await getERC20Approvals([], wallet, provider);
+          const erc721Approvals = await getERC721Approvals(wallet, provider);
+          const erc1155Approvals = await getERC1155Approvals(wallet, provider);
+          
+          // Combine all approvals
+          const allApprovals = [
+            ...erc20Approvals, 
+            ...erc721Approvals, 
+            ...erc1155Approvals
+          ];
+          
+          dispatch(setApprovals(allApprovals));
+        } catch (error) {
+          console.error("Error refreshing approvals:", error);
+          setError("Failed to refresh approvals: " + error.message);
+        }
+      }}
     >
-      Debug
+      🔄 Refresh
     </button>
-<button 
-  className="btn btn-secondary" 
-  onClick={async () => {
-    console.log("Fetching fresh approval data");
-    try {
-      const provider = await getProvider();
-      if (!provider) {
-        throw new Error("Failed to get provider");
-      }
-      
-      // Fetch all types of approvals
-      // Fix: Pass empty array as first parameter to getERC20Approvals
-      const erc20Approvals = await getERC20Approvals([], wallet, provider);
-      const erc721Approvals = await getERC721Approvals(wallet, provider);
-      const erc1155Approvals = await getERC1155Approvals(wallet, provider);
-      
-      // Combine all approvals
-      const allApprovals = [
-        ...erc20Approvals, 
-        ...erc721Approvals, 
-        ...erc1155Approvals
-      ];
-      
-      dispatch(setApprovals(allApprovals));
-    } catch (error) {
-      console.error("Error refreshing approvals:", error);
-      setError("Failed to refresh approvals: " + error.message);
-    }
-  }}
->
-  🔄 Refresh
-</button>
-  </div>
-</div>
-
+      </div>
+    </div>
       <div className="card-body">
         {/* Connection Status */}
         <div className="mb-3">
@@ -296,7 +290,6 @@ const handleRevoke = async () => {
             <small>If you've connected your wallet, try refreshing or check console logs for errors.</small>
           </div>
         )}
-
         {/* REVOKE SELECTED BUTTON */}
         <button
           className="btn btn-danger w-100 mt-3"
