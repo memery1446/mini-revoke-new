@@ -1,0 +1,16 @@
+[
+  {
+    "type": "ERC-20",
+    "contract": "0x6b175474e89094c44da98b954eedeac495271d0f",
+    "spender": "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+    "asset": "DAI",
+    "valueAtRisk": "Unlimited"
+  },
+  {
+    "type": "ERC-721",
+    "contract": "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d",
+    "spender": "0x00000000006c3852cbef3e08e8df289169ede581",
+    "asset": "BAYC",
+    "valueAtRisk": "All NFTs"
+  }
+]

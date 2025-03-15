@@ -1,0 +1,39 @@
+[2025-03-15T10:10:21.479Z] =======================================
+[2025-03-15T10:10:21.480Z] Starting approval debugging script
+[2025-03-15T10:10:21.480Z] =======================================
+[2025-03-15T10:10:21.695Z] Connected to network: 1337 (localhost)
+[2025-03-15T10:10:21.716Z] Using wallet: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+[2025-03-15T10:10:21.717Z] Critical error: Cannot read properties of undefined (reading 'formatEther')
+[2025-03-15T10:10:21.718Z] =======================================
+[2025-03-15T10:10:21.719Z] Debug script complete
+[2025-03-15T10:10:21.719Z] =======================================
+[2025-03-15T10:12:21.070Z] =======================================
+[2025-03-15T10:12:21.071Z] Starting approval debugging script (Compatible with ethers v5 & v6)
+[2025-03-15T10:12:21.071Z] Detected ethers version: v6+
+[2025-03-15T10:12:21.071Z] =======================================
+[2025-03-15T10:12:21.072Z] Provider obtained
+[2025-03-15T10:12:21.184Z] Connected to network: 1337 (localhost)
+[2025-03-15T10:12:21.203Z] Using wallet: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+[2025-03-15T10:12:21.204Z] Wallet balance: 9999.75158809263067638 ETH
+[2025-03-15T10:12:21.205Z] Current block number: 18000037
+[2025-03-15T10:12:21.205Z] Creating mock approvals for testing...
+[2025-03-15T10:12:21.205Z] Trying to check real approvals (may fail on forked network)...
+[2025-03-15T10:12:21.205Z] Checking ERC-20 approvals for 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+[2025-03-15T10:12:21.205Z] Checking DAI...
+[2025-03-15T10:12:21.920Z] Checking USDC...
+[2025-03-15T10:12:22.668Z] Checking USDT...
+[2025-03-15T10:12:23.403Z] Found 0 ERC-20 approvals
+[2025-03-15T10:12:23.404Z] Checking ERC-721 approvals for 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+[2025-03-15T10:12:23.404Z] Checking NFT collection Bored Ape Yacht Club...
+[2025-03-15T10:12:23.637Z] Checking NFT collection CryptoPunks...
+[2025-03-15T10:12:23.795Z] ❌ Error checking NFT approval for 0x00000000006c3852cbEf3e08E8dF289169EdE581: Error: VM Exception while processing transaction: invalid opcode
+[2025-03-15T10:12:23.797Z] ❌ Error checking NFT approval for 0x00000000000001ad428e4906aE43D8F9852d0dD6: Error: VM Exception while processing transaction: invalid opcode
+[2025-03-15T10:12:23.797Z] Found 0 ERC-721 approvals
+[2025-03-15T10:12:23.797Z] No real approvals found, using only mock data
+[2025-03-15T10:12:23.797Z] 2 approvals (mock + real) saved to approvals-debug-results.json
+[2025-03-15T10:12:23.797Z] 
+To add these approvals to Redux in your browser console, copy and paste:
+[2025-03-15T10:12:23.798Z] window.store.dispatch({ type: 'web3/setApprovals', payload: [{"type":"ERC-20","contract":"0x6b175474e89094c44da98b954eedeac495271d0f","spender":"0x7a250d5630b4cf539739df2c5dacb4c659f2488d","asset":"DAI","valueAtRisk":"Unlimited"},{"type":"ERC-721","contract":"0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d","spender":"0x00000000006c3852cbef3e08e8df289169ede581","asset":"BAYC","valueAtRisk":"All NFTs"}] })
+[2025-03-15T10:12:23.798Z] =======================================
+[2025-03-15T10:12:23.798Z] Debug script complete
+[2025-03-15T10:12:23.798Z] =======================================

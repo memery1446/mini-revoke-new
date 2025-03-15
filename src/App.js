@@ -13,6 +13,10 @@ import { FEATURES } from './constants/config'
 import "bootstrap/dist/css/bootstrap.min.css"
 import { BootstrapWrapper } from "./utils/provider"
 import { initializeProvider } from "./utils/providerService"
+import ReduxDebugger from './components/ReduxDebugger';
+import MinimalTest from './components/MinimalTest';
+
+
 
 console.log("🔴 App.js loaded - " + new Date().toISOString())
 
@@ -56,16 +60,21 @@ const AppContent = () => {
         </header>
 
         <div className="row mb-4">
-          <div className="col-md-6">
-            <WalletConnect />
-          </div>
+<div className="col-md-6">
+  {/* Comment out problematic components temporarily */}
+  {/* <MinimalTest /> */}
+  {/* <ReduxDebugger /> */}
+  <WalletConnect />
+</div>
           <div className="col-md-6">
             <NetworkSelector />
+
           </div>
         </div>
 
         {!wallet ? (
           <div className="text-center py-5">
+          <ReduxDebugger />
             <h2>Connect Your Wallet</h2>
             <p className="text-muted">View and manage your active token approvals.</p>
           </div>
