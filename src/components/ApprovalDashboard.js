@@ -58,89 +58,129 @@ const ApprovalDashboard = () => {
   };
 
   // ✅ Fix revocation to process selected approvals
-  const handleRevoke = async () => {
-    if (!selectedApprovals.length || processing) {
-      console.log("⚠️ No approvals selected or already processing");
-      return;
+const handleRevoke = async () => {
+  if (!selectedApprovals.length || processing) {
+    console.log("⚠️ No approvals selected or already processing");
+    return;
+  }
+
+  console.log("🚀 Starting revocation for", selectedApprovals.length, "approvals");
+  setProcessing(true);
+  setProgressValue(10);
+  setProgressStatus('Preparing revocation...');
+  setError(null);
+
+  try {
+    console.log("🔌 Getting provider and signer...");
+    const provider = await getProvider();
+    if (!provider) {
+      throw new Error("Failed to get provider");
     }
-
-    console.log("🚀 Starting revocation for", selectedApprovals.length, "approvals");
-    setProcessing(true);
-    setProgressValue(10);
-    setProgressStatus('Preparing revocation...');
-    setError(null);
-
-    try {
-      console.log("🔌 Getting provider and signer...");
-      const provider = await getProvider();
-      if (!provider) {
-        throw new Error("Failed to get provider");
-      }
-      
-      const signer = await provider.getSigner();
-      if (!signer) {
-        throw new Error("Failed to get signer");
-      }
-      
-      console.log("✅ Provider and signer ready");
-      let result = { success: false };
-
-      // Check what type of approvals we're revoking
-      console.log("🧪 Checking approval types...");
-      if (selectedApprovals.every(a => a?.type === 'ERC-20')) {
-        console.log("💰 Revoking ERC-20 approvals");
-        setProgressStatus('Revoking ERC-20 approvals...');
-        result = await revokeERC20Approvals(selectedApprovals, signer);
-      } else if (selectedApprovals.every(a => a?.type === 'ERC-721')) {
-        console.log("🖼️ Revoking ERC-721 approvals");
-        setProgressStatus('Revoking ERC-721 approvals...');
-        result = await revokeERC721Approvals(selectedApprovals, signer);
-      } else if (selectedApprovals.every(a => a?.type === 'ERC-1155')) {
-        console.log("🎮 Revoking ERC-1155 approvals");
-        setProgressStatus('Revoking ERC-1155 approvals...');
-        result = await revokeMultipleERC1155Approvals(
-          selectedApprovals.map(a => ({ contract: a.contract, spender: a.spender }))
-        );
-      } else {
-        console.log("❌ Mixed approval types");
-        throw new Error("Mixed approval types selected. Please revoke ERC-20, ERC-721, and ERC-1155 separately.");
-      }
-
-      setProgressValue(90);
-      setProgressStatus('Updating state...');
-      console.log("🔄 Revocation result:", result);
-
-      if (result?.success) {
-        // Create a new array without the revoked approvals instead of using a function
-        const currentApprovals = [...approvals]; // Make a copy of current approvals
-        const remainingApprovals = currentApprovals.filter(a =>
-          !selectedApprovals.some(sel =>
-            sel.contract === a.contract &&
-            sel.spender === a.spender &&
-            (a.tokenId ? sel.tokenId === a.tokenId : true)
-          )
-        );
-        
-        console.log("🟢 Updating Redux with remaining approvals:", remainingApprovals.length);
-        dispatch(setApprovals(remainingApprovals));
-        setProgressValue(100);
-        setProgressStatus('Revocation complete!');
-      } else {
-        throw new Error(result?.error || 'Unknown error during revocation');
-      }
-    } catch (error) {
-      console.error("❌ Revocation Error:", error);
-      setProgressStatus('Revocation failed.');
-      setError(error.message || "Revocation failed");
-    } finally {
-      setProcessing(false);
-      setSelectedApprovals([]); 
-      setTimeout(() => {
-        setProgressValue(0);
-        setProgressStatus('');
-      }, 1000);
+    
+    const signer = await provider.getSigner();
+    if (!signer) {
+      throw new Error("Failed to get signer");
     }
-  };
+    
+    console.log("✅ Provider and signer ready");
+    
+    // Separate approvals by type
+    const erc20Approvals = selectedApprovals.filter(a => a?.type === 'ERC-20');
+    const erc721Approvals = selectedApprovals.filter(a => a?.type === 'ERC-721');
+    const erc1155Approvals = selectedApprovals.filter(a => a?.type === 'ERC-1155');
+    
+    console.log("📊 Approval breakdown:", {
+      'ERC-20': erc20Approvals.length,
+      'ERC-721': erc721Approvals.length,
+      'ERC-1155': erc1155Approvals.length
+    });
+    
+    let successfulApprovals = [];
+    
+    // Process ERC-20 tokens if any
+    if (erc20Approvals.length > 0) {
+      console.log("💰 Revoking ERC-20 approvals");
+      setProgressStatus('Revoking ERC-20 approvals...');
+      setProgressValue(20);
+      try {
+        const erc20Result = await revokeERC20Approvals(erc20Approvals, signer);
+        if (erc20Result?.success) {
+          console.log("✅ ERC-20 revocation successful");
+          successfulApprovals.push(...erc20Approvals);
+        }
+      } catch (error) {
+        console.error("❌ ERC-20 revocation error:", error);
+      }
+    }
+    
+    // Process ERC-721 tokens if any
+    if (erc721Approvals.length > 0) {
+      console.log("🖼️ Revoking ERC-721 approvals");
+      setProgressStatus('Revoking ERC-721 approvals...');
+      setProgressValue(40);
+      try {
+        const erc721Result = await revokeERC721Approvals(erc721Approvals, signer);
+        if (erc721Result?.success) {
+          console.log("✅ ERC-721 revocation successful");
+          successfulApprovals.push(...erc721Approvals);
+        }
+      } catch (error) {
+        console.error("❌ ERC-721 revocation error:", error);
+      }
+    }
+    
+    // Process ERC-1155 tokens if any
+    if (erc1155Approvals.length > 0) {
+      console.log("🎮 Revoking ERC-1155 approvals");
+      setProgressStatus('Revoking ERC-1155 approvals...');
+      setProgressValue(60);
+      try {
+        const erc1155Result = await revokeMultipleERC1155Approvals(
+          erc1155Approvals.map(a => ({ contract: a.contract, spender: a.spender }))
+        );
+        if (erc1155Result?.success) {
+          console.log("✅ ERC-1155 revocation successful");
+          successfulApprovals.push(...erc1155Approvals);
+        }
+      } catch (error) {
+        console.error("❌ ERC-1155 revocation error:", error);
+      }
+    }
+    
+    setProgressValue(80);
+    setProgressStatus('Updating state...');
+    
+    if (successfulApprovals.length > 0) {
+      // Create a new array without the revoked approvals
+      const currentApprovals = [...approvals]; // Make a copy of current approvals
+      const remainingApprovals = currentApprovals.filter(a =>
+        !successfulApprovals.some(sel =>
+          sel.contract === a.contract &&
+          sel.spender === a.spender &&
+          (a.tokenId ? sel.tokenId === a.tokenId : true)
+        )
+      );
+      
+      console.log("🟢 Updating Redux with remaining approvals:", remainingApprovals.length);
+      dispatch(setApprovals(remainingApprovals));
+      setProgressValue(100);
+      setProgressStatus(`Revocation complete! Revoked ${successfulApprovals.length} approvals.`);
+    } else {
+      throw new Error('No approvals were successfully revoked.');
+    }
+  } catch (error) {
+    console.error("❌ Revocation Error:", error);
+    setProgressStatus('Revocation failed.');
+    setError(error.message || "Revocation failed");
+  } finally {
+    setProcessing(false);
+    setSelectedApprovals([]); 
+    setTimeout(() => {
+      setProgressValue(0);
+      setProgressStatus('');
+    }, 2000);
+  }
+};
 
   return (
     <div className="card shadow-lg">
@@ -164,7 +204,8 @@ const ApprovalDashboard = () => {
       }
       
       // Fetch all types of approvals
-      const erc20Approvals = await getERC20Approvals(wallet, provider);
+      // Fix: Pass empty array as first parameter to getERC20Approvals
+      const erc20Approvals = await getERC20Approvals([], wallet, provider);
       const erc721Approvals = await getERC721Approvals(wallet, provider);
       const erc1155Approvals = await getERC1155Approvals(wallet, provider);
       

@@ -1,0 +1,225 @@
+// Universal ERC-20 Approval Checker that works with ethers v5, ethers v6, or web3
+async function checkApprovals() {
+  console.log("🔍 Starting approval check...");
+  
+  // Check which libraries are available
+  const hasEthers = typeof ethers !== 'undefined';
+  const hasWeb3 = typeof web3 !== 'undefined' || typeof Web3 !== 'undefined';
+  const hasWindowEthereum = typeof window.ethereum !== 'undefined';
+  
+  console.log(`📚 Available libraries: ${hasEthers ? 'ethers.js' : ''}${hasWeb3 ? ' web3.js' : ''}${hasWindowEthereum ? ' window.ethereum' : ''}`);
+  
+  if (!hasEthers && !hasWeb3 && !hasWindowEthereum) {
+    console.error("❌ No web3 libraries detected. Make sure ethers.js or web3.js is loaded and a wallet is connected.");
+    return;
+  }
+  
+  // Token addresses from your Approve.js
+  const tokenAddresses = {
+    tk1: "0xa85EffB2658CFd81e0B1AaD4f2364CdBCd89F3a1",
+    tk2: "0x8aAC5570d54306Bb395bf2385ad327b7b706016b",
+    permitToken: "0x64f5219563e28EeBAAd91Ca8D31fa3b36621FD4f",
+    feeToken: "0x1757a98c1333B9dc8D408b194B2279b5AFDF70Cc"
+  };
+  
+  // Spender address (MockSpender from your code)
+  const spender = "0x1bEfE2d8417e22Da2E0432560ef9B2aB68Ab75Ad";
+  
+  // Simple ERC-20 ABI with just the functions we need
+  const minimalERC20ABI = [
+    {
+      "constant": true,
+      "inputs": [
+        { "name": "owner", "type": "address" },
+        { "name": "spender", "type": "address" }
+      ],
+      "name": "allowance",
+      "outputs": [{ "name": "", "type": "uint256" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "symbol",
+      "outputs": [{ "name": "", "type": "string" }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+  
+  // Get the current account
+  let currentAccount = null;
+  try {
+    // Try various methods to get the current account
+    if (hasWindowEthereum) {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      currentAccount = accounts[0];
+    } else if (window.web3 && window.web3.eth) {
+      currentAccount = (await window.web3.eth.getAccounts())[0];
+    } else if (window.ethereum && window.ethereum.selectedAddress) {
+      currentAccount = window.ethereum.selectedAddress;
+    } else if (window.store && window.store.getState) {
+      // Try to get account from your Redux store
+      const state = window.store.getState();
+      currentAccount = state.web3 && state.web3.account;
+    }
+    
+    if (!currentAccount) {
+      throw new Error("Could not determine current account");
+    }
+    
+    console.log(`👤 Using account: ${currentAccount}`);
+  } catch (err) {
+    console.error("❌ Error getting account:", err.message);
+    return;
+  }
+  
+  // Check approvals using different available libraries
+  if (hasEthers) {
+    await checkWithEthers(tokenAddresses, spender, currentAccount);
+  } else if (hasWeb3 || hasWindowEthereum) {
+    await checkWithWeb3(tokenAddresses, spender, currentAccount, minimalERC20ABI);
+  }
+}
+
+// Check approvals using ethers.js (compatible with v5 or v6)
+async function checkWithEthers(tokenAddresses, spender, currentAccount) {
+  console.log("🔍 Checking with ethers.js...");
+  
+  // Detect ethers version
+  const isEthersV6 = typeof ethers.BrowserProvider !== 'undefined';
+  console.log(`📚 Using ethers.js ${isEthersV6 ? 'v6' : 'v5'}`);
+  
+  try {
+    // Get provider based on ethers version
+    let provider;
+    if (isEthersV6) {
+      provider = new ethers.BrowserProvider(window.ethereum);
+    } else {
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+    }
+    
+    // Check each token
+    for (const [tokenName, tokenAddress] of Object.entries(tokenAddresses)) {
+      try {
+        // Interface definition varies between ethers v5 and v6
+        const abi = ["function allowance(address owner, address spender) view returns (uint256)"];
+        let contract;
+        
+        if (isEthersV6) {
+          contract = new ethers.Contract(tokenAddress, abi, provider);
+        } else {
+          contract = new ethers.Contract(tokenAddress, abi, provider);
+        }
+        
+        console.log(`🔍 Checking ${tokenName} (${tokenAddress})...`);
+        
+        // Call allowance function
+        const allowance = await contract.allowance(currentAccount, spender);
+        
+        // Convert to string (handling both v5 and v6)
+        const allowanceStr = typeof allowance.toString === 'function' 
+          ? allowance.toString() 
+          : String(allowance);
+        
+        if (allowanceStr !== '0') {
+          console.log(`✅ ${tokenName} (${tokenAddress}): Approval found! Amount: ${allowanceStr}`);
+          
+          // Check if unlimited (max uint256)
+          if (allowanceStr === "115792089237316195423570985008687907853269984665640564039457584007913129639935") {
+            console.log(`   💰 ${tokenName}: UNLIMITED approval`);
+          }
+        } else {
+          console.log(`❌ ${tokenName} (${tokenAddress}): No approval found`);
+        }
+      } catch (err) {
+        console.error(`❌ Error checking ${tokenName} (${tokenAddress}):`, err);
+      }
+    }
+  } catch (err) {
+    console.error("❌ Error with ethers.js:", err);
+  }
+}
+
+// Check approvals using web3.js
+async function checkWithWeb3(tokenAddresses, spender, currentAccount, abi) {
+  console.log("🔍 Checking with web3.js...");
+  
+  try {
+    // Get web3 instance
+    let web3Instance;
+    if (window.web3) {
+      web3Instance = window.web3;
+    } else if (window.Web3) {
+      web3Instance = new Web3(window.ethereum);
+    } else if (window.ethereum) {
+      // Try dynamic import of web3 if available
+      if (typeof Web3 !== 'undefined') {
+        web3Instance = new Web3(window.ethereum);
+      } else {
+        throw new Error("Web3 not available");
+      }
+    }
+    
+    if (!web3Instance) {
+      throw new Error("Could not initialize web3");
+    }
+    
+    // Check each token
+    for (const [tokenName, tokenAddress] of Object.entries(tokenAddresses)) {
+      try {
+        console.log(`🔍 Checking ${tokenName} (${tokenAddress})...`);
+        
+        // Create contract instance
+        const contract = new web3Instance.eth.Contract(abi, tokenAddress);
+        
+        // Call allowance function
+        const allowance = await contract.methods.allowance(currentAccount, spender).call();
+        
+        if (allowance !== '0') {
+          console.log(`✅ ${tokenName} (${tokenAddress}): Approval found! Amount: ${allowance}`);
+          
+          // Check if unlimited (max uint256)
+          if (allowance === "115792089237316195423570985008687907853269984665640564039457584007913129639935") {
+            console.log(`   💰 ${tokenName}: UNLIMITED approval`);
+          }
+        } else {
+          console.log(`❌ ${tokenName} (${tokenAddress}): No approval found`);
+        }
+      } catch (err) {
+        console.error(`❌ Error checking ${tokenName} (${tokenAddress}):`, err);
+      }
+    }
+  } catch (err) {
+    console.error("❌ Error with web3.js:", err);
+  }
+}
+
+// Check network ID
+async function checkNetwork() {
+  console.log("🔍 Checking network...");
+  
+  try {
+    if (window.ethereum) {
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      console.log(`🌐 Connected to chain ID: 0x${parseInt(chainId).toString(16)} (${parseInt(chainId)})`);
+    } else if (window.web3 && window.web3.eth) {
+      const chainId = await window.web3.eth.getChainId();
+      console.log(`🌐 Connected to chain ID: ${chainId}`);
+    } else {
+      console.log("⚠️ Could not determine network ID");
+    }
+  } catch (err) {
+    console.error("❌ Error checking network:", err);
+  }
+}
+
+// Run checks
+(async function() {
+  console.log("🚀 Starting checks...");
+  await checkNetwork();
+  await checkApprovals();
+})();
